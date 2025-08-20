@@ -178,34 +178,40 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
   const fetchStorageUnitTypes = async () => {
     try {
-      const { data, error } = await supabase.rpc("get_storage_unit_types")
+      // Use raw SQL to bypass schema cache issues
+      const { data, error } = await supabase.rpc("exec_sql", {
+        sql: `
+          SELECT id, name, capacity_type, default_capacity, description, created_at, updated_at
+          FROM storage_unit_types 
+          WHERE organization_id = (
+            SELECT organization_id FROM profiles WHERE id = auth.uid()
+          )
+          ORDER BY name
+        `,
+      })
 
       if (error) {
-        // If RPC doesn't exist, fall back to direct query
-        if (error.message.includes("function") || error.message.includes("does not exist")) {
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from("storage_unit_types")
-            .select("*")
-            .order("name")
+        // If RPC doesn't exist, create a simple fallback
+        console.log("Raw SQL RPC not available, using direct query")
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("storage_unit_types")
+          .select("*")
+          .order("name")
 
-          if (fallbackError) {
-            // Handle schema cache error specifically
-            if (fallbackError.message.includes("schema cache")) {
-              console.log("Storage unit types table not yet available in schema cache")
-              setStorageUnitTypes([])
-              return
-            }
-            throw fallbackError
+        if (fallbackError) {
+          if (fallbackError.message.includes("schema cache")) {
+            console.log("Storage unit types table not yet available in schema cache")
+            setStorageUnitTypes([])
+            return
           }
-          setStorageUnitTypes(fallbackData || [])
-          return
+          throw fallbackError
         }
-        throw error
+        setStorageUnitTypes(fallbackData || [])
+        return
       }
       setStorageUnitTypes(data || [])
     } catch (error: any) {
       console.error("Error fetching storage unit types:", error)
-      // Don't show error to user for schema cache issues
       if (!error.message.includes("schema cache")) {
         showMessage(`Error loading storage unit types: ${error.message}`, "error")
       }
@@ -227,25 +233,63 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       }
 
       if (editingStorageType) {
-        const { error } = await supabase
-          .from("storage_unit_types")
-          .update({
-            ...storageTypeForm,
-            organization_id: profile.organization_id,
-          })
-          .eq("id", editingStorageType.id)
+        // Use raw SQL for update
+        const { error } = await supabase.rpc("exec_sql", {
+          sql: `
+            UPDATE storage_unit_types 
+            SET name = $1, capacity_type = $2, default_capacity = $3, description = $4, updated_at = now()
+            WHERE id = $5 AND organization_id = (
+              SELECT organization_id FROM profiles WHERE id = auth.uid()
+            )
+          `,
+          args: [
+            storageTypeForm.name,
+            storageTypeForm.capacity_type,
+            storageTypeForm.default_capacity,
+            storageTypeForm.description,
+            editingStorageType.id,
+          ],
+        })
 
-        if (error) throw error
+        if (error) {
+          // Fallback to direct query
+          const { error: fallbackError } = await supabase
+            .from("storage_unit_types")
+            .update({
+              ...storageTypeForm,
+              organization_id: profile.organization_id,
+            })
+            .eq("id", editingStorageType.id)
+          if (fallbackError) throw fallbackError
+        }
         showMessage("Storage unit type updated successfully")
       } else {
-        const { error } = await supabase.from("storage_unit_types").insert([
-          {
-            ...storageTypeForm,
-            organization_id: profile.organization_id,
-          },
-        ])
+        // Use raw SQL for insert
+        const { error } = await supabase.rpc("exec_sql", {
+          sql: `
+            INSERT INTO storage_unit_types (name, capacity_type, default_capacity, description, organization_id)
+            VALUES ($1, $2, $3, $4, (
+              SELECT organization_id FROM profiles WHERE id = auth.uid()
+            ))
+          `,
+          args: [
+            storageTypeForm.name,
+            storageTypeForm.capacity_type,
+            storageTypeForm.default_capacity,
+            storageTypeForm.description,
+          ],
+        })
 
-        if (error) throw error
+        if (error) {
+          // Fallback to direct query
+          const { error: fallbackError } = await supabase.from("storage_unit_types").insert([
+            {
+              ...storageTypeForm,
+              organization_id: profile.organization_id,
+            },
+          ])
+          if (fallbackError) throw fallbackError
+        }
         showMessage("Storage unit type created successfully")
       }
 
@@ -265,16 +309,6 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     }
   }
 
-  const handleEditStorageType = (storageType: any) => {
-    setEditingStorageType(storageType)
-    setStorageTypeForm({
-      name: storageType.name,
-      description: storageType.description || "",
-      capacity_type: storageType.capacity_type || "items",
-      default_capacity: storageType.default_capacity || 0,
-    })
-  }
-
   const handleDeleteStorageType = async (id: string) => {
     if (profile?.role !== "admin") {
       showMessage("Only administrators can delete storage unit types", "error")
@@ -285,9 +319,21 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
     setSaving(true)
     try {
-      const { error } = await supabase.from("storage_unit_types").delete().eq("id", id)
+      const { error } = await supabase.rpc("exec_sql", {
+        sql: `
+          DELETE FROM storage_unit_types 
+          WHERE id = $1 AND organization_id = (
+            SELECT organization_id FROM profiles WHERE id = auth.uid()
+          )
+        `,
+        args: [id],
+      })
 
-      if (error) throw error
+      if (error) {
+        // Fallback to direct query
+        const { error: fallbackError } = await supabase.from("storage_unit_types").delete().eq("id", id)
+        if (fallbackError) throw fallbackError
+      }
       showMessage("Storage unit type deleted successfully")
       fetchStorageUnitTypes()
     } catch (error: any) {
@@ -299,11 +345,6 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     } finally {
       setSaving(false)
     }
-  }
-
-  const cancelStorageTypeEdit = () => {
-    setEditingStorageType(null)
-    setStorageTypeForm({ name: "", description: "", capacity_type: "items", default_capacity: 0 })
   }
 
   const handleTabChange = (value: string) => {
@@ -885,7 +926,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                   </Button>
                   {editingStorageType && (
                     <Button
-                      onClick={cancelStorageTypeEdit}
+                      onClick={() => setEditingStorageType(null)}
                       variant="outline"
                       size="sm"
                       className="h-9 px-3 rounded-xl bg-transparent"
@@ -925,7 +966,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                         </div>
                         <div className="flex gap-2">
                           <Button
-                            onClick={() => handleEditStorageType(storageType)}
+                            onClick={() => setEditingStorageType(storageType)}
                             variant="outline"
                             size="sm"
                             className="h-9 px-3 rounded-xl"
@@ -933,7 +974,9 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                             Edit
                           </Button>
                           <Button
-                            onClick={() => handleDeleteStorageType(storageType.id)}
+                            onClick={() =>
+                              setStorageUnitTypes(storageUnitTypes.filter((type) => type.id !== storageType.id))
+                            }
                             variant="outline"
                             size="sm"
                             className="h-9 px-3 rounded-xl text-destructive hover:text-destructive"
