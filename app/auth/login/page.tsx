@@ -147,9 +147,7 @@ export default function LoginPage() {
                 </div>
                 <div className="mt-6 text-center text-base">
                   <span className="text-muted-foreground">Need an account? </span>
-                  <Link href="/auth/sign-up" className="text-primary font-semibold hover:underline underline-offset-4">
-                    Contact your administrator
-                  </Link>
+                  <span className="text-primary font-semibold">Contact your administrator</span>
                 </div>
               </form>
             </CardContent>
