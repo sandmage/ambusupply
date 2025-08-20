@@ -85,55 +85,24 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
       console.log("[v0] Item data:", itemData)
       console.log("[v0] Editing item:", editingItem)
 
-      if (editingItem) {
-        // Update existing item using raw SQL
+      if (editingItem && editingItem.id) {
+        // Update existing item
         console.log("[v0] Updating existing inventory item with ID:", editingItem.id)
 
         const { data, error } = await supabase
-          .rpc("exec_sql", {
-            sql: `
-            UPDATE inventory_items 
-            SET 
-              name = $1,
-              description = $2,
-              quantity = $3,
-              min_par_level = $4,
-              unit_of_measure = $5,
-              expiration_date = $6,
-              location_id = $7,
-              storage_unit_id = $8,
-              updated_at = NOW()
-            WHERE id = $9
-          `,
-            params: [
-              itemData.name,
-              itemData.description || null,
-              itemData.quantity,
-              itemData.min_par_level,
-              itemData.unit_of_measure,
-              itemData.expiration_date || null,
-              itemData.location_id,
-              itemData.storage_unit_id || null,
-              editingItem.id,
-            ],
+          .from("inventory_items")
+          .update({
+            name: itemData.name,
+            description: itemData.description || null,
+            quantity: itemData.quantity,
+            min_par_level: itemData.min_par_level,
+            unit_of_measure: itemData.unit_of_measure,
+            expiration_date: itemData.expiration_date || null,
+            location_id: itemData.location_id,
+            storage_unit_id: itemData.storage_unit_id || null,
+            updated_at: new Date().toISOString(),
           })
-          .catch(async () => {
-            // Fallback to direct query if RPC doesn't exist
-            console.log("[v0] RPC not available, using direct update")
-            return await supabase
-              .from("inventory_items")
-              .update({
-                name: itemData.name,
-                description: itemData.description || null,
-                quantity: itemData.quantity,
-                unit_of_measure: itemData.unit_of_measure,
-                expiration_date: itemData.expiration_date || null,
-                location_id: itemData.location_id,
-                storage_unit_id: itemData.storage_unit_id || null,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", editingItem.id)
-          })
+          .eq("id", editingItem.id)
 
         if (error) {
           console.error("[v0] Error updating inventory item:", error)
@@ -142,41 +111,19 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
 
         console.log("[v0] Inventory item updated successfully")
       } else {
-        // Create new item using raw SQL
+        // Create new item
         console.log("[v0] Creating new inventory item")
 
-        const { data, error } = await supabase
-          .rpc("exec_sql", {
-            sql: `
-            INSERT INTO inventory_items (
-              name, description, quantity, min_par_level, unit_of_measure, 
-              expiration_date, location_id, storage_unit_id, created_by
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, auth.uid())
-          `,
-            params: [
-              itemData.name,
-              itemData.description || null,
-              itemData.quantity,
-              itemData.min_par_level,
-              itemData.unit_of_measure,
-              itemData.expiration_date || null,
-              itemData.location_id,
-              itemData.storage_unit_id || null,
-            ],
-          })
-          .catch(async () => {
-            // Fallback to direct query if RPC doesn't exist
-            console.log("[v0] RPC not available, using direct insert")
-            return await supabase.from("inventory_items").insert({
-              name: itemData.name,
-              description: itemData.description || null,
-              quantity: itemData.quantity,
-              unit_of_measure: itemData.unit_of_measure,
-              expiration_date: itemData.expiration_date || null,
-              location_id: itemData.location_id,
-              storage_unit_id: itemData.storage_unit_id || null,
-            })
-          })
+        const { data, error } = await supabase.from("inventory_items").insert({
+          name: itemData.name,
+          description: itemData.description || null,
+          quantity: itemData.quantity,
+          min_par_level: itemData.min_par_level,
+          unit_of_measure: itemData.unit_of_measure,
+          expiration_date: itemData.expiration_date || null,
+          location_id: itemData.location_id,
+          storage_unit_id: itemData.storage_unit_id || null,
+        })
 
         if (error) {
           console.error("[v0] Error creating inventory item:", error)
