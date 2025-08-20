@@ -242,17 +242,22 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         return
       }
 
-      const response = await fetch("/api/storage-unit-types")
-      const result = await response.json()
+      const { data, error } = await supabase
+        .from("storage_unit_types")
+        .select("*")
+        .eq("organization_id", currentProfile.organization_id)
+        .order("name")
 
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch storage unit types")
+      if (error) {
+        throw error
       }
 
-      setStorageUnitTypes(result.data || [])
+      setStorageUnitTypes(data || [])
     } catch (error: any) {
       console.error("Error fetching storage unit types:", error)
-      if (!error.message.includes("schema cache")) {
+      if (error.message.includes("schema cache")) {
+        showMessage("Database table not found. Please run the required database migration.", "error")
+      } else {
         showMessage(`Error loading storage unit types: ${error.message}`, "error")
       }
       setStorageUnitTypes([])
@@ -285,35 +290,24 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
       const storageTypeData = {
         ...storageTypeForm,
+        organization_id: currentProfile.organization_id,
       }
 
       console.log("[v0] Storage type data to submit:", storageTypeData)
 
       if (editingStorageType) {
-        const response = await fetch("/api/storage-unit-types", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...storageTypeData, id: editingStorageType.id }),
-        })
+        const { error } = await supabase
+          .from("storage_unit_types")
+          .update(storageTypeData)
+          .eq("id", editingStorageType.id)
+          .eq("organization_id", currentProfile.organization_id)
 
-        const result = await response.json()
-        if (!response.ok) {
-          throw new Error(result.error || "Failed to update storage unit type")
-        }
-
+        if (error) throw error
         showMessage("Storage unit type updated successfully")
       } else {
-        const response = await fetch("/api/storage-unit-types", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(storageTypeData),
-        })
+        const { error } = await supabase.from("storage_unit_types").insert([storageTypeData])
 
-        const result = await response.json()
-        if (!response.ok) {
-          throw new Error(result.error || "Failed to create storage unit type")
-        }
-
+        if (error) throw error
         showMessage("Storage unit type created successfully")
       }
 
@@ -321,7 +315,8 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       setEditingStorageType(null)
       fetchStorageUnitTypes()
     } catch (error: any) {
-      console.error("[v0] Storage unit type operation error:", error)
+      console.error("[v0] Storage unit type operation error:", error.message)
+      console.log("[v0] Error details:", error.message, error.code, error.details)
       showMessage(`Error: ${error.message}`, "error")
     } finally {
       setSaving(false)
@@ -338,15 +333,13 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
     setSaving(true)
     try {
-      const response = await fetch(`/api/storage-unit-types?id=${id}`, {
-        method: "DELETE",
-      })
+      const { error } = await supabase
+        .from("storage_unit_types")
+        .delete()
+        .eq("id", id)
+        .eq("organization_id", currentProfile.organization_id)
 
-      const result = await response.json()
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to delete storage unit type")
-      }
-
+      if (error) throw error
       showMessage("Storage unit type deleted successfully")
       fetchStorageUnitTypes()
     } catch (error: any) {
