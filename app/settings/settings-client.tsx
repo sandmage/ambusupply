@@ -216,12 +216,22 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   const handleStorageTypeSubmit = async () => {
     setSaving(true)
     try {
+      if (profile?.role !== "admin") {
+        showMessage("Only administrators can manage storage unit types", "error")
+        return
+      }
+
+      if (!profile?.organization_id) {
+        showMessage("Organization information not available. Please complete setup first.", "error")
+        return
+      }
+
       if (editingStorageType) {
         const { error } = await supabase
           .from("storage_unit_types")
           .update({
             ...storageTypeForm,
-            organization_id: organization?.id,
+            organization_id: profile.organization_id,
           })
           .eq("id", editingStorageType.id)
 
@@ -231,7 +241,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         const { error } = await supabase.from("storage_unit_types").insert([
           {
             ...storageTypeForm,
-            organization_id: organization?.id,
+            organization_id: profile.organization_id,
           },
         ])
 
@@ -243,10 +253,12 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       setEditingStorageType(null)
       fetchStorageUnitTypes()
     } catch (error: any) {
-      if (error.message.includes("schema cache")) {
+      if (error.message.includes("row-level security policy")) {
+        showMessage("Permission denied. Only administrators can manage storage unit types.", "error")
+      } else if (error.message.includes("schema cache")) {
         showMessage("Database table not ready yet. Please try again in a moment.", "error")
       } else {
-        showMessage(error.message, "error")
+        showMessage(`Error: ${error.message}`, "error")
       }
     } finally {
       setSaving(false)
@@ -264,6 +276,11 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   }
 
   const handleDeleteStorageType = async (id: string) => {
+    if (profile?.role !== "admin") {
+      showMessage("Only administrators can delete storage unit types", "error")
+      return
+    }
+
     if (!confirm("Are you sure you want to delete this storage unit type?")) return
 
     setSaving(true)
@@ -274,7 +291,11 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       showMessage("Storage unit type deleted successfully")
       fetchStorageUnitTypes()
     } catch (error: any) {
-      showMessage(error.message, "error")
+      if (error.message.includes("row-level security policy")) {
+        showMessage("Permission denied. Only administrators can delete storage unit types.", "error")
+      } else {
+        showMessage(`Error: ${error.message}`, "error")
+      }
     } finally {
       setSaving(false)
     }
