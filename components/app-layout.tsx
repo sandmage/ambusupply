@@ -7,6 +7,7 @@ import { AppSidebar } from "./app-sidebar"
 interface AppLayoutProps {
   children: React.ReactNode
   user: {
+    id?: string
     email: string
     full_name?: string
     role: string

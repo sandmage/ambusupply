@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserManagement } from "@/components/user-management"
@@ -10,7 +10,7 @@ import { AppLayout } from "@/components/app-layout"
 import Link from "next/link"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const supabase = createServerClient()
 
   const {
     data: { user },
@@ -36,7 +36,7 @@ export default async function DashboardPage() {
 
   const handleSignOut = async () => {
     "use server"
-    const supabase = await createClient()
+    const supabase = createServerClient()
     await supabase.auth.signOut()
     redirect("/auth/login")
   }

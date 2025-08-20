@@ -22,8 +22,15 @@ export default async function SettingsPage() {
     ? await supabase.from("organizations").select("*").eq("id", profile.organization_id).single()
     : { data: null }
 
+  const userProfile = profile || {
+    id: user.id,
+    email: user.email || "",
+    full_name: user.user_metadata?.full_name || user.email,
+    role: user.user_metadata?.role || "staff",
+  }
+
   return (
-    <AppLayout user={user} profile={profile}>
+    <AppLayout user={userProfile}>
       <SettingsClient user={user} profile={profile} organization={organization} />
     </AppLayout>
   )
