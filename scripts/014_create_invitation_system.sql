@@ -27,8 +27,9 @@ CREATE INDEX IF NOT EXISTS idx_invitations_org ON public.invitations(organizatio
 -- Enable RLS
 ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
 
+-- Use CREATE OR REPLACE POLICY to avoid conflicts with existing policies
 -- RLS Policies for invitations
-CREATE POLICY "Users can view invitations for their organization" ON public.invitations
+CREATE OR REPLACE POLICY "Users can view invitations for their organization" ON public.invitations
     FOR SELECT USING (
         organization_id IN (
             SELECT organization_id FROM public.profiles 
@@ -36,7 +37,7 @@ CREATE POLICY "Users can view invitations for their organization" ON public.invi
         )
     );
 
-CREATE POLICY "Admins can create invitations" ON public.invitations
+CREATE OR REPLACE POLICY "Admins can create invitations" ON public.invitations
     FOR INSERT WITH CHECK (
         organization_id IN (
             SELECT organization_id FROM public.profiles 
@@ -44,7 +45,7 @@ CREATE POLICY "Admins can create invitations" ON public.invitations
         )
     );
 
-CREATE POLICY "Admins can update invitations" ON public.invitations
+CREATE OR REPLACE POLICY "Admins can update invitations" ON public.invitations
     FOR UPDATE USING (
         organization_id IN (
             SELECT organization_id FROM public.profiles 
@@ -52,7 +53,7 @@ CREATE POLICY "Admins can update invitations" ON public.invitations
         )
     );
 
-CREATE POLICY "Admins can delete invitations" ON public.invitations
+CREATE OR REPLACE POLICY "Admins can delete invitations" ON public.invitations
     FOR DELETE USING (
         organization_id IN (
             SELECT organization_id FROM public.profiles 
@@ -123,4 +124,3 @@ ADD COLUMN IF NOT EXISTS invitation_accepted_at TIMESTAMP WITH TIME ZONE;
 UPDATE public.profiles 
 SET invited_at = created_at, invitation_accepted_at = created_at
 WHERE invited_at IS NULL;
-</sql>
