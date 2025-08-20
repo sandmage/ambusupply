@@ -202,93 +202,95 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
   }
 
   return (
-    <div className="h-full bg-background">
-      <div className="border-b border-border bg-card">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground medical-heading">Storage Locations</h1>
-              <p className="text-sm text-muted-foreground">
-                {isAdmin
-                  ? "Manage physical storage locations and organizational units"
-                  : "View storage locations (Read Only)"}
-              </p>
-            </div>
-            {isAdmin && (
-              <Button onClick={handleAddLocation} className="bg-primary hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Location
-              </Button>
-            )}
+    <div className="h-full">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-serif font-bold text-primary mb-2">Storage Locations</h1>
+            <p className="text-lg text-muted-foreground font-medium">
+              {isAdmin
+                ? "Manage physical storage locations and organizational units"
+                : "View storage locations (Read Only)"}
+            </p>
           </div>
+          {isAdmin && (
+            <Button onClick={handleAddLocation} className="apple-button-secondary">
+              <Plus className="h-5 w-5 mr-2" />
+              Add Location
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-border">
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-3xl font-bold text-primary">{stats.totalLocations}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Total Locations</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-primary/10 transition-transform duration-200 group-hover:scale-110">
+                  <Building className="h-6 w-6 text-primary" />
                 </div>
-                <Building className="h-8 w-8 text-primary/60" />
               </div>
+              <div className="text-3xl font-serif font-bold text-primary mb-2">{stats.totalLocations}</div>
+              <div className="text-sm text-muted-foreground font-medium">Total Locations</div>
             </CardContent>
           </Card>
 
-          <Card className="border-border">
+          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-3xl font-bold text-secondary">{stats.totalStorageUnits}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Storage Units</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-secondary/10 transition-transform duration-200 group-hover:scale-110">
+                  <Package className="h-6 w-6 text-secondary" />
                 </div>
-                <Package className="h-8 w-8 text-secondary/60" />
               </div>
+              <div className="text-3xl font-serif font-bold text-secondary mb-2">{stats.totalStorageUnits}</div>
+              <div className="text-sm text-muted-foreground font-medium">Storage Units</div>
             </CardContent>
           </Card>
 
-          <Card className="border-border">
+          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-3xl font-bold text-orange-500">{filteredLocations.length}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Filtered Results</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-orange-100 transition-transform duration-200 group-hover:scale-110">
+                  <Search className="h-6 w-6 text-orange-600" />
                 </div>
-                <Search className="h-8 w-8 text-orange-500/60" />
               </div>
+              <div className="text-3xl font-serif font-bold text-orange-600 mb-2">{filteredLocations.length}</div>
+              <div className="text-sm text-muted-foreground font-medium">Filtered Results</div>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="medical-heading">Search & Filter</CardTitle>
-            <CardDescription>Find locations and storage units quickly</CardDescription>
+        <Card className="apple-card">
+          <CardHeader className="pb-6">
+            <CardTitle className="text-2xl font-serif font-bold text-primary">Search & Filter</CardTitle>
+            <CardDescription className="text-base font-medium">
+              Find locations and storage units quickly
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Search locations, descriptions, or storage units..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-12 h-12 rounded-2xl border-border/50 bg-card text-base"
               />
             </div>
           </CardContent>
         </Card>
 
         {!isAdmin && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-orange-700">
-                <AlertCircle className="h-5 w-5" />
+          <Card className="apple-card border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-orange-100">
+                  <AlertCircle className="h-6 w-6 text-orange-600" />
+                </div>
                 <div>
-                  <div className="font-medium">View Only Access</div>
-                  <div className="text-sm">
+                  <div className="font-serif font-bold text-orange-800 text-lg mb-1">View Only Access</div>
+                  <div className="text-base text-orange-700 font-medium">
                     You can view location information but cannot make changes. Contact an administrator to modify
                     locations.
                   </div>

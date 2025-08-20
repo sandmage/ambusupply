@@ -71,28 +71,29 @@ export function LocationTree({
   const getUnitTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case "cabinet":
-        return <Building2 className="h-4 w-4" />
+        return <Building2 className="h-5 w-5" />
       case "shelf":
-        return <Layers className="h-4 w-4" />
+        return <Layers className="h-5 w-5" />
       case "drawer":
-        return <Package className="h-4 w-4" />
+        return <Package className="h-5 w-5" />
       default:
-        return <Package className="h-4 w-4" />
+        return <Package className="h-5 w-5" />
     }
   }
 
   const getUnitTypeBadge = (type: string) => {
     const colors = {
-      cabinet: "bg-primary/10 text-primary",
-      shelf: "bg-secondary/10 text-secondary",
-      drawer: "bg-orange-100 text-orange-700",
-      compartment: "bg-purple-100 text-purple-700",
+      cabinet: "bg-primary/10 text-primary border-primary/20",
+      shelf: "bg-secondary/10 text-secondary border-secondary/20",
+      drawer: "bg-orange-100 text-orange-700 border-orange-200",
+      compartment: "bg-purple-100 text-purple-700 border-purple-200",
     }
 
-    const colorClass = colors[type.toLowerCase() as keyof typeof colors] || "bg-muted text-muted-foreground"
+    const colorClass =
+      colors[type.toLowerCase() as keyof typeof colors] || "bg-muted text-muted-foreground border-border"
 
     return (
-      <Badge variant="outline" className={`text-xs ${colorClass} border-0`}>
+      <Badge variant="outline" className={`text-sm font-medium px-3 py-1 rounded-xl ${colorClass}`}>
         {type}
       </Badge>
     )
@@ -106,7 +107,7 @@ export function LocationTree({
 
     return parts.map((part, index) =>
       regex.test(part) ? (
-        <mark key={index} className="bg-yellow-200 px-1 rounded">
+        <mark key={index} className="bg-yellow-200 px-1 rounded-lg">
           {part}
         </mark>
       ) : (
@@ -120,41 +121,45 @@ export function LocationTree({
     const isExpanded = expandedUnits.has(unit.id)
 
     return (
-      <div key={unit.id} className="ml-4">
-        <div className="flex items-center gap-3 py-3 px-4 hover:bg-muted/50 rounded-lg group transition-colors border border-transparent hover:border-border">
+      <div key={unit.id} className="ml-6">
+        <div className="flex items-center gap-4 py-4 px-5 hover:bg-muted/30 rounded-2xl group transition-all duration-200 border border-transparent hover:border-border/50 hover:shadow-sm">
           <button
             onClick={() => toggleUnit(unit.id)}
-            className="p-1 hover:bg-muted rounded transition-colors"
+            className="p-2 hover:bg-muted rounded-xl transition-all duration-200"
             disabled={!hasChildren}
           >
             {hasChildren ? (
               isExpanded ? (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               )
             ) : (
-              <div className="h-4 w-4" />
+              <div className="h-5 w-5" />
             )}
           </button>
 
-          <div className="flex items-center gap-2">{getUnitTypeIcon(unit.unit_type)}</div>
+          <div className="p-2 rounded-xl bg-muted/50 group-hover:bg-primary/10 transition-colors duration-200">
+            {getUnitTypeIcon(unit.unit_type)}
+          </div>
 
-          <div className="flex-1 flex items-center gap-3">
-            <span className="font-medium text-foreground">{highlightText(unit.name, searchTerm)}</span>
+          <div className="flex-1 flex items-center gap-4">
+            <span className="font-semibold text-foreground text-base">{highlightText(unit.name, searchTerm)}</span>
             {getUnitTypeBadge(unit.unit_type)}
             {unit.description && (
-              <span className="text-sm text-muted-foreground">{highlightText(unit.description, searchTerm)}</span>
+              <span className="text-sm text-muted-foreground font-medium">
+                {highlightText(unit.description, searchTerm)}
+              </span>
             )}
           </div>
 
           {!isReadOnly && (
-            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
+            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-2 transition-all duration-200">
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => onAddStorageUnit?.(locationId, unit.id)}
-                className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
+                className="h-9 w-9 p-0 rounded-xl hover:bg-secondary/10 hover:text-secondary hover:scale-105 transition-all duration-200"
                 title="Add nested storage unit"
               >
                 <Plus className="h-4 w-4" />
@@ -163,7 +168,7 @@ export function LocationTree({
                 size="sm"
                 variant="ghost"
                 onClick={() => onEditStorageUnit?.(unit, locationId)}
-                className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
+                className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary hover:scale-105 transition-all duration-200"
                 title="Edit storage unit"
               >
                 <Edit className="h-4 w-4" />
@@ -172,7 +177,7 @@ export function LocationTree({
                 size="sm"
                 variant="ghost"
                 onClick={() => onDeleteStorageUnit?.(unit.id, locationId)}
-                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                className="h-9 w-9 p-0 rounded-xl hover:bg-destructive/10 hover:text-destructive hover:scale-105 transition-all duration-200"
                 title="Delete storage unit"
               >
                 <Trash2 className="h-4 w-4" />
@@ -182,7 +187,7 @@ export function LocationTree({
         </div>
 
         {hasChildren && isExpanded && (
-          <div className="ml-4 border-l-2 border-border pl-2">
+          <div className="ml-6 border-l-2 border-border/30 pl-4 mt-2">
             {unit.children!.map((childUnit) => renderStorageUnit(childUnit, locationId, level + 1))}
           </div>
         )}
@@ -192,16 +197,18 @@ export function LocationTree({
 
   if (locations.length === 0) {
     return (
-      <Card className="border-border">
-        <CardContent className="p-12 text-center">
-          <MapPin className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-          <h3 className="text-xl font-semibold mb-2 text-foreground">No storage locations yet</h3>
-          <p className="text-muted-foreground mb-4">
+      <Card className="apple-card">
+        <CardContent className="p-16 text-center">
+          <div className="p-6 rounded-3xl bg-primary/10 inline-flex mb-6">
+            <MapPin className="h-16 w-16 text-primary" />
+          </div>
+          <h3 className="text-2xl font-serif font-bold mb-3 text-primary">No storage locations yet</h3>
+          <p className="text-lg text-muted-foreground mb-6 font-medium">
             Create your first storage location to organize your medical supplies
           </p>
           {onAddLocation && (
-            <Button onClick={onAddLocation} className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button onClick={onAddLocation} className="apple-button-secondary">
+              <Plus className="h-5 w-5 mr-2" />
               Add First Location
             </Button>
           )}
@@ -211,25 +218,25 @@ export function LocationTree({
   }
 
   return (
-    <Card className="border-border">
-      <CardHeader className="pb-4">
+    <Card className="apple-card">
+      <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="medical-heading">Storage Hierarchy</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Hierarchy</CardTitle>
+            <CardDescription className="text-base font-medium mt-2">
               Organized view of all storage locations and units • {locations.length} locations
             </CardDescription>
           </div>
           {onAddLocation && (
-            <Button onClick={onAddLocation} className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button onClick={onAddLocation} className="apple-button-secondary">
+              <Plus className="h-5 w-5 mr-2" />
               Add Location
             </Button>
           )}
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {locations.map((location) => {
           const isExpanded = expandedLocations.has(location.id)
           const hasStorageUnits = location.storage_units.length > 0
@@ -241,59 +248,64 @@ export function LocationTree({
           }, 0)
 
           return (
-            <Card key={location.id} className="border-border hover:shadow-sm transition-shadow">
+            <Card
+              key={location.id}
+              className="apple-card hover:shadow-lg transition-all duration-300 hover:scale-[1.01]"
+            >
               <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-4 mb-6">
                   <button
                     onClick={() => toggleLocation(location.id)}
-                    className="p-2 hover:bg-muted rounded-lg transition-colors"
+                    className="p-3 hover:bg-muted rounded-2xl transition-all duration-200"
                     disabled={!hasStorageUnits}
                   >
                     {hasStorageUnits ? (
                       isExpanded ? (
-                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                        <ChevronDown className="h-6 w-6 text-muted-foreground" />
                       ) : (
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        <ChevronRight className="h-6 w-6 text-muted-foreground" />
                       )
                     ) : (
-                      <div className="h-5 w-5" />
+                      <div className="h-6 w-6" />
                     )}
                   </button>
 
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <MapPin className="h-5 w-5 text-primary" />
+                  <div className="p-3 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl shadow-sm">
+                    <MapPin className="h-6 w-6 text-primary" />
                   </div>
 
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground">
+                    <h3 className="text-xl font-serif font-bold text-primary mb-1">
                       {highlightText(location.name, searchTerm)}
                     </h3>
                     {location.description && (
-                      <p className="text-sm text-muted-foreground">{highlightText(location.description, searchTerm)}</p>
+                      <p className="text-base text-muted-foreground font-medium mb-2">
+                        {highlightText(location.description, searchTerm)}
+                      </p>
                     )}
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline" className="text-sm font-medium px-3 py-1 rounded-xl">
                         {unitCount} storage units
                       </Badge>
                     </div>
                   </div>
 
                   {!isReadOnly && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => onAddStorageUnit?.(location.id)}
-                        className="hover:bg-secondary/10 hover:text-secondary hover:border-secondary"
+                        className="apple-button-secondary h-10 px-4"
                       >
-                        <Plus className="h-4 w-4 mr-1" />
+                        <Plus className="h-4 w-4 mr-2" />
                         Add Storage
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => onEditLocation?.(location)}
-                        className="hover:bg-primary/10 hover:text-primary"
+                        className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary hover:scale-105 transition-all duration-200"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -301,7 +313,7 @@ export function LocationTree({
                         size="sm"
                         variant="ghost"
                         onClick={() => onDeleteLocation?.(location.id)}
-                        className="hover:bg-destructive/10 hover:text-destructive"
+                        className="h-10 w-10 p-0 rounded-xl hover:bg-destructive/10 hover:text-destructive hover:scale-105 transition-all duration-200"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -310,24 +322,28 @@ export function LocationTree({
                 </div>
 
                 {isExpanded && hasStorageUnits && (
-                  <div className="border-t border-border pt-4">
+                  <div className="border-t border-border/30 pt-6">
                     {location.storage_units.map((unit) => renderStorageUnit(unit, location.id))}
                   </div>
                 )}
 
                 {!hasStorageUnits && (
-                  <div className="border-t border-border pt-4">
-                    <div className="p-6 bg-muted/30 rounded-lg text-center">
-                      <Package className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                      <p className="text-sm text-muted-foreground mb-3">No storage units in this location</p>
+                  <div className="border-t border-border/30 pt-6">
+                    <div className="p-8 bg-gradient-to-br from-muted/30 to-muted/10 rounded-2xl text-center">
+                      <div className="p-4 rounded-2xl bg-muted/50 inline-flex mb-4">
+                        <Package className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-base text-muted-foreground mb-4 font-medium">
+                        No storage units in this location
+                      </p>
                       {onAddStorageUnit && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => onAddStorageUnit(location.id)}
-                          className="hover:bg-secondary/10 hover:text-secondary hover:border-secondary"
+                          className="apple-button-secondary"
                         >
-                          <Plus className="h-4 w-4 mr-1" />
+                          <Plus className="h-4 w-4 mr-2" />
                           Add First Storage Unit
                         </Button>
                       )}

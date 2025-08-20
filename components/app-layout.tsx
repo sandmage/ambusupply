@@ -27,8 +27,10 @@ export function AppLayout({ children, user, stats }: AppLayoutProps) {
   return (
     <div className="flex h-screen bg-background">
       <AppSidebar user={user} onSignOut={handleSignOut} stats={stats} />
-      <main className="flex-1 overflow-auto">
-        <div className="h-full">{children}</div>
+      <main className="flex-1 overflow-hidden ml-2 mr-4 my-4">
+        <div className="h-full bg-card rounded-2xl shadow-sm border border-border/50 overflow-auto">
+          <div className="h-full p-6">{children}</div>
+        </div>
       </main>
     </div>
   )

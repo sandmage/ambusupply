@@ -168,142 +168,188 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Manage your account, organization, and system preferences</p>
+    <div className="h-full">
+      <div className="mb-8">
+        <h1 className="text-4xl font-serif font-bold text-primary mb-2">Settings</h1>
+        <p className="text-lg text-muted-foreground font-medium">
+          Manage your account, organization, and system preferences
+        </p>
       </div>
 
       {message && (
         <div
-          className={`p-4 rounded-md ${message.includes("error") || message.includes("Error") ? "bg-destructive/10 text-destructive" : "bg-green-50 text-green-700"}`}
+          className={`p-4 rounded-2xl mb-6 ${
+            message.includes("error") || message.includes("Error")
+              ? "bg-destructive/10 text-destructive border border-destructive/20"
+              : "bg-green-50 text-green-700 border border-green-200"
+          }`}
         >
-          {message}
+          <p className="font-medium">{message}</p>
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <TabsList className="bg-card border border-border/50 rounded-2xl p-2 shadow-sm">
+          <TabsTrigger value="profile" className="flex items-center gap-2 rounded-xl font-medium">
             <User className="h-4 w-4" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="organization" className="flex items-center gap-2" disabled={profile?.role !== "admin"}>
+          <TabsTrigger
+            value="organization"
+            className="flex items-center gap-2 rounded-xl font-medium"
+            disabled={profile?.role !== "admin"}
+          >
             <Building2 className="h-4 w-4" />
             Organization
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
+          <TabsTrigger value="security" className="flex items-center gap-2 rounded-xl font-medium">
             <Shield className="h-4 w-4" />
             Security
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
+          <TabsTrigger value="notifications" className="flex items-center gap-2 rounded-xl font-medium">
             <Bell className="h-4 w-4" />
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="inventory" className="flex items-center gap-2">
+          <TabsTrigger value="inventory" className="flex items-center gap-2 rounded-xl font-medium">
             <Database className="h-4 w-4" />
             Inventory
           </TabsTrigger>
-          <TabsTrigger value="data" className="flex items-center gap-2">
+          <TabsTrigger value="data" className="flex items-center gap-2 rounded-xl font-medium">
             <Download className="h-4 w-4" />
             Data
           </TabsTrigger>
         </TabsList>
 
-        {/* Profile Settings */}
-        <TabsContent value="profile" className="space-y-6">
-          <Card>
+        <TabsContent value="profile" className="space-y-8">
+          <Card className="apple-card">
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Update your personal information and account details</CardDescription>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Profile Information</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Update your personal information and account details
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">Full Name</Label>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="full_name" className="text-base font-medium">
+                    Full Name
+                  </Label>
                   <Input
                     id="full_name"
                     value={profileData.full_name}
                     onChange={(e) => setProfileData((prev) => ({ ...prev, full_name: e.target.value }))}
+                    className="h-12 rounded-2xl border-border/50 bg-card text-base"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={profileData.email} disabled className="bg-muted" />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                <div className="space-y-3">
+                  <Label htmlFor="email" className="text-base font-medium">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profileData.email}
+                    disabled
+                    className="h-12 rounded-2xl border-border/50 bg-muted text-base"
+                  />
+                  <p className="text-sm text-muted-foreground font-medium">Email cannot be changed</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+              <div className="space-y-3">
+                <Label htmlFor="phone" className="text-base font-medium">
+                  Phone Number
+                </Label>
                 <Input
                   id="phone"
                   value={profileData.phone}
                   onChange={(e) => setProfileData((prev) => ({ ...prev, phone: e.target.value }))}
                   placeholder="+1 (555) 123-4567"
+                  className="h-12 rounded-2xl border-border/50 bg-card text-base"
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <Badge variant={profile?.role === "admin" ? "default" : "secondary"}>{profile?.role || "staff"}</Badge>
-                <span className="text-sm text-muted-foreground">Current Role</span>
+              <div className="flex items-center gap-3">
+                <Badge
+                  variant={profile?.role === "admin" ? "default" : "secondary"}
+                  className="text-sm font-medium px-3 py-1 rounded-xl"
+                >
+                  {profile?.role || "staff"}
+                </Badge>
+                <span className="text-base text-muted-foreground font-medium">Current Role</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="apple-card">
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>Update your account password</CardDescription>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Change Password</CardTitle>
+              <CardDescription className="text-base font-medium">Update your account password</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current_password">Current Password</Label>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="current_password" className="text-base font-medium">
+                  Current Password
+                </Label>
                 <Input
                   id="current_password"
                   type="password"
                   value={profileData.current_password}
                   onChange={(e) => setProfileData((prev) => ({ ...prev, current_password: e.target.value }))}
+                  className="h-12 rounded-2xl border-border/50 bg-card text-base"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new_password">New Password</Label>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="new_password" className="text-base font-medium">
+                    New Password
+                  </Label>
                   <Input
                     id="new_password"
                     type="password"
                     value={profileData.new_password}
                     onChange={(e) => setProfileData((prev) => ({ ...prev, new_password: e.target.value }))}
+                    className="h-12 rounded-2xl border-border/50 bg-card text-base"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm_password">Confirm Password</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="confirm_password" className="text-base font-medium">
+                    Confirm Password
+                  </Label>
                   <Input
                     id="confirm_password"
                     type="password"
                     value={profileData.confirm_password}
                     onChange={(e) => setProfileData((prev) => ({ ...prev, confirm_password: e.target.value }))}
+                    className="h-12 rounded-2xl border-border/50 bg-card text-base"
                   />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="apple-card">
             <CardHeader>
-              <CardTitle>Organization Setup</CardTitle>
-              <CardDescription>Re-run the initial organization setup wizard</CardDescription>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Organization Setup</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Re-run the initial organization setup wizard
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label>Setup Wizard</Label>
-                  <p className="text-sm text-muted-foreground">
+                <div className="space-y-2">
+                  <Label className="text-base font-medium">Setup Wizard</Label>
+                  <p className="text-base text-muted-foreground font-medium">
                     Re-configure your organization settings and preferences
                   </p>
                 </div>
-                <Button onClick={handleRerunSetup} disabled={loading} variant="outline">
+                <Button
+                  onClick={handleRerunSetup}
+                  disabled={loading}
+                  variant="outline"
+                  className="apple-button-secondary bg-transparent"
+                >
                   <Settings className="h-4 w-4 mr-2" />
                   {loading ? "Resetting..." : "Re-run Setup"}
                 </Button>
@@ -311,44 +357,55 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleLogout}>
+          <div className="flex justify-end gap-4">
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="h-12 px-6 rounded-2xl border-border/50 bg-transparent"
+            >
               Sign Out
             </Button>
-            <Button onClick={handleProfileUpdate} disabled={saving}>
+            <Button onClick={handleProfileUpdate} disabled={saving} className="apple-button h-12 px-6">
               {saving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </TabsContent>
 
         {/* Organization Settings */}
-        <TabsContent value="organization" className="space-y-6">
+        <TabsContent value="organization" className="space-y-8">
           {profile?.role === "admin" ? (
-            <Card>
+            <Card className="apple-card">
               <CardHeader>
-                <CardTitle>Organization Details</CardTitle>
-                <CardDescription>Manage your organization information</CardDescription>
+                <CardTitle className="text-2xl font-serif font-bold text-primary">Organization Details</CardTitle>
+                <CardDescription className="text-base font-medium">
+                  Manage your organization information
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="org_name">Organization Name</Label>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="org_name" className="text-base font-medium">
+                      Organization Name
+                    </Label>
                     <Input
                       id="org_name"
                       value={organizationData.name}
                       onChange={(e) => setOrganizationData((prev) => ({ ...prev, name: e.target.value }))}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="org_type">Organization Type</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="org_type" className="text-base font-medium">
+                      Organization Type
+                    </Label>
                     <Select
                       value={organizationData.organization_type}
                       onValueChange={(value) => setOrganizationData((prev) => ({ ...prev, organization_type: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12 rounded-2xl border-border/50 bg-card">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-2xl border-border/50">
                         <SelectItem value="hospital">Hospital</SelectItem>
                         <SelectItem value="clinic">Clinic</SelectItem>
                         <SelectItem value="ems">EMS Service</SelectItem>
@@ -359,58 +416,74 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="org_address">Address</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="org_address" className="text-base font-medium">
+                    Address
+                  </Label>
                   <Input
                     id="org_address"
                     value={organizationData.address}
                     onChange={(e) => setOrganizationData((prev) => ({ ...prev, address: e.target.value }))}
+                    className="h-12 rounded-2xl border-border/50 bg-card text-base"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="org_phone">Phone</Label>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="org_phone" className="text-base font-medium">
+                      Phone
+                    </Label>
                     <Input
                       id="org_phone"
                       value={organizationData.phone}
                       onChange={(e) => setOrganizationData((prev) => ({ ...prev, phone: e.target.value }))}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="org_email">Email</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="org_email" className="text-base font-medium">
+                      Email
+                    </Label>
                     <Input
                       id="org_email"
                       type="email"
                       value={organizationData.email}
                       onChange={(e) => setOrganizationData((prev) => ({ ...prev, email: e.target.value }))}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="license_number">License Number</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="license_number" className="text-base font-medium">
+                    License Number
+                  </Label>
                   <Input
                     id="license_number"
                     value={organizationData.license_number}
                     onChange={(e) => setOrganizationData((prev) => ({ ...prev, license_number: e.target.value }))}
+                    className="h-12 rounded-2xl border-border/50 bg-card text-base"
                   />
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleOrganizationUpdate} disabled={saving}>
+                  <Button onClick={handleOrganizationUpdate} disabled={saving} className="apple-button h-12 px-6">
                     {saving ? "Saving..." : "Update Organization"}
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <Card>
-              <CardContent className="flex items-center justify-center py-12">
+            <Card className="apple-card">
+              <CardContent className="flex items-center justify-center py-16">
                 <div className="text-center">
-                  <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Admin Access Required</h3>
-                  <p className="text-muted-foreground">Only administrators can modify organization settings.</p>
+                  <div className="p-4 rounded-3xl bg-orange-100 inline-flex mb-6">
+                    <AlertTriangle className="h-12 w-12 text-orange-600" />
+                  </div>
+                  <h3 className="text-xl font-serif font-bold mb-3 text-primary">Admin Access Required</h3>
+                  <p className="text-base text-muted-foreground font-medium">
+                    Only administrators can modify organization settings.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -419,10 +492,12 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
         {/* Security Settings */}
         <TabsContent value="security" className="space-y-6">
-          <Card>
+          <Card className="apple-card">
             <CardHeader>
-              <CardTitle>Security Preferences</CardTitle>
-              <CardDescription>Configure security and access controls</CardDescription>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Security Preferences</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Configure security and access controls
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
@@ -478,10 +553,12 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
         {/* Notification Settings */}
         <TabsContent value="notifications" className="space-y-6">
-          <Card>
+          <Card className="apple-card">
             <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Choose what notifications you want to receive</CardDescription>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Notification Preferences</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Choose what notifications you want to receive
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
@@ -524,10 +601,12 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
         {/* Inventory Settings */}
         <TabsContent value="inventory" className="space-y-6">
-          <Card>
+          <Card className="apple-card">
             <CardHeader>
-              <CardTitle>Inventory Preferences</CardTitle>
-              <CardDescription>Configure default inventory management settings</CardDescription>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Inventory Preferences</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Configure default inventory management settings
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
@@ -585,18 +664,25 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
         {/* Data Management */}
         <TabsContent value="data" className="space-y-6">
-          <Card>
+          <Card className="apple-card">
             <CardHeader>
-              <CardTitle>Data Export</CardTitle>
-              <CardDescription>Export your inventory data for backup or analysis</CardDescription>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Data Export</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Export your inventory data for backup or analysis
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
-                <Button onClick={() => handleDataExport("csv")} disabled={loading}>
+                <Button onClick={() => handleDataExport("csv")} disabled={loading} className="apple-button h-12 px-6">
                   <Download className="h-4 w-4 mr-2" />
                   Export as CSV
                 </Button>
-                <Button onClick={() => handleDataExport("json")} disabled={loading} variant="outline">
+                <Button
+                  onClick={() => handleDataExport("json")}
+                  disabled={loading}
+                  variant="outline"
+                  className="apple-button-secondary h-12 px-6"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Export as JSON
                 </Button>
@@ -607,10 +693,12 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="apple-card">
             <CardHeader>
-              <CardTitle>System Maintenance</CardTitle>
-              <CardDescription>Database backup and system maintenance options</CardDescription>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">System Maintenance</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Database backup and system maintenance options
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -618,7 +706,11 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                   <p className="font-medium">Database Backup</p>
                   <p className="text-sm text-muted-foreground">Last backup: 2 hours ago</p>
                 </div>
-                <Button variant="outline" disabled={profile?.role !== "admin"}>
+                <Button
+                  variant="outline"
+                  disabled={profile?.role !== "admin"}
+                  className="apple-button-secondary h-12 px-6 bg-transparent"
+                >
                   <Database className="h-4 w-4 mr-2" />
                   Backup Now
                 </Button>
@@ -629,7 +721,11 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                   <p className="font-medium">System Maintenance</p>
                   <p className="text-sm text-muted-foreground">Next scheduled: Sunday 2:00 AM</p>
                 </div>
-                <Button variant="outline" disabled={profile?.role !== "admin"}>
+                <Button
+                  variant="outline"
+                  disabled={profile?.role !== "admin"}
+                  className="apple-button-secondary h-12 px-6 bg-transparent"
+                >
                   <Clock className="h-4 w-4 mr-2" />
                   Schedule Maintenance
                 </Button>

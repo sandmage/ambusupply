@@ -74,38 +74,44 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
   return (
     <div
       className={cn(
-        "flex flex-col h-full bg-sidebar border-r border-sidebar-border transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64",
+        /* Updated sidebar with Apple-esque glass morphism and rounded corners */
+        "flex flex-col h-full apple-glass backdrop-blur-xl rounded-r-2xl border-r border-border/30 transition-all duration-300 ease-out shadow-lg m-4 mr-0",
+        isCollapsed ? "w-20" : "w-72",
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
+      <div className="flex items-center justify-between p-6 border-b border-border/20">
         {!isCollapsed && (
-          <div className="flex items-center space-x-2">
-            <Activity className="h-8 w-8 text-primary" />
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-sm">
+              <Activity className="h-6 w-6 text-white" />
+            </div>
             <div>
-              <h1 className="text-lg font-bold text-primary">AmbuSupply</h1>
-              <p className="text-xs text-muted-foreground">Medical Inventory</p>
+              <h1 className="text-xl font-serif font-bold text-primary">AmbuSupply</h1>
+              <p className="text-sm text-muted-foreground font-medium">Medical Inventory</p>
             </div>
           </div>
         )}
-        <Button variant="ghost" size="sm" onClick={() => setIsCollapsed(!isCollapsed)} className="h-8 w-8 p-0">
-          {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 transition-all duration-200"
+        >
+          {isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
         </Button>
       </div>
 
-      {/* User Info */}
       {!isCollapsed && (
-        <div className="p-4 border-b border-sidebar-border">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-medium text-primary">
+        <div className="p-6 border-b border-border/20">
+          <div className="flex items-center space-x-4">
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center shadow-sm border border-border/30">
+              <span className="text-lg font-serif font-bold text-primary">
                 {user.full_name?.charAt(0) || user.email.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{user.full_name || user.email}</p>
-              <Badge variant="secondary" className="text-xs">
+              <p className="text-base font-semibold text-foreground truncate">{user.full_name || user.email}</p>
+              <Badge variant="secondary" className="text-xs font-medium rounded-lg px-2 py-1 mt-1">
                 {user.role}
               </Badge>
             </div>
@@ -113,25 +119,29 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-6 space-y-2">
         {navigation.map((item) => (
           <Link
             key={item.name}
             href={item.href}
             className={cn(
-              "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              "flex items-center space-x-4 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 group",
               item.current
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+                ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                : "text-foreground hover:bg-primary/10 hover:scale-[1.01] active:scale-[0.99]",
             )}
           >
-            <item.icon className="h-5 w-5 flex-shrink-0" />
+            <item.icon
+              className={cn(
+                "h-5 w-5 flex-shrink-0 transition-transform duration-200",
+                item.current ? "scale-110" : "group-hover:scale-105",
+              )}
+            />
             {!isCollapsed && (
               <>
-                <span className="flex-1">{item.name}</span>
+                <span className="flex-1 font-medium">{item.name}</span>
                 {item.badge && (
-                  <Badge variant="destructive" className="h-5 text-xs">
+                  <Badge variant="destructive" className="h-6 text-xs font-semibold rounded-lg px-2 shadow-sm">
                     {item.badge}
                   </Badge>
                 )}
@@ -142,9 +152,9 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
 
         {isAdmin && (
           <>
-            <div className={cn("pt-4", isCollapsed && "border-t border-sidebar-border")}>
+            <div className={cn("pt-6", isCollapsed && "border-t border-border/20 mt-4")}>
               {!isCollapsed && (
-                <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <p className="px-4 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
                   Administration
                 </p>
               )}
@@ -154,32 +164,36 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center space-x-4 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 group",
                   item.current
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+                    ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                    : "text-foreground hover:bg-primary/10 hover:scale-[1.01] active:scale-[0.99]",
                 )}
               >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!isCollapsed && <span className="flex-1">{item.name}</span>}
+                <item.icon
+                  className={cn(
+                    "h-5 w-5 flex-shrink-0 transition-transform duration-200",
+                    item.current ? "scale-110" : "group-hover:scale-105",
+                  )}
+                />
+                {!isCollapsed && <span className="flex-1 font-medium">{item.name}</span>}
               </Link>
             ))}
           </>
         )}
       </nav>
 
-      {/* Sign Out */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-6 border-t border-border/20">
         <Button
           variant="ghost"
           onClick={onSignOut}
           className={cn(
-            "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/50",
-            isCollapsed && "px-2",
+            "w-full justify-start text-foreground hover:bg-destructive/10 hover:text-destructive rounded-2xl py-3 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]",
+            isCollapsed && "px-3",
           )}
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
-          {!isCollapsed && <span className="ml-3">Sign Out</span>}
+          {!isCollapsed && <span className="ml-4 font-medium">Sign Out</span>}
         </Button>
       </div>
     </div>

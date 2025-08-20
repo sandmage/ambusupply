@@ -162,98 +162,100 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
   }
 
   return (
-    <div className="h-full bg-background">
-      <div className="border-b border-border bg-card">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground medical-heading">Inventory Management</h1>
-              <p className="text-sm text-muted-foreground">
-                {isAdmin ? "Manage medical supplies and track usage" : "View inventory and record usage"}
-              </p>
-            </div>
-            {isAdmin && (
-              <Button onClick={handleAddItem} className="bg-primary hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
-            )}
+    <div className="h-full">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-serif font-bold text-primary mb-2">Inventory Management</h1>
+            <p className="text-lg text-muted-foreground font-medium">
+              {isAdmin ? "Manage medical supplies and track usage" : "View inventory and record usage"}
+            </p>
           </div>
+          {isAdmin && (
+            <Button onClick={handleAddItem} className="apple-button-secondary">
+              <Plus className="h-5 w-5 mr-2" />
+              Add Item
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-border">
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-3xl font-bold text-primary">{totalItems}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Total Items</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-primary/10 transition-transform duration-200 group-hover:scale-110">
+                  <Package className="h-6 w-6 text-primary" />
                 </div>
-                <Package className="h-8 w-8 text-primary/60" />
               </div>
+              <div className="text-3xl font-serif font-bold text-primary mb-2">{totalItems}</div>
+              <div className="text-sm text-muted-foreground font-medium">Total Items</div>
             </CardContent>
           </Card>
 
-          <Card className="border-border">
+          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-3xl font-bold text-destructive">{belowParCount}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Below Par Level</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-destructive/10 transition-transform duration-200 group-hover:scale-110">
+                  <AlertTriangle className="h-6 w-6 text-destructive" />
                 </div>
-                <AlertTriangle className="h-8 w-8 text-destructive/60" />
               </div>
+              <div className="text-3xl font-serif font-bold text-destructive mb-2">{belowParCount}</div>
+              <div className="text-sm text-muted-foreground font-medium">Below Par Level</div>
             </CardContent>
           </Card>
 
-          <Card className="border-border">
+          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-3xl font-bold text-orange-500">{expiringCount}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Expiring Soon</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-orange-100 transition-transform duration-200 group-hover:scale-110">
+                  <Clock className="h-6 w-6 text-orange-600" />
                 </div>
-                <Clock className="h-8 w-8 text-orange-500/60" />
               </div>
+              <div className="text-3xl font-serif font-bold text-orange-600 mb-2">{expiringCount}</div>
+              <div className="text-sm text-muted-foreground font-medium">Expiring Soon</div>
             </CardContent>
           </Card>
 
-          <Card className="border-border">
+          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-3xl font-bold text-destructive">{outOfStockCount}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Out of Stock</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-destructive/10 transition-transform duration-200 group-hover:scale-110">
+                  <TrendingDown className="h-6 w-6 text-destructive" />
                 </div>
-                <TrendingDown className="h-8 w-8 text-destructive/60" />
               </div>
+              <div className="text-3xl font-serif font-bold text-destructive mb-2">{outOfStockCount}</div>
+              <div className="text-sm text-muted-foreground font-medium">Out of Stock</div>
             </CardContent>
           </Card>
         </div>
 
         {(belowParCount > 0 || expiringCount > 0 || outOfStockCount > 0) && (
-          <Card className="border-destructive/20 bg-destructive/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
-                Inventory Alerts
+          <Card className="apple-card border-destructive/30 bg-gradient-to-r from-destructive/5 to-orange-50">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-destructive">
+                <div className="p-2 rounded-xl bg-destructive/10">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <span className="font-serif font-bold">Inventory Alerts</span>
               </CardTitle>
-              <CardDescription>Items requiring immediate attention</CardDescription>
+              <CardDescription className="text-base">Items requiring immediate attention</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {belowParCount > 0 && (
-                  <Badge variant="destructive" className="text-sm">
+                  <Badge variant="destructive" className="text-sm font-medium px-3 py-1 rounded-xl">
                     {belowParCount} items below par level
                   </Badge>
                 )}
                 {expiringCount > 0 && (
-                  <Badge className="text-sm bg-orange-500 text-white">{expiringCount} items expiring soon</Badge>
+                  <Badge className="text-sm font-medium px-3 py-1 rounded-xl bg-orange-500 text-white hover:bg-orange-600">
+                    {expiringCount} items expiring soon
+                  </Badge>
                 )}
                 {outOfStockCount > 0 && (
-                  <Badge variant="destructive" className="text-sm">
+                  <Badge variant="destructive" className="text-sm font-medium px-3 py-1 rounded-xl">
                     {outOfStockCount} items out of stock
                   </Badge>
                 )}

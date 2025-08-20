@@ -104,55 +104,59 @@ export default async function DashboardPage() {
 
   return (
     <AppLayout user={userProfile} stats={{ belowParCount: stats.belowParCount, expiringCount: stats.expiringCount }}>
-      <div className="h-full bg-background">
-        <div className="border-b border-border bg-card">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-foreground medical-heading">
-              {isAdmin ? "Administrator Dashboard" : "Dashboard"}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {isAdmin ? "System overview and management tools" : "Inventory overview and quick actions"}
-            </p>
+      <div className="h-full">
+        <div className="mb-8">
+          <h1 className="text-4xl font-serif font-bold text-primary mb-2">
+            {isAdmin ? "Administrator Dashboard" : "Dashboard"}
+          </h1>
+          <p className="text-lg text-muted-foreground font-medium">
+            {isAdmin ? "System overview and management tools" : "Inventory overview and quick actions"}
+          </p>
+        </div>
+
+        {isAdmin ? (
+          <Tabs defaultValue="overview" className="space-y-8">
+            <TabsList className="bg-card border border-border/50 rounded-2xl p-2 shadow-sm">
+              <TabsTrigger value="overview" className="rounded-xl font-medium">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="users" className="rounded-xl font-medium">
+                User Management
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="rounded-xl font-medium">
+                Recent Activity
+              </TabsTrigger>
+              <TabsTrigger value="system" className="rounded-xl font-medium">
+                System Health
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview">
+              <div className="space-y-8">
+                <DashboardStats stats={stats} />
+                <DashboardActions isAdmin={true} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="users">
+              <UserManagement users={users} currentUserId={user.id} />
+            </TabsContent>
+
+            <TabsContent value="activity">
+              <RecentActivity activities={transformedActivity} />
+            </TabsContent>
+
+            <TabsContent value="system">
+              <SystemHealth stats={stats} />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="space-y-8">
+            <DashboardStats stats={stats} />
+            <DashboardActions isAdmin={false} />
+            <RecentActivity activities={transformedActivity.slice(0, 5)} />
           </div>
-        </div>
-
-        <div className="p-6">
-          {isAdmin ? (
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="bg-muted">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="users">User Management</TabsTrigger>
-                <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-                <TabsTrigger value="system">System Health</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview">
-                <div className="space-y-6">
-                  <DashboardStats stats={stats} />
-                  <DashboardActions isAdmin={true} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="users">
-                <UserManagement users={users} currentUserId={user.id} />
-              </TabsContent>
-
-              <TabsContent value="activity">
-                <RecentActivity activities={transformedActivity} />
-              </TabsContent>
-
-              <TabsContent value="system">
-                <SystemHealth stats={stats} />
-              </TabsContent>
-            </Tabs>
-          ) : (
-            <div className="space-y-6">
-              <DashboardStats stats={stats} />
-              <DashboardActions isAdmin={false} />
-              <RecentActivity activities={transformedActivity.slice(0, 5)} />
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </AppLayout>
   )

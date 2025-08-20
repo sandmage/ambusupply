@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Activity } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -68,33 +69,42 @@ export default function LoginPage() {
 
   if (isCheckingAuth) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10">
+      <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10 bg-gradient-to-br from-background to-muted/30">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Checking authentication...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-6"></div>
+          <p className="text-lg text-muted-foreground font-medium">Checking authentication...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
+    <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10 bg-gradient-to-br from-background to-muted/30">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col gap-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-blue-600">AmbuSupply</h1>
-            <p className="text-muted-foreground">Inventory Management System</p>
+            <div className="flex items-center justify-center mb-6">
+              <div className="p-4 rounded-3xl bg-gradient-to-br from-primary to-secondary shadow-lg">
+                <Activity className="h-12 w-12 text-white" />
+              </div>
+            </div>
+            <h1 className="text-4xl font-serif font-bold text-primary mb-2">AmbuSupply</h1>
+            <p className="text-lg text-muted-foreground font-medium">Medical Inventory Management</p>
           </div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Sign In</CardTitle>
-              <CardDescription>Enter your credentials to access the system</CardDescription>
+          <Card className="apple-card shadow-xl">
+            <CardHeader className="pb-6">
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Welcome Back</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Enter your credentials to access the system
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin}>
                 <div className="flex flex-col gap-6">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                  <div className="grid gap-3">
+                    <Label htmlFor="email" className="text-base font-medium">
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -102,26 +112,34 @@ export default function LoginPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                  <div className="grid gap-3">
+                    <Label htmlFor="password" className="text-base font-medium">
+                      Password
+                    </Label>
                     <Input
                       id="password"
                       type="password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  {error && (
+                    <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20">
+                      <p className="text-sm text-destructive font-medium">{error}</p>
+                    </div>
+                  )}
+                  <Button type="submit" className="apple-button h-12 text-base font-semibold" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>
-                <div className="mt-4 text-center text-sm">
-                  Need an account?{" "}
-                  <Link href="/auth/sign-up" className="underline underline-offset-4">
+                <div className="mt-6 text-center text-base">
+                  <span className="text-muted-foreground">Need an account? </span>
+                  <Link href="/auth/sign-up" className="text-primary font-semibold hover:underline underline-offset-4">
                     Contact your administrator
                   </Link>
                 </div>

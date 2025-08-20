@@ -1,12 +1,20 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { DM_Sans } from "next/font/google"
+import { Playfair_Display, Source_Sans_3 as Source_Sans_Pro } from "next/font/google"
 import "./globals.css"
 
-const dmSans = DM_Sans({
+const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-dm-sans",
+  variable: "--font-playfair",
+  weight: ["400", "700", "900"],
+})
+
+const sourceSansPro = Source_Sans_Pro({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-source-sans",
+  weight: ["300", "400", "600", "700"],
 })
 
 export const metadata: Metadata = {
@@ -21,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={dmSans.variable}>
+    <html lang="en" className={`${playfairDisplay.variable} ${sourceSansPro.variable} antialiased`}>
       <body className="min-h-screen bg-background font-sans antialiased">{children}</body>
     </html>
   )

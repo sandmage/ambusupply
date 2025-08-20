@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Activity } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -57,23 +58,30 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
+    <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10 bg-gradient-to-br from-background to-muted/30">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col gap-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-blue-600">AmbuSupply</h1>
-            <p className="text-muted-foreground">Create New Account</p>
+            <div className="flex items-center justify-center mb-6">
+              <div className="p-4 rounded-3xl bg-gradient-to-br from-primary to-secondary shadow-lg">
+                <Activity className="h-12 w-12 text-white" />
+              </div>
+            </div>
+            <h1 className="text-4xl font-serif font-bold text-primary mb-2">AmbuSupply</h1>
+            <p className="text-lg text-muted-foreground font-medium">Create New Account</p>
           </div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Sign Up</CardTitle>
-              <CardDescription>Create a new user account</CardDescription>
+          <Card className="apple-card shadow-xl">
+            <CardHeader className="pb-6">
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Join Our Team</CardTitle>
+              <CardDescription className="text-base font-medium">Create a new user account</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSignUp}>
                 <div className="flex flex-col gap-6">
-                  <div className="grid gap-2">
-                    <Label htmlFor="fullName">Full Name</Label>
+                  <div className="grid gap-3">
+                    <Label htmlFor="fullName" className="text-base font-medium">
+                      Full Name
+                    </Label>
                     <Input
                       id="fullName"
                       type="text"
@@ -81,10 +89,13 @@ export default function SignUpPage() {
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                  <div className="grid gap-3">
+                    <Label htmlFor="email" className="text-base font-medium">
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -92,48 +103,61 @@ export default function SignUpPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
+                  <div className="grid gap-3">
+                    <Label htmlFor="role" className="text-base font-medium">
+                      Role
+                    </Label>
                     <Select value={role} onValueChange={(value: "admin" | "staff") => setRole(value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12 rounded-2xl border-border/50 bg-card">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-2xl border-border/50">
                         <SelectItem value="staff">Staff</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                  <div className="grid gap-3">
+                    <Label htmlFor="password" className="text-base font-medium">
+                      Password
+                    </Label>
                     <Input
                       id="password"
                       type="password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="repeat-password">Repeat Password</Label>
+                  <div className="grid gap-3">
+                    <Label htmlFor="repeat-password" className="text-base font-medium">
+                      Repeat Password
+                    </Label>
                     <Input
                       id="repeat-password"
                       type="password"
                       required
                       value={repeatPassword}
                       onChange={(e) => setRepeatPassword(e.target.value)}
+                      className="h-12 rounded-2xl border-border/50 bg-card text-base"
                     />
                   </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  {error && (
+                    <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20">
+                      <p className="text-sm text-destructive font-medium">{error}</p>
+                    </div>
+                  )}
+                  <Button type="submit" className="apple-button h-12 text-base font-semibold" disabled={isLoading}>
                     {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </div>
-                <div className="mt-4 text-center text-sm">
-                  Already have an account?{" "}
-                  <Link href="/auth/login" className="underline underline-offset-4">
+                <div className="mt-6 text-center text-base">
+                  <span className="text-muted-foreground">Already have an account? </span>
+                  <Link href="/auth/login" className="text-primary font-semibold hover:underline underline-offset-4">
                     Sign in
                   </Link>
                 </div>
