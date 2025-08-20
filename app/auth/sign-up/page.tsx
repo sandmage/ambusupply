@@ -24,16 +24,7 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Environment variables check:")
-    console.log("[v0] NEXT_PUBLIC_SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "✓ Found" : "❌ Missing")
-    console.log(
-      "[v0] NEXT_PUBLIC_SUPABASE_ANON_KEY:",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✓ Found" : "❌ Missing",
-    )
-
     const supabase = createClient()
-    console.log("[v0] Supabase client created:", supabase)
-    console.log("[v0] Supabase URL being used:", supabase.supabaseUrl)
 
     setIsLoading(true)
     setError(null)
@@ -45,7 +36,6 @@ export default function SignUpPage() {
     }
 
     try {
-      console.log("[v0] Attempting sign up with email:", email)
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -57,12 +47,9 @@ export default function SignUpPage() {
           },
         },
       })
-      console.log("[v0] Sign up response error:", error)
       if (error) throw error
-      console.log("[v0] Sign up successful, redirecting...")
       router.push("/auth/sign-up-success")
     } catch (error: unknown) {
-      console.log("[v0] Sign up error caught:", error)
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
