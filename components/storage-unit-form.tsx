@@ -25,25 +25,52 @@ interface StorageUnit {
   position_order?: number
 }
 
+interface StorageUnitType {
+  id: string
+  name: string
+  capacity_type: string
+  default_capacity?: number
+  description?: string
+}
+
 interface StorageUnitFormProps {
   unit?: StorageUnit
   isOpen: boolean
   onClose: () => void
   onSave: (unit: Omit<StorageUnit, "id">) => Promise<void>
   parentUnitName?: string
+  storageUnitTypes?: StorageUnitType[]
 }
 
-const STORAGE_TYPES = [
-  { value: "rack", label: "Rack" },
-  { value: "shelf", label: "Shelf" },
-  { value: "cabinet", label: "Cabinet" },
-  { value: "drawer", label: "Drawer" },
-  { value: "container", label: "Container/Tote" },
-  { value: "bin", label: "Bin" },
-  { value: "compartment", label: "Compartment" },
-]
+const getStorageTypes = (storageUnitTypes?: StorageUnitType[]) => {
+  if (storageUnitTypes && storageUnitTypes.length > 0) {
+    return storageUnitTypes.map((type) => ({
+      value: type.name.toLowerCase(),
+      label: type.name,
+      description: type.description,
+    }))
+  }
 
-export function StorageUnitForm({ unit, isOpen, onClose, onSave, parentUnitName }: StorageUnitFormProps) {
+  // Fallback to default types if no custom types available
+  return [
+    { value: "rack", label: "Rack" },
+    { value: "shelf", label: "Shelf" },
+    { value: "cabinet", label: "Cabinet" },
+    { value: "drawer", label: "Drawer" },
+    { value: "container", label: "Container/Tote" },
+    { value: "bin", label: "Bin" },
+    { value: "compartment", label: "Compartment" },
+  ]
+}
+
+export function StorageUnitForm({
+  unit,
+  isOpen,
+  onClose,
+  onSave,
+  parentUnitName,
+  storageUnitTypes,
+}: StorageUnitFormProps) {
   const [name, setName] = useState(unit?.name || "")
   const [type, setType] = useState(unit?.type || "")
   const [description, setDescription] = useState(unit?.description || "")
@@ -84,6 +111,8 @@ export function StorageUnitForm({ unit, isOpen, onClose, onSave, parentUnitName 
     resetForm()
   }
 
+  const storageTypes = getStorageTypes(storageUnitTypes)
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -116,9 +145,12 @@ export function StorageUnitForm({ unit, isOpen, onClose, onSave, parentUnitName 
                   <SelectValue placeholder="Select storage type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {STORAGE_TYPES.map((storageType) => (
+                  {storageTypes.map((storageType) => (
                     <SelectItem key={storageType.value} value={storageType.value}>
                       {storageType.label}
+                      {storageType.description && (
+                        <span className="text-xs text-muted-foreground ml-2">- {storageType.description}</span>
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>

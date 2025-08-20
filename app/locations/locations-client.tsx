@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { LocationTree } from "@/components/location-tree"
@@ -27,6 +27,14 @@ interface Location {
   storage_units: StorageUnit[]
 }
 
+interface StorageUnitType {
+  id: string
+  name: string
+  capacity_type: string
+  default_capacity?: number
+  description?: string
+}
+
 interface LocationsClientProps {
   locations: Location[]
   userRole: string
@@ -38,6 +46,7 @@ interface LocationsClientProps {
 
 export function LocationsClient({ locations: initialLocations, userRole, stats }: LocationsClientProps) {
   const [locations, setLocations] = useState<Location[]>(initialLocations)
+  const [storageUnitTypes, setStorageUnitTypes] = useState<StorageUnitType[]>([])
   const [isLocationFormOpen, setIsLocationFormOpen] = useState(false)
   const [isStorageFormOpen, setIsStorageFormOpen] = useState(false)
   const [editingLocation, setEditingLocation] = useState<Location | undefined>()
@@ -52,6 +61,35 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
 
   const supabase = createClient()
   const isAdmin = userRole === "admin"
+
+  useEffect(() => {
+    fetchStorageUnitTypes()
+  }, [])
+
+  const fetchStorageUnitTypes = async () => {
+    try {
+      const { data, error } = await supabase.from("storage_unit_types").select("*").order("name")
+
+      if (error) {
+        console.error("[v0] Error fetching storage unit types:", error)
+        setStorageUnitTypes([
+          { id: "default-1", name: "Shelf", capacity_type: "count", description: "Default shelf type" },
+          { id: "default-2", name: "Cabinet", capacity_type: "count", description: "Default cabinet type" },
+          { id: "default-3", name: "Drawer", capacity_type: "count", description: "Default drawer type" },
+        ])
+      } else {
+        console.log("[v0] Fetched storage unit types:", data)
+        setStorageUnitTypes(data || [])
+      }
+    } catch (error) {
+      console.error("[v0] Exception fetching storage unit types:", error)
+      setStorageUnitTypes([
+        { id: "default-1", name: "Shelf", capacity_type: "count", description: "Default shelf type" },
+        { id: "default-2", name: "Cabinet", capacity_type: "count", description: "Default cabinet type" },
+        { id: "default-3", name: "Drawer", capacity_type: "count", description: "Default drawer type" },
+      ])
+    }
+  }
 
   // Filter locations based on search
   const filteredLocations = locations.filter((location) => {
@@ -326,6 +364,7 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
               onClose={() => setIsStorageFormOpen(false)}
               onSave={handleSaveStorageUnit}
               parentUnitName={editingStorageUnit?.parentUnitName}
+              storageUnitTypes={storageUnitTypes}
             />
           </>
         )}
