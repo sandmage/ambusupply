@@ -11,16 +11,40 @@ import Link from "next/link"
 export default async function DashboardPage() {
   const supabase = await createClient()
 
+  console.log("[v0] Dashboard: Starting dashboard load")
+
   const {
     data: { user },
     error,
   } = await supabase.auth.getUser()
+
+  console.log("[v0] Dashboard: User check result:", user ? `User found: ${user.email}` : "No user found")
+
   if (error || !user) {
+    console.log("[v0] Dashboard: No user, redirecting to login")
     redirect("/auth/login")
   }
 
-  // Get user profile
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  console.log("[v0] Dashboard: Querying profile for user ID:", user.id)
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle() // Use maybeSingle instead of single to avoid errors when no record exists
+
+  console.log("[v0] Dashboard: Profile query result:", profile ? "Profile found" : "No profile found")
+  if (profileError) {
+    console.log("[v0] Dashboard: Profile query error:", profileError)
+  }
+
+  const userProfile = profile || {
+    id: user.id,
+    email: user.email,
+    full_name: user.user_metadata?.full_name || user.email,
+    role: user.user_metadata?.role || "staff",
+  }
+
+  console.log("[v0] Dashboard: Using profile:", userProfile)
 
   const handleSignOut = async () => {
     "use server"
@@ -29,24 +53,36 @@ export default async function DashboardPage() {
     redirect("/auth/login")
   }
 
-  const isAdmin = profile?.role === "admin"
+  const isAdmin = userProfile?.role === "admin"
+  console.log("[v0] Dashboard: User role:", userProfile?.role, "Is admin:", isAdmin)
+
+  console.log("[v0] Dashboard: Starting database queries")
 
   const [{ data: inventoryItems }, { data: locations }, { data: users }, { data: recentTransactions }] =
     await Promise.all([
       supabase
         .from("inventory_items")
         .select("id, current_quantity, par_level, expiration_date")
-        .catch(() => ({ data: [] })),
+        .catch((err) => {
+          console.log("[v0] Dashboard: Inventory query error:", err)
+          return { data: [] }
+        }),
       supabase
         .from("locations")
         .select("id")
-        .catch(() => ({ data: [] })),
+        .catch((err) => {
+          console.log("[v0] Dashboard: Locations query error:", err)
+          return { data: [] }
+        }),
       isAdmin
         ? supabase
             .from("profiles")
             .select("*")
             .order("created_at", { ascending: false })
-            .catch(() => ({ data: [] }))
+            .catch((err) => {
+              console.log("[v0] Dashboard: Users query error:", err)
+              return { data: [] }
+            })
         : { data: [] },
       supabase
         .from("transactions")
@@ -60,8 +96,14 @@ export default async function DashboardPage() {
       `)
         .order("created_at", { ascending: false })
         .limit(20)
-        .catch(() => ({ data: [] })),
+        .catch((err) => {
+          console.log("[v0] Dashboard: Transactions query error:", err)
+          return { data: [] }
+        }),
     ])
+
+  console.log("[v0] Dashboard: Database queries completed")
+  console.log("[v0] Dashboard: Items:", inventoryItems?.length || 0, "Locations:", locations?.length || 0)
 
   const totalItems = inventoryItems?.length || 0
   const belowParCount =
@@ -107,9 +149,11 @@ export default async function DashboardPage() {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm">
-                Welcome, {profile?.full_name || user.email}
-                {profile?.role && (
-                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{profile.role}</span>
+                Welcome, {userProfile?.full_name || user.email}
+                {userProfile?.role && (
+                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                    {userProfile.role}
+                  </span>
                 )}
               </span>
               <form action={handleSignOut}>
