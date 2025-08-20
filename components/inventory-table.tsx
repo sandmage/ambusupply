@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface InventoryItem {
   id: string
@@ -198,251 +199,279 @@ export function InventoryTable({ items, onEditItem, onUseItem, onRestockItem, us
   }
 
   return (
-    <Card className="apple-card">
-      <CardHeader className="pb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-2xl font-serif font-bold text-primary">Inventory Items</CardTitle>
-            <CardDescription className="text-base font-medium mt-2">
-              Manage medical supplies and track stock levels • {filteredAndSortedItems.length} of {items.length} items
-              shown
-            </CardDescription>
-          </div>
-          <Badge variant="outline" className="text-sm font-medium px-3 py-1 rounded-xl">
-            {filteredAndSortedItems.length} items
-          </Badge>
-        </div>
-
-        <div className="space-y-4 mt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search items, descriptions, locations, or lot numbers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 rounded-2xl border-border/50 bg-card text-base"
-              />
+    <TooltipProvider>
+      <Card className="apple-card">
+        <CardHeader className="pb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Inventory Items</CardTitle>
+              <CardDescription className="text-base font-medium mt-2">
+                Manage medical supplies and track stock levels • {filteredAndSortedItems.length} of {items.length} items
+                shown
+              </CardDescription>
             </div>
-            <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
-              <SelectTrigger className="w-56 h-12 rounded-2xl border-border/50 bg-card">
-                <Filter className="h-5 w-5 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-2xl border-border/50">
-                <SelectItem value="all">All Items ({items.length})</SelectItem>
-                <SelectItem value="low">
-                  Below Par (
-                  {items.filter((item) => item.quantity < item.min_par_level && item.min_par_level > 0).length})
-                </SelectItem>
-                <SelectItem value="expiring">
-                  Expiring Soon (
-                  {
-                    items.filter((item) => {
-                      if (!item.expiration_date) return false
-                      const expirationDate = new Date(item.expiration_date)
-                      const thirtyDaysFromNow = new Date()
-                      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-                      return expirationDate <= thirtyDaysFromNow
-                    }).length
-                  }
-                  )
-                </SelectItem>
-                <SelectItem value="out_of_stock">
-                  Out of Stock ({items.filter((item) => item.quantity === 0).length})
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <Badge variant="outline" className="text-sm font-medium px-3 py-1 rounded-xl">
+              {filteredAndSortedItems.length} items
+            </Badge>
           </div>
-        </div>
-      </CardHeader>
 
-      <CardContent className="p-0">
-        <div className="rounded-2xl border border-border/50 overflow-hidden bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30">
-                <TableHead className="font-semibold text-base h-14">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("name")}
-                    className="h-auto p-0 font-semibold text-base rounded-xl"
-                  >
-                    Item Details {getSortIcon("name")}
-                  </Button>
-                </TableHead>
-                <TableHead className="font-semibold text-base h-14">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("location_name")}
-                    className="h-auto p-0 font-semibold text-base rounded-xl"
-                  >
-                    Location {getSortIcon("location_name")}
-                  </Button>
-                </TableHead>
-                <TableHead className="font-semibold text-base h-14">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("quantity")}
-                    className="h-auto p-0 font-semibold text-base rounded-xl"
-                  >
-                    Current Stock {getSortIcon("quantity")}
-                  </Button>
-                </TableHead>
-                <TableHead className="font-semibold text-base h-14">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("min_par_level")}
-                    className="h-auto p-0 font-semibold text-base rounded-xl"
-                  >
-                    Par Level {getSortIcon("min_par_level")}
-                  </Button>
-                </TableHead>
-                <TableHead className="font-semibold text-base h-14">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("expiration_date")}
-                    className="h-auto p-0 font-semibold text-base rounded-xl"
-                  >
-                    Expiration {getSortIcon("expiration_date")}
-                  </Button>
-                </TableHead>
-                <TableHead className="font-semibold text-base h-14">Status</TableHead>
-                <TableHead className="font-semibold text-base text-right h-14">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAndSortedItems.map((item) => (
-                <TableRow key={item.id} className="hover:bg-muted/20 transition-all duration-200 h-16">
-                  <TableCell className="py-4">
-                    <div className="space-y-1">
-                      <div className="font-semibold text-foreground text-base">{item.name}</div>
-                      {item.description && (
-                        <div className="text-sm text-muted-foreground font-medium">{item.description}</div>
-                      )}
-                      {item.lot_number && (
-                        <div className="text-xs text-muted-foreground font-medium">Lot: {item.lot_number}</div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="p-1 rounded-lg bg-primary/10">
-                        <MapPin className="h-4 w-4 text-primary" />
+          <div className="space-y-4 mt-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  placeholder="Search items, descriptions, locations, or lot numbers..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 h-12 rounded-2xl border-border/50 bg-card text-base"
+                />
+              </div>
+              <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+                <SelectTrigger className="w-56 h-12 rounded-2xl border-border/50 bg-card">
+                  <Filter className="h-5 w-5 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-border/50">
+                  <SelectItem value="all">All Items ({items.length})</SelectItem>
+                  <SelectItem value="low">
+                    Below Par (
+                    {items.filter((item) => item.quantity < item.min_par_level && item.min_par_level > 0).length})
+                  </SelectItem>
+                  <SelectItem value="expiring">
+                    Expiring Soon (
+                    {
+                      items.filter((item) => {
+                        if (!item.expiration_date) return false
+                        const expirationDate = new Date(item.expiration_date)
+                        const thirtyDaysFromNow = new Date()
+                        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+                        return expirationDate <= thirtyDaysFromNow
+                      }).length
+                    }
+                    )
+                  </SelectItem>
+                  <SelectItem value="out_of_stock">
+                    Out of Stock ({items.filter((item) => item.quantity === 0).length})
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <div className="rounded-2xl border border-border/50 overflow-hidden bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="font-semibold text-base h-14">
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("name")}
+                      className="h-auto p-0 font-semibold text-base rounded-xl"
+                    >
+                      Item Details {getSortIcon("name")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="font-semibold text-base h-14">
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("location_name")}
+                      className="h-auto p-0 font-semibold text-base rounded-xl"
+                    >
+                      Location {getSortIcon("location_name")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="font-semibold text-base h-14">
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("quantity")}
+                      className="h-auto p-0 font-semibold text-base rounded-xl"
+                    >
+                      Current Stock {getSortIcon("quantity")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="font-semibold text-base h-14">
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("min_par_level")}
+                      className="h-auto p-0 font-semibold text-base rounded-xl"
+                    >
+                      Par Level {getSortIcon("min_par_level")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="font-semibold text-base h-14">
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("expiration_date")}
+                      className="h-auto p-0 font-semibold text-base rounded-xl"
+                    >
+                      Expiration {getSortIcon("expiration_date")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="font-semibold text-base h-14">Status</TableHead>
+                  <TableHead className="font-semibold text-base text-right h-14">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAndSortedItems.map((item) => (
+                  <TableRow key={item.id} className="hover:bg-muted/20 transition-all duration-200 h-16">
+                    <TableCell className="py-4">
+                      <div className="space-y-1">
+                        <div className="font-semibold text-foreground text-base">{item.name}</div>
+                        {item.description && (
+                          <div className="text-sm text-muted-foreground font-medium">{item.description}</div>
+                        )}
+                        {item.lot_number && (
+                          <div className="text-xs text-muted-foreground font-medium">Lot: {item.lot_number}</div>
+                        )}
                       </div>
-                      <span className="text-foreground font-medium">{getStoragePath(item)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <div className="font-semibold text-foreground text-base">
-                      {item.quantity} {item.unit_of_measure}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <div className="text-sm text-foreground font-medium">
-                      {item.min_par_level} {item.unit_of_measure}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    {item.expiration_date ? (
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="p-1 rounded-lg bg-primary/10">
+                          <MapPin className="h-4 w-4 text-primary" />
+                        </div>
+                        <span className="text-foreground font-medium">{getStoragePath(item)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="font-semibold text-foreground text-base">
+                        {item.quantity} {item.unit_of_measure}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
                       <div className="text-sm text-foreground font-medium">
-                        {format(new Date(item.expiration_date), "MMM dd, yyyy")}
+                        {item.min_par_level} {item.unit_of_measure}
                       </div>
-                    ) : (
-                      <div className="text-sm text-muted-foreground font-medium">No expiration</div>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-4">{getStatusBadge(item)}</TableCell>
-                  <TableCell className="py-4">
-                    <div className="flex items-center justify-end gap-3">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="1"
-                          max={item.quantity}
-                          value={useQuantities[item.id] || ""}
-                          onChange={(e) =>
-                            setUseQuantities((prev) => ({ ...prev, [item.id]: Number.parseInt(e.target.value) || 0 }))
-                          }
-                          placeholder="1"
-                          className="w-16 h-9 text-sm rounded-xl border-border/50"
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const quantity = useQuantities[item.id] || 1
-                            onUseItem(item.id, quantity)
-                            setUseQuantities((prev) => ({ ...prev, [item.id]: 0 }))
-                          }}
-                          disabled={
-                            !useQuantities[item.id] || useQuantities[item.id] > item.quantity || item.quantity === 0
-                          }
-                          className="h-9 px-3 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {isAdmin && (
+                    </TableCell>
+                    <TableCell className="py-4">
+                      {item.expiration_date ? (
+                        <div className="text-sm text-foreground font-medium">
+                          {format(new Date(item.expiration_date), "MMM dd, yyyy")}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground font-medium">No expiration</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4">{getStatusBadge(item)}</TableCell>
+                    <TableCell className="py-4">
+                      <div className="flex items-center justify-end gap-3">
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
                             min="1"
-                            value={restockQuantities[item.id] || ""}
+                            max={item.quantity}
+                            value={useQuantities[item.id] || ""}
                             onChange={(e) =>
-                              setRestockQuantities((prev) => ({
-                                ...prev,
-                                [item.id]: Number.parseInt(e.target.value) || 0,
-                              }))
+                              setUseQuantities((prev) => ({ ...prev, [item.id]: Number.parseInt(e.target.value) || 0 }))
                             }
                             placeholder="1"
                             className="w-16 h-9 text-sm rounded-xl border-border/50"
                           />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const quantity = restockQuantities[item.id] || 1
-                              onRestockItem(item.id, quantity)
-                              setRestockQuantities((prev) => ({ ...prev, [item.id]: 0 }))
-                            }}
-                            disabled={!restockQuantities[item.id]}
-                            className="h-9 px-3 rounded-xl border-border/50 hover:bg-secondary/10 hover:text-secondary hover:border-secondary/30"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const quantity = useQuantities[item.id] || 1
+                                  onUseItem(item.id, quantity)
+                                  setUseQuantities((prev) => ({ ...prev, [item.id]: 0 }))
+                                }}
+                                disabled={
+                                  !useQuantities[item.id] ||
+                                  useQuantities[item.id] > item.quantity ||
+                                  item.quantity === 0
+                                }
+                                className="h-9 px-3 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                                aria-label="Use/consume inventory"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Use/Consume Item</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
-                      )}
 
-                      {isAdmin && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => onEditItem(item)}
-                          className="h-9 px-3 rounded-xl hover:bg-primary/10 hover:text-primary"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                        {isAdmin && (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="1"
+                              value={restockQuantities[item.id] || ""}
+                              onChange={(e) =>
+                                setRestockQuantities((prev) => ({
+                                  ...prev,
+                                  [item.id]: Number.parseInt(e.target.value) || 0,
+                                }))
+                              }
+                              placeholder="1"
+                              className="w-16 h-9 text-sm rounded-xl border-border/50"
+                            />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    const quantity = restockQuantities[item.id] || 1
+                                    onRestockItem(item.id, quantity)
+                                    setRestockQuantities((prev) => ({ ...prev, [item.id]: 0 }))
+                                  }}
+                                  disabled={!restockQuantities[item.id]}
+                                  className="h-9 px-3 rounded-xl border-border/50 hover:bg-secondary/10 hover:text-secondary hover:border-secondary/30"
+                                  aria-label="Restock inventory"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Restock Item</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        )}
 
-        {filteredAndSortedItems.length === 0 && searchTerm && (
-          <div className="text-center py-16 text-muted-foreground">
-            <div className="p-6 rounded-3xl bg-muted/20 inline-flex mb-6">
-              <Package className="h-12 w-12 opacity-50" />
-            </div>
-            <p className="text-xl font-serif font-bold mb-2">No items found</p>
-            <p className="text-base font-medium">Try adjusting your search or filter criteria</p>
+                        {isAdmin && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => onEditItem(item)}
+                                className="h-9 px-3 rounded-xl hover:bg-primary/10 hover:text-primary"
+                                aria-label="Edit item"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Edit Item</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {filteredAndSortedItems.length === 0 && searchTerm && (
+            <div className="text-center py-16 text-muted-foreground">
+              <div className="p-6 rounded-3xl bg-muted/20 inline-flex mb-6">
+                <Package className="h-12 w-12 opacity-50" />
+              </div>
+              <p className="text-xl font-serif font-bold mb-2">No items found</p>
+              <p className="text-base font-medium">Try adjusting your search or filter criteria</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   )
 }
