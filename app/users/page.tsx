@@ -32,6 +32,14 @@ export default async function UsersPage() {
     redirect("/dashboard")
   }
 
+  if (!profile) {
+    try {
+      await supabase.from("profiles").insert([userProfile])
+    } catch (error) {
+      console.error("Error creating user profile:", error)
+    }
+  }
+
   // Fetch all users and profiles
   let users: any[] = []
   let userStats = {
@@ -55,21 +63,6 @@ export default async function UsersPage() {
         admins: profiles.filter((p) => p.role === "admin").length,
         staff: profiles.filter((p) => p.role === "staff").length,
         pending: profiles.filter((p) => p.role === "pending").length,
-      }
-    }
-
-    // If no profiles exist, create one for the current user
-    if (profiles && profiles.length === 0) {
-      const { data: newProfile } = await supabase.from("profiles").insert([userProfile]).select().single()
-
-      if (newProfile) {
-        users = [newProfile]
-        userStats = {
-          total: 1,
-          admins: newProfile.role === "admin" ? 1 : 0,
-          staff: newProfile.role === "staff" ? 1 : 0,
-          pending: newProfile.role === "pending" ? 1 : 0,
-        }
       }
     }
   } catch (error) {
