@@ -368,6 +368,7 @@ export function InventoryTable({ items, onEditItem, onUseItem, onRestockItem, us
                             }
                             placeholder="1"
                             className="w-16 h-9 text-sm rounded-xl border-border/50"
+                            aria-label="Quantity to use/consume"
                           />
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -410,6 +411,7 @@ export function InventoryTable({ items, onEditItem, onUseItem, onRestockItem, us
                               }
                               placeholder="1"
                               className="w-16 h-9 text-sm rounded-xl border-border/50"
+                              aria-label="Quantity to restock"
                             />
                             <Tooltip>
                               <TooltipTrigger asChild>
