@@ -31,43 +31,49 @@ export default async function DashboardPage() {
 
   const isAdmin = profile?.role === "admin"
 
-  // Fetch comprehensive dashboard data
-  const [
-    { data: inventoryStats },
-    { data: belowParItems },
-    { data: expiringItems },
-    { data: locations },
-    { data: users },
-    { data: recentActivity },
-  ] = await Promise.all([
-    supabase.from("inventory_items").select("id, quantity, min_par_level"),
-    supabase.from("items_below_par").select("id"),
-    supabase.from("expiring_items").select("id"),
-    supabase.from("locations").select("id"),
-    isAdmin ? supabase.from("profiles").select("*").order("created_at", { ascending: false }) : { data: [] },
-    supabase
-      .from("inventory_transactions")
-      .select(`
+  const [{ data: inventoryItems }, { data: locations }, { data: users }, { data: recentTransactions }] =
+    await Promise.all([
+      supabase
+        .from("inventory_items")
+        .select("id, current_quantity, par_level, expiration_date")
+        .catch(() => ({ data: [] })),
+      supabase
+        .from("locations")
+        .select("id")
+        .catch(() => ({ data: [] })),
+      isAdmin
+        ? supabase
+            .from("profiles")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .catch(() => ({ data: [] }))
+        : { data: [] },
+      supabase
+        .from("transactions")
+        .select(`
         id,
         transaction_type,
         quantity_change,
-        quantity_after,
-        notes,
+        reason,
         created_at,
-        inventory_items!inner (
-          name,
-          locations!inner (name)
-        ),
-        profiles (full_name)
+        performed_by
       `)
-      .order("created_at", { ascending: false })
-      .limit(20),
-  ])
+        .order("created_at", { ascending: false })
+        .limit(20)
+        .catch(() => ({ data: [] })),
+    ])
 
-  // Calculate stats
-  const totalItems = inventoryStats?.length || 0
-  const belowParCount = belowParItems?.length || 0
-  const expiringCount = expiringItems?.length || 0
+  const totalItems = inventoryItems?.length || 0
+  const belowParCount =
+    inventoryItems?.filter((item) => item.current_quantity < item.par_level && item.par_level > 0).length || 0
+
+  // Calculate expiring items (within 30 days)
+  const thirtyDaysFromNow = new Date()
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+  const expiringCount =
+    inventoryItems?.filter((item) => item.expiration_date && new Date(item.expiration_date) <= thirtyDaysFromNow)
+      .length || 0
+
   const locationCount = locations?.length || 0
   const userCount = users?.length || 0
   const adminCount = users?.filter((u) => u.role === "admin").length || 0
@@ -76,20 +82,16 @@ export default async function DashboardPage() {
   const twentyFourHoursAgo = new Date()
   twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
   const recentActivityCount =
-    recentActivity?.filter((activity) => new Date(activity.created_at) > twentyFourHoursAgo).length || 0
+    recentTransactions?.filter((activity) => new Date(activity.created_at) > twentyFourHoursAgo).length || 0
 
-  // Transform recent activity data
   const transformedActivity =
-    recentActivity?.map((activity: any) => ({
-      id: activity.id,
-      transaction_type: activity.transaction_type,
-      quantity_change: activity.quantity_change,
-      quantity_after: activity.quantity_after,
-      notes: activity.notes,
-      created_at: activity.created_at,
-      item_name: activity.inventory_items.name,
-      location_name: activity.inventory_items.locations.name,
-      user_name: activity.profiles?.full_name,
+    recentTransactions?.map((transaction: any) => ({
+      id: transaction.id,
+      transaction_type: transaction.transaction_type,
+      quantity_change: transaction.quantity_change,
+      notes: transaction.reason,
+      created_at: transaction.created_at,
+      user_name: transaction.performed_by,
     })) || []
 
   return (
