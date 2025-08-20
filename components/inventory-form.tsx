@@ -20,8 +20,8 @@ interface InventoryItem {
   id?: string
   name: string
   description?: string
-  quantity: number
-  min_par_level: number
+  quantity: number // Form uses quantity, maps to current_quantity in database
+  min_par_level: number // Form uses min_par_level, maps to par_level in database
   unit_of_measure: string
   expiration_date?: string
   notes?: string
@@ -101,8 +101,8 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
       await onSave({
         name: name.trim(),
         description: description.trim() || undefined,
-        quantity: Number.parseInt(quantity) || 0,
-        min_par_level: Number.parseInt(minParLevel) || 0,
+        quantity: Number.parseInt(quantity) || 0, // This gets mapped to current_quantity
+        min_par_level: Number.parseInt(minParLevel) || 0, // This gets mapped to par_level
         unit_of_measure: unitOfMeasure,
         expiration_date: expirationDate || undefined,
         notes: notes.trim() || undefined,

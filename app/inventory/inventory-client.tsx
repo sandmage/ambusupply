@@ -14,8 +14,8 @@ interface InventoryItem {
   id: string
   name: string
   description?: string
-  quantity: number
-  min_par_level: number
+  quantity: number // This maps to current_quantity in database
+  min_par_level: number // This maps to par_level in database
   unit_of_measure: string
   expiration_date?: string
   lot_number?: string
@@ -90,43 +90,19 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
         console.log("[v0] Updating existing inventory item with ID:", editingItem.id)
 
         const { data, error } = await supabase
-          .rpc("exec_sql", {
-            sql: `
-            UPDATE inventory_items 
-            SET name = $1, description = $2, quantity = $3, min_par_level = $4, 
-                unit_of_measure = $5, expiration_date = $6, location_id = $7, 
-                storage_unit_id = $8, updated_at = NOW()
-            WHERE id = $9
-          `,
-            params: [
-              itemData.name,
-              itemData.description || null,
-              itemData.quantity,
-              itemData.min_par_level,
-              itemData.unit_of_measure,
-              itemData.expiration_date || null,
-              itemData.location_id,
-              itemData.storage_unit_id || null,
-              editingItem.id,
-            ],
+          .from("inventory_items")
+          .update({
+            name: itemData.name,
+            description: itemData.description || null,
+            current_quantity: itemData.quantity, // Map quantity to current_quantity
+            par_level: itemData.min_par_level, // Map min_par_level to par_level
+            unit_of_measure: itemData.unit_of_measure,
+            expiration_date: itemData.expiration_date || null,
+            location_id: itemData.location_id,
+            storage_unit_id: itemData.storage_unit_id || null,
+            updated_at: new Date().toISOString(),
           })
-          .catch(async () => {
-            // Fallback: use direct query without min_par_level
-            console.log("[v0] Fallback: updating without min_par_level field")
-            return await supabase
-              .from("inventory_items")
-              .update({
-                name: itemData.name,
-                description: itemData.description || null,
-                quantity: itemData.quantity,
-                unit_of_measure: itemData.unit_of_measure,
-                expiration_date: itemData.expiration_date || null,
-                location_id: itemData.location_id,
-                storage_unit_id: itemData.storage_unit_id || null,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", editingItem.id)
-          })
+          .eq("id", editingItem.id)
 
         if (error) {
           console.error("[v0] Error updating inventory item:", error)
@@ -138,36 +114,16 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
         // Create new item
         console.log("[v0] Creating new inventory item")
 
-        const { data, error } = await supabase
-          .rpc("exec_sql", {
-            sql: `
-            INSERT INTO inventory_items (name, description, quantity, min_par_level, unit_of_measure, expiration_date, location_id, storage_unit_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-          `,
-            params: [
-              itemData.name,
-              itemData.description || null,
-              itemData.quantity,
-              itemData.min_par_level,
-              itemData.unit_of_measure,
-              itemData.expiration_date || null,
-              itemData.location_id,
-              itemData.storage_unit_id || null,
-            ],
-          })
-          .catch(async () => {
-            // Fallback: use direct query without min_par_level
-            console.log("[v0] Fallback: creating without min_par_level field")
-            return await supabase.from("inventory_items").insert({
-              name: itemData.name,
-              description: itemData.description || null,
-              quantity: itemData.quantity,
-              unit_of_measure: itemData.unit_of_measure,
-              expiration_date: itemData.expiration_date || null,
-              location_id: itemData.location_id,
-              storage_unit_id: itemData.storage_unit_id || null,
-            })
-          })
+        const { data, error } = await supabase.from("inventory_items").insert({
+          name: itemData.name,
+          description: itemData.description || null,
+          current_quantity: itemData.quantity, // Map quantity to current_quantity
+          par_level: itemData.min_par_level, // Map min_par_level to par_level
+          unit_of_measure: itemData.unit_of_measure,
+          expiration_date: itemData.expiration_date || null,
+          location_id: itemData.location_id,
+          storage_unit_id: itemData.storage_unit_id || null,
+        })
 
         if (error) {
           console.error("[v0] Error creating inventory item:", error)
