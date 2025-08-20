@@ -59,6 +59,15 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     two_factor_auth: true,
   })
 
+  const [storageUnitTypes, setStorageUnitTypes] = useState<any[]>([])
+  const [editingStorageType, setEditingStorageType] = useState<any>(null)
+  const [storageTypeForm, setStorageTypeForm] = useState({
+    name: "",
+    description: "",
+    capacity_type: "items",
+    default_capacity: 0,
+  })
+
   const showMessage = (msg: string, type: "success" | "error" = "success") => {
     setMessage(msg)
     setTimeout(() => setMessage(""), 3000)
@@ -167,6 +176,86 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     }
   }
 
+  const fetchStorageUnitTypes = async () => {
+    try {
+      const { data, error } = await supabase.from("storage_unit_types").select("*").order("name")
+
+      if (error) throw error
+      setStorageUnitTypes(data || [])
+    } catch (error: any) {
+      console.error("Error fetching storage unit types:", error)
+    }
+  }
+
+  const handleStorageTypeSubmit = async () => {
+    setSaving(true)
+    try {
+      if (editingStorageType) {
+        // Update existing storage unit type
+        const { error } = await supabase
+          .from("storage_unit_types")
+          .update(storageTypeForm)
+          .eq("id", editingStorageType.id)
+
+        if (error) throw error
+        showMessage("Storage unit type updated successfully")
+      } else {
+        // Create new storage unit type
+        const { error } = await supabase.from("storage_unit_types").insert([storageTypeForm])
+
+        if (error) throw error
+        showMessage("Storage unit type created successfully")
+      }
+
+      setStorageTypeForm({ name: "", description: "", capacity_type: "items", default_capacity: 0 })
+      setEditingStorageType(null)
+      fetchStorageUnitTypes()
+    } catch (error: any) {
+      showMessage(error.message, "error")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleEditStorageType = (storageType: any) => {
+    setEditingStorageType(storageType)
+    setStorageTypeForm({
+      name: storageType.name,
+      description: storageType.description || "",
+      capacity_type: storageType.capacity_type || "items",
+      default_capacity: storageType.default_capacity || 0,
+    })
+  }
+
+  const handleDeleteStorageType = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this storage unit type?")) return
+
+    setSaving(true)
+    try {
+      const { error } = await supabase.from("storage_unit_types").delete().eq("id", id)
+
+      if (error) throw error
+      showMessage("Storage unit type deleted successfully")
+      fetchStorageUnitTypes()
+    } catch (error: any) {
+      showMessage(error.message, "error")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const cancelStorageTypeEdit = () => {
+    setEditingStorageType(null)
+    setStorageTypeForm({ name: "", description: "", capacity_type: "items", default_capacity: 0 })
+  }
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    if (value === "inventory") {
+      fetchStorageUnitTypes()
+    }
+  }
+
   return (
     <div className="h-full">
       <div className="mb-8">
@@ -188,7 +277,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
         <TabsList className="bg-card border border-border/50 rounded-2xl p-2 shadow-sm">
           <TabsTrigger value="profile" className="flex items-center gap-2 rounded-xl font-medium">
             <User className="h-4 w-4" />
@@ -657,6 +746,149 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                   />
                   <p className="text-xs text-muted-foreground">Percentage of PAR level to trigger alerts</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="apple-card">
+            <CardHeader>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Unit Types</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Create and manage storage unit types for your organization
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Storage Unit Type Form */}
+              <div className="p-6 bg-muted/30 rounded-2xl border border-border/50">
+                <h4 className="text-lg font-semibold mb-4">
+                  {editingStorageType ? "Edit Storage Unit Type" : "Add New Storage Unit Type"}
+                </h4>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="storage_type_name">Name</Label>
+                    <Input
+                      id="storage_type_name"
+                      value={storageTypeForm.name}
+                      onChange={(e) => setStorageTypeForm((prev) => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g., Cabinet, Drawer, Shelf"
+                      className="h-12 rounded-2xl border-border/50 bg-card"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="capacity_type">Capacity Type</Label>
+                    <Select
+                      value={storageTypeForm.capacity_type}
+                      onValueChange={(value) => setStorageTypeForm((prev) => ({ ...prev, capacity_type: value }))}
+                    >
+                      <SelectTrigger className="h-12 rounded-2xl border-border/50 bg-card">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-border/50">
+                        <SelectItem value="items">Items</SelectItem>
+                        <SelectItem value="volume">Volume (L)</SelectItem>
+                        <SelectItem value="weight">Weight (kg)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="default_capacity">Default Capacity</Label>
+                    <Input
+                      id="default_capacity"
+                      type="number"
+                      value={storageTypeForm.default_capacity}
+                      onChange={(e) =>
+                        setStorageTypeForm((prev) => ({
+                          ...prev,
+                          default_capacity: Number.parseInt(e.target.value) || 0,
+                        }))
+                      }
+                      className="h-12 rounded-2xl border-border/50 bg-card"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="storage_description">Description</Label>
+                    <Input
+                      id="storage_description"
+                      value={storageTypeForm.description}
+                      onChange={(e) => setStorageTypeForm((prev) => ({ ...prev, description: e.target.value }))}
+                      placeholder="Optional description"
+                      className="h-12 rounded-2xl border-border/50 bg-card"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleStorageTypeSubmit}
+                    disabled={saving || !storageTypeForm.name}
+                    className="apple-button h-12 px-6"
+                  >
+                    {saving ? "Saving..." : editingStorageType ? "Update Type" : "Add Type"}
+                  </Button>
+                  {editingStorageType && (
+                    <Button
+                      onClick={cancelStorageTypeEdit}
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-3 rounded-xl bg-transparent"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Storage Unit Types List */}
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold">Existing Storage Unit Types</h4>
+                {storageUnitTypes.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No storage unit types configured yet.</p>
+                    <p className="text-sm">Add your first storage unit type above.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {storageUnitTypes.map((storageType) => (
+                      <div
+                        key={storageType.id}
+                        className="flex items-center justify-between p-4 bg-card rounded-2xl border border-border/50"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <h5 className="font-semibold">{storageType.name}</h5>
+                            <Badge variant="secondary" className="text-xs">
+                              {storageType.capacity_type}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                            <span>Capacity: {storageType.default_capacity}</span>
+                            {storageType.description && <span>{storageType.description}</span>}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleEditStorageType(storageType)}
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3 rounded-xl"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteStorageType(storageType.id)}
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3 rounded-xl text-destructive hover:text-destructive"
+                            disabled={saving}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
