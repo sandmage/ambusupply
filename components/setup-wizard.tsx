@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createClient } from "@/lib/supabase/client"
-import { Building2, User, CheckCircle } from "lucide-react"
+import { Building2, User, CheckCircle, AlertTriangle } from "lucide-react"
 
 interface SetupWizardProps {
   user: any
@@ -20,6 +21,7 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     // User profile data
     fullName: user.user_metadata?.full_name || "",
@@ -38,6 +40,7 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+    if (error) setError(null)
   }
 
   const handleNext = () => {
@@ -54,6 +57,7 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
 
   const handleComplete = async () => {
     setLoading(true)
+    setError(null)
 
     try {
       // Create organization
@@ -84,15 +88,23 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
       if (profile) {
         // Update existing profile
         const { error: profileError } = await supabase.from("profiles").update(profileData).eq("id", profile.id)
+        if (profileError) throw profileError
       } else {
         // Create new profile
         const { error: profileError } = await supabase.from("profiles").insert(profileData)
+        if (profileError) throw profileError
       }
 
       router.push("/dashboard")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Setup error:", error)
-      alert("There was an error setting up your organization. Please try again.")
+      if (error.message?.includes("organizations")) {
+        setError(
+          "The organizations table doesn't exist yet. Please run the database setup script first. Go to the Scripts section and run 'scripts/005_create_organizations.sql'.",
+        )
+      } else {
+        setError("There was an error setting up your organization. Please try again or contact support.")
+      }
     } finally {
       setLoading(false)
     }
@@ -151,6 +163,13 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         {currentStep === 1 && (
           <div className="space-y-4">
             <div>
