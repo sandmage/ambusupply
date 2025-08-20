@@ -14,7 +14,7 @@ export default async function InventoryPage() {
   }
 
   // Get user profile to check role
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
 
   // Fetch inventory items with location information
   const { data: inventoryItems, error: inventoryError } = await supabase
@@ -23,11 +23,11 @@ export default async function InventoryPage() {
       id,
       name,
       description,
-      quantity,
-      min_par_level,
+      current_quantity,
+      par_level,
       unit_of_measure,
       expiration_date,
-      notes,
+      lot_number,
       created_at,
       locations!inner (
         id,
@@ -36,7 +36,7 @@ export default async function InventoryPage() {
       storage_units (
         id,
         name,
-        type
+        unit_type
       )
     `)
     .order("name")
@@ -54,7 +54,7 @@ export default async function InventoryPage() {
       storage_units (
         id,
         name,
-        type
+        unit_type
       )
     `)
     .order("name")
@@ -69,13 +69,14 @@ export default async function InventoryPage() {
       id: item.id,
       name: item.name,
       description: item.description,
-      quantity: item.quantity,
-      min_par_level: item.min_par_level,
+      quantity: item.current_quantity,
+      min_par_level: item.par_level,
       unit_of_measure: item.unit_of_measure,
       expiration_date: item.expiration_date,
-      notes: item.notes,
+      lot_number: item.lot_number,
       location_name: item.locations.name,
       storage_unit_name: item.storage_units?.name,
+      storage_unit_type: item.storage_units?.unit_type,
       created_at: item.created_at,
     })) || []
 
