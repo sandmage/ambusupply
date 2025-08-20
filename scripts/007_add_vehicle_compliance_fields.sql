@@ -54,7 +54,7 @@ SELECT
     WHEN narcotics_license_expiration <= CURRENT_DATE + INTERVAL '30 days' THEN narcotics_license_expiration
   END as expiration_date
 FROM vehicles v
-WHERE organization_id = auth.jwt() ->> 'organization_id'
+WHERE organization_id = (auth.jwt() ->> 'organization_id')::uuid
   AND (
     registration_expiration <= CURRENT_DATE + INTERVAL '30 days' OR
     insurance_expiration <= CURRENT_DATE + INTERVAL '30 days' OR
