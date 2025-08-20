@@ -58,35 +58,15 @@ export default async function DashboardPage() {
 
   console.log("[v0] Dashboard: Starting database queries")
 
-  const [{ data: inventoryItems }, { data: locations }, { data: users }, { data: recentTransactions }] =
-    await Promise.all([
-      supabase
-        .from("inventory_items")
-        .select("id, current_quantity, par_level, expiration_date")
-        .catch((err) => {
-          console.log("[v0] Dashboard: Inventory query error:", err)
-          return { data: [] }
-        }),
-      supabase
-        .from("locations")
-        .select("id")
-        .catch((err) => {
-          console.log("[v0] Dashboard: Locations query error:", err)
-          return { data: [] }
-        }),
-      isAdmin
-        ? supabase
-            .from("profiles")
-            .select("*")
-            .order("created_at", { ascending: false })
-            .catch((err) => {
-              console.log("[v0] Dashboard: Users query error:", err)
-              return { data: [] }
-            })
-        : { data: [] },
-      supabase
-        .from("transactions")
-        .select(`
+  const [inventoryResult, locationsResult, usersResult, transactionsResult] = await Promise.all([
+    supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date"),
+    supabase.from("locations").select("id"),
+    isAdmin
+      ? supabase.from("profiles").select("*").order("created_at", { ascending: false })
+      : { data: [], error: null },
+    supabase
+      .from("transactions")
+      .select(`
         id,
         transaction_type,
         quantity_change,
@@ -94,13 +74,20 @@ export default async function DashboardPage() {
         created_at,
         performed_by
       `)
-        .order("created_at", { ascending: false })
-        .limit(20)
-        .catch((err) => {
-          console.log("[v0] Dashboard: Transactions query error:", err)
-          return { data: [] }
-        }),
-    ])
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ])
+
+  // Handle errors and extract data
+  const inventoryItems = inventoryResult.error ? [] : inventoryResult.data
+  const locations = locationsResult.error ? [] : locationsResult.data
+  const users = usersResult.error ? [] : usersResult.data
+  const recentTransactions = transactionsResult.error ? [] : transactionsResult.data
+
+  if (inventoryResult.error) console.log("[v0] Dashboard: Inventory query error:", inventoryResult.error)
+  if (locationsResult.error) console.log("[v0] Dashboard: Locations query error:", locationsResult.error)
+  if (usersResult.error) console.log("[v0] Dashboard: Users query error:", usersResult.error)
+  if (transactionsResult.error) console.log("[v0] Dashboard: Transactions query error:", transactionsResult.error)
 
   console.log("[v0] Dashboard: Database queries completed")
   console.log("[v0] Dashboard: Items:", inventoryItems?.length || 0, "Locations:", locations?.length || 0)
