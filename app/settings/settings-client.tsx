@@ -242,21 +242,14 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         return
       }
 
-      const { data, error } = await supabase
-        .from("storage_unit_types")
-        .select("*")
-        .eq("organization_id", currentProfile.organization_id)
-        .order("name")
+      const response = await fetch("/api/storage-unit-types")
+      const result = await response.json()
 
-      if (error) {
-        if (error.message.includes("schema cache")) {
-          console.log("Storage unit types table not yet available in schema cache")
-          setStorageUnitTypes([])
-          return
-        }
-        throw error
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to fetch storage unit types")
       }
-      setStorageUnitTypes(data || [])
+
+      setStorageUnitTypes(result.data || [])
     } catch (error: any) {
       console.error("Error fetching storage unit types:", error)
       if (!error.message.includes("schema cache")) {
@@ -292,24 +285,35 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
       const storageTypeData = {
         ...storageTypeForm,
-        organization_id: currentProfile.organization_id,
       }
 
       console.log("[v0] Storage type data to submit:", storageTypeData)
 
       if (editingStorageType) {
-        const { error } = await supabase
-          .from("storage_unit_types")
-          .update(storageTypeData)
-          .eq("id", editingStorageType.id)
-          .eq("organization_id", currentProfile.organization_id)
+        const response = await fetch("/api/storage-unit-types", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...storageTypeData, id: editingStorageType.id }),
+        })
 
-        if (error) throw error
+        const result = await response.json()
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to update storage unit type")
+        }
+
         showMessage("Storage unit type updated successfully")
       } else {
-        const { error } = await supabase.from("storage_unit_types").insert([storageTypeData])
+        const response = await fetch("/api/storage-unit-types", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(storageTypeData),
+        })
 
-        if (error) throw error
+        const result = await response.json()
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to create storage unit type")
+        }
+
         showMessage("Storage unit type created successfully")
       }
 
@@ -318,17 +322,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       fetchStorageUnitTypes()
     } catch (error: any) {
       console.error("[v0] Storage unit type operation error:", error)
-      console.log("[v0] Error details:", error.message, error.code, error.details)
-      if (error.message.includes("row-level security policy")) {
-        showMessage(
-          "Permission denied. Please ensure you have admin privileges and proper organization setup.",
-          "error",
-        )
-      } else if (error.message.includes("schema cache")) {
-        showMessage("Database table not ready yet. Please try again in a moment.", "error")
-      } else {
-        showMessage(`Error: ${error.message}`, "error")
-      }
+      showMessage(`Error: ${error.message}`, "error")
     } finally {
       setSaving(false)
     }
@@ -344,22 +338,20 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
     setSaving(true)
     try {
-      const { error } = await supabase
-        .from("storage_unit_types")
-        .delete()
-        .eq("id", id)
-        .eq("organization_id", currentProfile.organization_id)
+      const response = await fetch(`/api/storage-unit-types?id=${id}`, {
+        method: "DELETE",
+      })
 
-      if (error) throw error
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete storage unit type")
+      }
+
       showMessage("Storage unit type deleted successfully")
       fetchStorageUnitTypes()
     } catch (error: any) {
       console.error("Delete storage unit type error:", error)
-      if (error.message.includes("row-level security policy")) {
-        showMessage("Permission denied. Only administrators can delete storage unit types.", "error")
-      } else {
-        showMessage(`Error: ${error.message}`, "error")
-      }
+      showMessage(`Error: ${error.message}`, "error")
     } finally {
       setSaving(false)
     }
