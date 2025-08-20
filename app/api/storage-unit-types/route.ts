@@ -1,9 +1,16 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
+
+const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+})
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
     // Get the current user
     const {
@@ -14,8 +21,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user's profile to check organization
-    const { data: profile, error: profileError } = await supabase
+    // Get user's profile to check organization using admin client
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("organization_id, role")
       .eq("id", user.id)
@@ -25,8 +32,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 })
     }
 
-    // Fetch storage unit types for the user's organization
-    const { data: storageTypes, error } = await supabase
+    // Fetch storage unit types using admin client (bypasses RLS)
+    const { data: storageTypes, error } = await supabaseAdmin
       .from("storage_unit_types")
       .select("*")
       .eq("organization_id", profile.organization_id)
@@ -44,7 +51,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
     // Get the current user
     const {
@@ -55,8 +62,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user's profile to check organization and role
-    const { data: profile, error: profileError } = await supabase
+    // Get user's profile to check organization and role using admin client
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("organization_id, role")
       .eq("id", user.id)
@@ -74,8 +81,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, capacity_type, default_capacity } = body
 
-    // Create storage unit type with user's organization_id
-    const { data, error } = await supabase
+    // Create storage unit type using admin client (bypasses RLS)
+    const { data, error } = await supabaseAdmin
       .from("storage_unit_types")
       .insert([
         {
@@ -101,7 +108,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
     // Get the current user
     const {
@@ -112,8 +119,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user's profile to check organization and role
-    const { data: profile, error: profileError } = await supabase
+    // Get user's profile to check organization and role using admin client
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("organization_id, role")
       .eq("id", user.id)
@@ -131,8 +138,8 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { id, name, description, capacity_type, default_capacity } = body
 
-    // Update storage unit type (only if it belongs to user's organization)
-    const { data, error } = await supabase
+    // Update storage unit type using admin client (bypasses RLS)
+    const { data, error } = await supabaseAdmin
       .from("storage_unit_types")
       .update({
         name,
@@ -157,7 +164,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
     // Get the current user
     const {
@@ -168,8 +175,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user's profile to check organization and role
-    const { data: profile, error: profileError } = await supabase
+    // Get user's profile to check organization and role using admin client
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("organization_id, role")
       .eq("id", user.id)
@@ -191,8 +198,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Storage unit type ID is required" }, { status: 400 })
     }
 
-    // Delete storage unit type (only if it belongs to user's organization)
-    const { error } = await supabase
+    // Delete storage unit type using admin client (bypasses RLS)
+    const { error } = await supabaseAdmin
       .from("storage_unit_types")
       .delete()
       .eq("id", id)
