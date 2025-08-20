@@ -48,6 +48,12 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
       current: pathname === "/locations",
     },
     {
+      name: "Fleet",
+      href: "/fleet",
+      icon: Activity,
+      current: pathname === "/fleet",
+    },
+    {
       name: "Reports",
       href: "/reports",
       icon: BarChart3,
