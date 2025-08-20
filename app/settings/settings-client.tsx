@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { User, Building2, Shield, Bell, Database, Download, Clock, AlertTriangle } from "lucide-react"
+import { User, Building2, Shield, Bell, Database, Download, Clock, AlertTriangle, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 interface SettingsClientProps {
@@ -156,6 +156,25 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     router.push("/auth/login")
   }
 
+  const handleRerunSetup = async () => {
+    setLoading(true)
+    try {
+      // Mark setup as incomplete to allow re-running
+      const { error } = await supabase.from("profiles").update({ setup_completed: false }).eq("id", user.id)
+
+      if (error) throw error
+
+      showMessage("Setup wizard reset successfully")
+      setTimeout(() => {
+        router.push("/setup")
+      }, 1000)
+    } catch (error: any) {
+      showMessage(error.message, "error")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -275,6 +294,27 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                     onChange={(e) => setProfileData((prev) => ({ ...prev, confirm_password: e.target.value }))}
                   />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Organization Setup</CardTitle>
+              <CardDescription>Re-run the initial organization setup wizard</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label>Setup Wizard</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Re-configure your organization settings and preferences
+                  </p>
+                </div>
+                <Button onClick={handleRerunSetup} disabled={loading} variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  {loading ? "Resetting..." : "Re-run Setup"}
+                </Button>
               </div>
             </CardContent>
           </Card>
