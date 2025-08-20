@@ -457,6 +457,7 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSave={handleSaveItem}
+          userRole={userRole}
         />
       )}
     </div>
