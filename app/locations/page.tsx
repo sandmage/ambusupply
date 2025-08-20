@@ -26,10 +26,9 @@ export default async function LocationsPage() {
       storage_units (
         id,
         name,
-        type,
-        description,
-        position_order,
-        parent_unit_id
+        unit_type,
+        parent_unit_id,
+        position_info
       )
     `)
     .order("name")
@@ -62,9 +61,9 @@ export default async function LocationsPage() {
         }
       })
 
-      // Sort by position_order
+      // Sort by name instead
       const sortUnits = (units: any[]) => {
-        units.sort((a, b) => a.position_order - b.position_order)
+        units.sort((a, b) => a.name.localeCompare(b.name))
         units.forEach((unit) => {
           if (unit.children.length > 0) {
             sortUnits(unit.children)
