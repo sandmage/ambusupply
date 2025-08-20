@@ -82,16 +82,24 @@ export function StorageUnitForm({
     e.preventDefault()
     setIsLoading(true)
 
+    console.log("[v0] Storage unit form submission started")
+    console.log("[v0] Form values:", { name, type, description, positionOrder })
+
     try {
-      await onSave({
+      const unitData = {
         name: name.trim(),
-        type,
+        unit_type: type, // Fixed field name from 'type' to 'unit_type'
         description: description.trim() || undefined,
         position_order: Number.parseInt(positionOrder) || 0,
-      })
+      }
+      console.log("[v0] Prepared unit data for save:", unitData)
+
+      await onSave(unitData)
+      console.log("[v0] Storage unit save completed successfully")
       onClose()
       resetForm()
     } catch (error) {
+      console.error("[v0] Error in form submission:", error)
       setError("Failed to save storage unit. Please try again.")
     } finally {
       setIsLoading(false)

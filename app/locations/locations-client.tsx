@@ -190,36 +190,51 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
 
     const { locationId, parentUnitId, unit } = editingStorageUnit
 
+    console.log("[v0] Storage unit save started")
+    console.log("[v0] Unit data received:", unitData)
+    console.log("[v0] Editing storage unit context:", editingStorageUnit)
+
     try {
       if (unit) {
         // Update existing unit
-        const { error } = await supabase
-          .from("storage_units")
-          .update({
-            name: unitData.name,
-            unit_type: unitData.unit_type,
-            parent_unit_id: parentUnitId || null,
-          })
-          .eq("id", unit.id)
+        console.log("[v0] Updating existing storage unit:", unit.id)
+        const updateData = {
+          name: unitData.name,
+          unit_type: unitData.unit_type,
+          parent_unit_id: parentUnitId || null,
+        }
+        console.log("[v0] Update data:", updateData)
 
-        if (!error) {
+        const { error } = await supabase.from("storage_units").update(updateData).eq("id", unit.id)
+
+        if (error) {
+          console.error("[v0] Error updating storage unit:", error)
+        } else {
+          console.log("[v0] Storage unit updated successfully")
           router.refresh()
         }
       } else {
         // Create new unit
-        const { error } = await supabase.from("storage_units").insert({
+        console.log("[v0] Creating new storage unit")
+        const insertData = {
           name: unitData.name,
           unit_type: unitData.unit_type,
           location_id: locationId,
           parent_unit_id: parentUnitId || null,
-        })
+        }
+        console.log("[v0] Insert data:", insertData)
 
-        if (!error) {
+        const { data, error } = await supabase.from("storage_units").insert(insertData).select()
+
+        if (error) {
+          console.error("[v0] Error creating storage unit:", error)
+        } else {
+          console.log("[v0] Storage unit created successfully:", data)
           router.refresh()
         }
       }
     } catch (error) {
-      console.error("Error saving storage unit:", error)
+      console.error("[v0] Exception in storage unit save:", error)
     }
   }
 
