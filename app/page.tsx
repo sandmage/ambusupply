@@ -4,12 +4,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AlertTriangle, Settings } from "lucide-react"
 
 export default async function HomePage() {
+  console.log("[v0] Environment variables check:")
+  console.log(
+    "[v0] ambusupply_NEXT_PUBLIC_SUPABASE_URL:",
+    process.env.ambusupply_NEXT_PUBLIC_SUPABASE_URL ? "✓ Found" : "✗ Missing",
+  )
+  console.log(
+    "[v0] ambusupply_NEXT_PUBLIC_SUPABASE_ANON_KEY:",
+    process.env.ambusupply_NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✓ Found" : "✗ Missing",
+  )
+
   try {
     const supabase = await createClient()
+    console.log("[v0] Supabase client created successfully")
 
     const {
       data: { user },
     } = await supabase.auth.getUser()
+
+    console.log("[v0] User check:", user ? "User found" : "No user")
 
     if (user) {
       redirect("/dashboard")
@@ -17,6 +30,7 @@ export default async function HomePage() {
       redirect("/auth/login")
     }
   } catch (error) {
+    console.log("[v0] Supabase client error:", error)
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -43,8 +57,8 @@ export default async function HomePage() {
             <div className="text-sm text-gray-600">
               <p className="font-medium mb-2">Required environment variables:</p>
               <ul className="space-y-1 text-xs font-mono bg-gray-50 p-3 rounded">
-                <li>NEXT_PUBLIC_SUPABASE_URL</li>
-                <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
+                <li>ambusupply_NEXT_PUBLIC_SUPABASE_URL</li>
+                <li>ambusupply_NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
               </ul>
             </div>
           </CardContent>
