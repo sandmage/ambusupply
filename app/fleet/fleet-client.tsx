@@ -9,19 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import {
-  Car,
-  Wrench,
-  MapPin,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  BarChart3,
-} from "lucide-react"
+import { Car, Wrench, AlertTriangle, CheckCircle, Clock, Plus, Search, Filter, Eye, BarChart3 } from "lucide-react"
 import { VehicleForm } from "@/components/vehicle-form"
 import { VehicleDetail } from "@/components/vehicle-detail"
 import { MaintenanceForm } from "@/components/maintenance-form"
@@ -240,7 +228,7 @@ export function FleetClient() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="vehicles" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-3 rounded-2xl">
           <TabsTrigger value="vehicles" className="rounded-xl">
             Vehicles
           </TabsTrigger>
@@ -249,9 +237,6 @@ export function FleetClient() {
           </TabsTrigger>
           <TabsTrigger value="analytics" className="rounded-xl">
             Analytics
-          </TabsTrigger>
-          <TabsTrigger value="tracking" className="rounded-xl">
-            Tracking
           </TabsTrigger>
         </TabsList>
 
@@ -437,21 +422,6 @@ export function FleetClient() {
             </div>
           </div>
           <FleetAnalytics />
-        </TabsContent>
-
-        <TabsContent value="tracking" className="space-y-6">
-          <Card className="apple-card">
-            <CardHeader>
-              <CardTitle>Vehicle Tracking</CardTitle>
-              <CardDescription>Real-time vehicle location and status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">GPS tracking interface coming soon</p>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
 
