@@ -294,7 +294,7 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
               className="apple-button-outline"
             >
               <Layers className="h-5 w-5 mr-2" />
-              Hierarchical View
+              Allocation
             </Button>
 
             <Button variant="outline" onClick={handleExportInventory} className="apple-button-outline bg-transparent">

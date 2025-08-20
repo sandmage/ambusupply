@@ -18,14 +18,14 @@ export default async function HierarchicalInventoryPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="hierarchy-heading text-3xl">Hierarchical Inventory</h1>
+          <h1 className="hierarchy-heading text-3xl">Inventory Allocation</h1>
           <p className="text-muted-foreground mt-2">
             Manage inventory allocations from headquarters to field locations
           </p>
         </div>
       </div>
 
-      <Suspense fallback={<div>Loading hierarchical inventory...</div>}>
+      <Suspense fallback={<div>Loading inventory allocation...</div>}>
         <HierarchicalInventoryClient
           initialInventory={hierarchicalInventory || []}
           locations={locations || []}
