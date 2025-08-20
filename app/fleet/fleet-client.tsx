@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import {
   Car,
-  Users,
   Wrench,
   MapPin,
   AlertTriangle,
@@ -21,15 +20,12 @@ import {
   Search,
   Filter,
   Eye,
-  User,
   BarChart3,
 } from "lucide-react"
 import { VehicleForm } from "@/components/vehicle-form"
 import { VehicleDetail } from "@/components/vehicle-detail"
 import { MaintenanceForm } from "@/components/maintenance-form"
 import { MaintenanceCalendar } from "@/components/maintenance-calendar"
-import { DriverForm } from "@/components/driver-form"
-import { AssignmentBoard } from "@/components/assignment-board"
 import { FleetAnalytics } from "@/components/fleet-analytics"
 
 interface Vehicle {
@@ -41,15 +37,6 @@ interface Vehicle {
   status: string
   mileage: number
   current_location?: any
-}
-
-interface Driver {
-  id: string
-  first_name: string
-  last_name: string
-  status: string
-  license_expiry: string
-  employee_id: string
 }
 
 interface MaintenanceRecord {
@@ -64,7 +51,6 @@ interface MaintenanceRecord {
 
 export function FleetClient() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [drivers, setDrivers] = useState<Driver[]>([])
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -74,8 +60,6 @@ export function FleetClient() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false)
   const [selectedMaintenance, setSelectedMaintenance] = useState<any>(null)
-  const [showDriverForm, setShowDriverForm] = useState(false)
-  const [selectedDriver, setSelectedDriver] = useState<any>(null)
 
   const supabase = createClient()
 
@@ -88,9 +72,6 @@ export function FleetClient() {
       // Fetch vehicles
       const { data: vehiclesData } = await supabase.from("vehicles").select("*").order("vehicle_number")
 
-      // Fetch drivers
-      const { data: driversData } = await supabase.from("drivers").select("*").order("last_name")
-
       // Fetch maintenance records
       const { data: maintenanceData } = await supabase
         .from("maintenance_records")
@@ -102,7 +83,6 @@ export function FleetClient() {
         .limit(10)
 
       setVehicles(vehiclesData || [])
-      setDrivers(driversData || [])
       setMaintenanceRecords(maintenanceData || [])
     } catch (error) {
       console.error("Error fetching fleet data:", error)
@@ -154,17 +134,6 @@ export function FleetClient() {
     setShowMaintenanceForm(true)
   }
 
-  const handleDriverSave = () => {
-    setShowDriverForm(false)
-    setSelectedDriver(null)
-    fetchFleetData()
-  }
-
-  const handleEditDriver = (driver: any) => {
-    setSelectedDriver(driver)
-    setShowDriverForm(true)
-  }
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "active":
@@ -205,8 +174,6 @@ export function FleetClient() {
     totalVehicles: vehicles.length,
     activeVehicles: vehicles.filter((v) => v.status === "active").length,
     maintenanceVehicles: vehicles.filter((v) => v.status === "maintenance").length,
-    availableDrivers: drivers.filter((d) => d.status === "available").length,
-    totalDrivers: drivers.length,
     pendingMaintenance: maintenanceRecords.filter((m) => !m.completed_date).length,
   }
 
@@ -227,7 +194,7 @@ export function FleetClient() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-serif font-bold text-primary">Fleet Management</h1>
-          <p className="text-muted-foreground mt-1">Manage vehicles, drivers, and maintenance schedules</p>
+          <p className="text-muted-foreground mt-1">Manage vehicles and maintenance schedules</p>
         </div>
         <Button onClick={() => setShowVehicleForm(true)} className="apple-button">
           <Plus className="h-4 w-4 mr-2" />
@@ -236,7 +203,7 @@ export function FleetClient() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="apple-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Vehicles</CardTitle>
@@ -245,17 +212,6 @@ export function FleetClient() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalVehicles}</div>
             <p className="text-xs text-muted-foreground">{stats.activeVehicles} active</p>
-          </CardContent>
-        </Card>
-
-        <Card className="apple-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Drivers</CardTitle>
-            <Users className="h-4 w-4 text-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.availableDrivers}</div>
-            <p className="text-xs text-muted-foreground">of {stats.totalDrivers} total</p>
           </CardContent>
         </Card>
 
@@ -284,12 +240,9 @@ export function FleetClient() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="vehicles" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl">
           <TabsTrigger value="vehicles" className="rounded-xl">
             Vehicles
-          </TabsTrigger>
-          <TabsTrigger value="drivers" className="rounded-xl">
-            Drivers
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="rounded-xl">
             Maintenance
@@ -374,72 +327,6 @@ export function FleetClient() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="drivers" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-serif font-bold">Driver Management</h2>
-              <p className="text-muted-foreground">Manage drivers and assignments</p>
-            </div>
-            <Button onClick={() => setShowDriverForm(true)} className="apple-button">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Driver
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="apple-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Driver List</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {drivers.map((driver) => (
-                    <div key={driver.id} className="flex items-center justify-between p-3 border rounded-xl">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                          <User className="h-4 w-4 text-secondary" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">
-                            {driver.first_name} {driver.last_name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{driver.employee_id}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge
-                          variant={
-                            driver.status === "available"
-                              ? "secondary"
-                              : driver.status === "assigned"
-                                ? "default"
-                                : "outline"
-                          }
-                          className="text-xs rounded-lg"
-                        >
-                          {driver.status.replace("_", " ")}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditDriver(driver)}
-                          className="rounded-xl"
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="lg:col-span-2">
-              <AssignmentBoard onAssignmentChange={fetchFleetData} />
-            </div>
           </div>
         </TabsContent>
 
@@ -607,20 +494,6 @@ export function FleetClient() {
             onCancel={() => {
               setShowMaintenanceForm(false)
               setSelectedMaintenance(null)
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Driver Form Dialog */}
-      <Dialog open={showDriverForm} onOpenChange={setShowDriverForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DriverForm
-            driver={selectedDriver || undefined}
-            onSave={handleDriverSave}
-            onCancel={() => {
-              setShowDriverForm(false)
-              setSelectedDriver(null)
             }}
           />
         </DialogContent>
