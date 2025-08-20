@@ -33,10 +33,12 @@ export function LocationForm({ location, isOpen, onClose, onSave }: LocationForm
   const [name, setName] = useState(location?.name || "")
   const [description, setDescription] = useState(location?.description || "")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
     try {
       await onSave({
@@ -47,7 +49,7 @@ export function LocationForm({ location, isOpen, onClose, onSave }: LocationForm
       setName("")
       setDescription("")
     } catch (error) {
-      console.error("Error saving location:", error)
+      setError("Failed to save location. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -91,6 +93,7 @@ export function LocationForm({ location, isOpen, onClose, onSave }: LocationForm
               />
             </div>
           </div>
+          {error && <p className="text-red-500">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel

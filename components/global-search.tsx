@@ -86,7 +86,7 @@ export function GlobalSearch({ onItemSelect }: GlobalSearchProps) {
           setShowResults(true)
         }
       } catch (error) {
-        console.error("Search error:", error)
+        setResults([])
       } finally {
         setIsLoading(false)
       }

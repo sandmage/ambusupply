@@ -24,7 +24,7 @@ export default async function DashboardPage() {
     .from("profiles")
     .select("*")
     .eq("id", user.id)
-    .maybeSingle() // Use maybeSingle instead of single to avoid errors when no record exists
+    .maybeSingle()
 
   const userProfile = profile || {
     id: user.id,
@@ -42,13 +42,38 @@ export default async function DashboardPage() {
 
   const isAdmin = userProfile?.role === "admin"
 
-  const [inventoryResult, locationsResult, usersResult, transactionsResult] = await Promise.all([
-    supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date"),
-    supabase.from("locations").select("id"),
-    isAdmin
-      ? supabase.from("profiles").select("*").order("created_at", { ascending: false })
-      : { data: [], error: null },
-    supabase
+  let inventoryItems = []
+  let locations = []
+  let users = []
+  let recentTransactions = []
+
+  try {
+    const { data: inventoryData } = await supabase
+      .from("inventory_items")
+      .select("id, current_quantity, par_level, expiration_date")
+    inventoryItems = inventoryData || []
+  } catch (err) {
+    inventoryItems = []
+  }
+
+  try {
+    const { data: locationsData } = await supabase.from("locations").select("id")
+    locations = locationsData || []
+  } catch (err) {
+    locations = []
+  }
+
+  if (isAdmin) {
+    try {
+      const { data: usersData } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
+      users = usersData || []
+    } catch (err) {
+      users = []
+    }
+  }
+
+  try {
+    const { data: transactionsData } = await supabase
       .from("transactions")
       .select(`
         id,
@@ -59,20 +84,16 @@ export default async function DashboardPage() {
         performed_by
       `)
       .order("created_at", { ascending: false })
-      .limit(20),
-  ])
-
-  // Handle errors and extract data
-  const inventoryItems = inventoryResult.error ? [] : inventoryResult.data
-  const locations = locationsResult.error ? [] : locationsResult.data
-  const users = usersResult.error ? [] : usersResult.data
-  const recentTransactions = transactionsResult.error ? [] : transactionsResult.data
+      .limit(20)
+    recentTransactions = transactionsData || []
+  } catch (err) {
+    recentTransactions = []
+  }
 
   const totalItems = inventoryItems?.length || 0
   const belowParCount =
     inventoryItems?.filter((item) => item.current_quantity < item.par_level && item.par_level > 0).length || 0
 
-  // Calculate expiring items (within 30 days)
   const thirtyDaysFromNow = new Date()
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
   const expiringCount =
@@ -83,7 +104,6 @@ export default async function DashboardPage() {
   const userCount = users?.length || 0
   const adminCount = users?.filter((u) => u.role === "admin").length || 0
 
-  // Get recent activity count (last 24 hours)
   const twentyFourHoursAgo = new Date()
   twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
   const recentActivityCount =

@@ -49,6 +49,7 @@ export function StorageUnitForm({ unit, isOpen, onClose, onSave, parentUnitName 
   const [description, setDescription] = useState(unit?.description || "")
   const [positionOrder, setPositionOrder] = useState(unit?.position_order?.toString() || "0")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,7 +65,7 @@ export function StorageUnitForm({ unit, isOpen, onClose, onSave, parentUnitName 
       onClose()
       resetForm()
     } catch (error) {
-      console.error("Error saving storage unit:", error)
+      setError("Failed to save storage unit. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -75,6 +76,7 @@ export function StorageUnitForm({ unit, isOpen, onClose, onSave, parentUnitName 
     setType(unit?.type || "")
     setDescription(unit?.description || "")
     setPositionOrder(unit?.position_order?.toString() || "0")
+    setError(null)
   }
 
   const handleClose = () => {
@@ -145,6 +147,7 @@ export function StorageUnitForm({ unit, isOpen, onClose, onSave, parentUnitName 
               />
             </div>
           </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel

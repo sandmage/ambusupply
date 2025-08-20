@@ -35,7 +35,7 @@ export default async function LocationsPage() {
     .order("name")
 
   if (locationsError) {
-    console.error("Error fetching locations:", locationsError)
+    return <div>Error loading locations. Please refresh the page.</div>
   }
 
   // Transform the flat storage units into a hierarchical structure

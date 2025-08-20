@@ -42,7 +42,7 @@ export default async function InventoryPage() {
     .order("name")
 
   if (inventoryError) {
-    console.error("Error fetching inventory:", inventoryError)
+    return <div>Error loading inventory. Please refresh the page.</div>
   }
 
   // Fetch locations with storage units for the form
@@ -60,7 +60,7 @@ export default async function InventoryPage() {
     .order("name")
 
   if (locationsError) {
-    console.error("Error fetching locations:", locationsError)
+    return <div>Error loading locations. Please refresh the page.</div>
   }
 
   // Transform inventory data

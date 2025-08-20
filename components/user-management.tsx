@@ -45,10 +45,10 @@ export function UserManagement({ users: initialUsers, currentUserId }: UserManag
       if (!error) {
         setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, role: newRole } : user)))
       } else {
-        console.error("Error updating user role:", error)
+        alert("Failed to update user role. Please try again.")
       }
     } catch (error) {
-      console.error("Error updating user role:", error)
+      alert("Failed to update user role. Please try again.")
     } finally {
       setIsLoading((prev) => ({ ...prev, [userId]: false }))
     }
@@ -74,10 +74,10 @@ export function UserManagement({ users: initialUsers, currentUserId }: UserManag
       if (!error) {
         setUsers((prev) => prev.filter((user) => user.id !== userId))
       } else {
-        console.error("Error deleting user:", error)
+        alert("Failed to delete user. Please try again.")
       }
     } catch (error) {
-      console.error("Error deleting user:", error)
+      alert("Failed to delete user. Please try again.")
     } finally {
       setIsLoading((prev) => ({ ...prev, [userId]: false }))
     }

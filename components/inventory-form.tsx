@@ -80,6 +80,7 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
   const [locationId, setLocationId] = useState(item?.location_id || "")
   const [storageUnitId, setStorageUnitId] = useState(item?.storage_unit_id || "")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const selectedLocation = locations.find((loc) => loc.id === locationId)
   const availableStorageUnits = selectedLocation?.storage_units || []
@@ -94,6 +95,7 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
     try {
       await onSave({
@@ -110,7 +112,7 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
       onClose()
       resetForm()
     } catch (error) {
-      console.error("Error saving inventory item:", error)
+      setError("Failed to save inventory item. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -263,6 +265,7 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
               />
             </div>
           </div>
+          {error && <div className="text-red-500 text-sm">{error}</div>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
