@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Users, UserPlus, Search, Shield, Clock } from "lucide-react"
+import { Users, Search, Shield, Clock, Mail, Trash2, RefreshCw } from "lucide-react"
+import { InvitationDialog } from "@/components/invitation-dialog"
+import { toast } from "sonner"
 
 interface User {
   id: string
@@ -14,6 +16,17 @@ interface User {
   role: string
   created_at: string
   updated_at: string
+  organization_id?: string
+}
+
+interface Invitation {
+  id: string
+  email: string
+  role: string
+  created_at: string
+  expires_at: string
+  accepted_at: string | null
+  invited_by: string
 }
 
 interface UserStats {
@@ -32,10 +45,33 @@ interface UsersClientProps {
 export function UsersClient({ users: initialUsers, userStats: initialStats, currentUser }: UsersClientProps) {
   const [users, setUsers] = useState<User[]>(initialUsers)
   const [userStats, setUserStats] = useState<UserStats>(initialStats)
+  const [invitations, setInvitations] = useState<Invitation[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
   const supabase = createClient()
+
+  const fetchInvitations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("invitations")
+        .select("*")
+        .eq("organization_id", currentUser.organization_id)
+        .is("accepted_at", null)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+      setInvitations(data || [])
+    } catch (error) {
+      console.error("Error fetching invitations:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (currentUser.organization_id) {
+      fetchInvitations()
+    }
+  }, [currentUser.organization_id])
 
   const filteredUsers = users.filter(
     (user) =>
@@ -78,10 +114,46 @@ export function UsersClient({ users: initialUsers, userStats: initialStats, curr
         pending: updatedUsers.filter((u) => u.role === "pending").length,
       }
       setUserStats(newStats)
+      toast.success("User role updated successfully")
     } catch (error) {
       console.error("Error updating user role:", error)
+      toast.error("Failed to update user role")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const cancelInvitation = async (invitationId: string) => {
+    try {
+      const { error } = await supabase.from("invitations").delete().eq("id", invitationId)
+
+      if (error) throw error
+
+      setInvitations(invitations.filter((inv) => inv.id !== invitationId))
+      toast.success("Invitation cancelled")
+    } catch (error) {
+      console.error("Error cancelling invitation:", error)
+      toast.error("Failed to cancel invitation")
+    }
+  }
+
+  const resendInvitation = async (invitationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("invitations")
+        .update({
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", invitationId)
+
+      if (error) throw error
+
+      await fetchInvitations()
+      toast.success("Invitation resent")
+    } catch (error) {
+      console.error("Error resending invitation:", error)
+      toast.error("Failed to resend invitation")
     }
   }
 
@@ -125,12 +197,60 @@ export function UsersClient({ users: initialUsers, userStats: initialStats, curr
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center space-x-2">
             <Clock className="h-4 w-4 text-orange-500" />
-            <h3 className="font-medium">Pending</h3>
+            <h3 className="font-medium">Staff</h3>
           </div>
-          <p className="text-2xl font-bold mt-2">{userStats.pending}</p>
-          <p className="text-sm text-muted-foreground">Awaiting approval</p>
+          <p className="text-2xl font-bold mt-2">{userStats.staff}</p>
+          <p className="text-sm text-muted-foreground">Staff members</p>
+        </div>
+
+        <div className="rounded-lg border bg-card p-6">
+          <div className="flex items-center space-x-2">
+            <Mail className="h-4 w-4 text-blue-500" />
+            <h3 className="font-medium">Pending Invites</h3>
+          </div>
+          <p className="text-2xl font-bold mt-2">{invitations.length}</p>
+          <p className="text-sm text-muted-foreground">Awaiting response</p>
         </div>
       </div>
+
+      {invitations.length > 0 && (
+        <div className="rounded-lg border bg-card">
+          <div className="p-6 border-b">
+            <h2 className="text-lg font-semibold">Pending Invitations</h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {invitations.map((invitation) => (
+                <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                      <Mail className="h-4 w-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{invitation.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Invited {new Date(invitation.created_at).toLocaleDateString()} • Expires{" "}
+                        {new Date(invitation.expires_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge className={getRoleBadgeColor(invitation.role)}>
+                      {invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1)}
+                    </Badge>
+                    <Button variant="outline" size="sm" onClick={() => resendInvitation(invitation.id)}>
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => cancelInvitation(invitation.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-lg border bg-card">
         <div className="p-6 border-b">
@@ -146,10 +266,10 @@ export function UsersClient({ users: initialUsers, userStats: initialStats, curr
                   className="pl-10 w-64"
                 />
               </div>
-              <Button>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add User
-              </Button>
+              <InvitationDialog
+                organizationId={currentUser.organization_id || ""}
+                onInvitationSent={fetchInvitations}
+              />
             </div>
           </div>
         </div>

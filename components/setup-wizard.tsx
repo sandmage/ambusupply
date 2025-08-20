@@ -43,6 +43,7 @@ export function SetupWizard({ user, profile, existingOrganization, isRerun = fal
   const [error, setError] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [retryCount, setRetryCount] = useState(0)
+  const [isInvitedUser, setIsInvitedUser] = useState(false)
 
   const [formData, setFormData] = useState<FormData>({
     fullName: profile?.full_name || user.user_metadata?.full_name || "",
@@ -58,6 +59,15 @@ export function SetupWizard({ user, profile, existingOrganization, isRerun = fal
   const supabase = createClient()
 
   useEffect(() => {
+    const checkInvitationStatus = async () => {
+      if (profile?.organization_id || user.user_metadata?.invitation_id) {
+        setIsInvitedUser(true)
+        setCurrentStep(3)
+      }
+    }
+
+    checkInvitationStatus()
+
     if (isRerun && existingOrganization) {
       return
     }
@@ -80,7 +90,7 @@ export function SetupWizard({ user, profile, existingOrganization, isRerun = fal
         setCurrentStep(step)
       }
     }
-  }, [isRerun, existingOrganization])
+  }, [isRerun, existingOrganization, profile, user])
 
   useEffect(() => {
     const saveProgress = async () => {
@@ -116,7 +126,7 @@ export function SetupWizard({ user, profile, existingOrganization, isRerun = fal
       }
     }
 
-    if (step === 2) {
+    if (step === 2 && !isInvitedUser) {
       if (!formData.organizationName.trim()) {
         errors.organizationName = "Organization name is required"
       } else if (formData.organizationName.trim().length < 2) {
@@ -171,6 +181,34 @@ export function SetupWizard({ user, profile, existingOrganization, isRerun = fal
   }
 
   const handleComplete = async () => {
+    if (isInvitedUser && profile?.organization_id) {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            full_name: formData.fullName.trim(),
+            setup_completed: true,
+          })
+          .eq("id", profile.id)
+
+        if (profileError) throw profileError
+
+        localStorage.removeItem("setup-wizard-progress")
+        localStorage.removeItem("setup-wizard-step")
+
+        router.push("/dashboard")
+        return
+      } catch (error: any) {
+        console.error("Profile update error:", error)
+        setError(`Failed to update profile: ${error.message}`)
+        setLoading(false)
+        return
+      }
+    }
+
     const errors = validateStep(2)
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors)
@@ -339,6 +377,13 @@ export function SetupWizard({ user, profile, existingOrganization, isRerun = fal
           </div>
         )}
 
+        {isInvitedUser && !isRerun && (
+          <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+            Welcome! You've joined an organization via invitation. Please confirm your personal information to complete
+            setup.
+          </div>
+        )}
+
         <CardTitle className="text-2xl">
           {isRerun ? `Update ${steps[currentStep - 1].title}` : steps[currentStep - 1].title}
         </CardTitle>
@@ -389,7 +434,7 @@ export function SetupWizard({ user, profile, existingOrganization, isRerun = fal
           </div>
         )}
 
-        {currentStep === 2 && (
+        {currentStep === 2 && !isInvitedUser && (
           <div className="space-y-4">
             <div>
               <Label htmlFor="organizationName">Organization Name *</Label>
@@ -484,53 +529,64 @@ export function SetupWizard({ user, profile, existingOrganization, isRerun = fal
                   <span className="font-medium">Name:</span> {formData.fullName}
                 </p>
                 <p>
-                  <span className="font-medium">Role:</span> Administrator
+                  <span className="font-medium">Role:</span>{" "}
+                  {formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
                 </p>
               </div>
             </div>
 
-            <div>
-              <h3 className="font-semibold mb-3 text-lg">Organization Details</h3>
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <p>
-                  <span className="font-medium">Name:</span> {formData.organizationName}
-                </p>
-                <p>
-                  <span className="font-medium">Type:</span>{" "}
-                  {formData.organizationType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                </p>
-                {formData.address && (
+            {!isInvitedUser && (
+              <div>
+                <h3 className="font-semibold mb-3 text-lg">Organization Details</h3>
+                <div className="bg-muted p-4 rounded-lg space-y-2">
                   <p>
-                    <span className="font-medium">Address:</span> {formData.address}
+                    <span className="font-medium">Name:</span> {formData.organizationName}
                   </p>
-                )}
-                {formData.phone && (
                   <p>
-                    <span className="font-medium">Phone:</span> {formData.phone}
+                    <span className="font-medium">Type:</span>{" "}
+                    {formData.organizationType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                   </p>
-                )}
-                {formData.email && (
-                  <p>
-                    <span className="font-medium">Email:</span> {formData.email}
-                  </p>
-                )}
-                {formData.licenseNumber && (
-                  <p>
-                    <span className="font-medium">License:</span> {formData.licenseNumber}
-                  </p>
-                )}
+                  {formData.address && (
+                    <p>
+                      <span className="font-medium">Address:</span> {formData.address}
+                    </p>
+                  )}
+                  {formData.phone && (
+                    <p>
+                      <span className="font-medium">Phone:</span> {formData.phone}
+                    </p>
+                  )}
+                  {formData.email && (
+                    <p>
+                      <span className="font-medium">Email:</span> {formData.email}
+                    </p>
+                  )}
+                  {formData.licenseNumber && (
+                    <p>
+                      <span className="font-medium">License:</span> {formData.licenseNumber}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
         <div className="flex justify-between pt-6 border-t">
-          <Button variant="outline" onClick={handleBack} disabled={currentStep === 1 || loading}>
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            disabled={currentStep === 1 || loading || (isInvitedUser && currentStep === 3)}
+          >
             Back
           </Button>
 
-          {currentStep < 3 ? (
+          {currentStep < 3 && !isInvitedUser ? (
             <Button onClick={handleNext} disabled={loading}>
+              Next
+            </Button>
+          ) : currentStep === 1 && isInvitedUser ? (
+            <Button onClick={() => setCurrentStep(3)} disabled={loading}>
               Next
             </Button>
           ) : (

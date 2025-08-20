@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
 import { createClient } from "@/lib/supabase/client"
@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Activity } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Activity, Building2 } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -18,7 +19,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [invitation, setInvitation] = useState<any>(null)
+
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteId = searchParams.get("invite")
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -29,8 +34,34 @@ export default function LoginPage() {
         } = await supabase.auth.getUser()
 
         if (user) {
+          // If user is logged in and has an invitation, redirect to accept invitation
+          if (inviteId) {
+            router.push(`/invite/${inviteId}`)
+            return
+          }
           router.push("/dashboard")
           return
+        }
+
+        // If there's an invitation ID, fetch invitation details
+        if (inviteId) {
+          const { data, error } = await supabase
+            .from("invitations")
+            .select(`
+              *,
+              organizations (
+                name
+              )
+            `)
+            .eq("id", inviteId)
+            .is("accepted_at", null)
+            .gt("expires_at", new Date().toISOString())
+            .single()
+
+          if (!error && data) {
+            setInvitation(data)
+            setEmail(data.email)
+          }
         }
       } catch (error) {
         console.error("Auth check error:", error)
@@ -40,7 +71,7 @@ export default function LoginPage() {
     }
 
     checkAuth()
-  }, [router])
+  }, [router, inviteId])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,7 +90,12 @@ export default function LoginPage() {
         throw error
       }
 
-      router.push("/dashboard")
+      // If logging in with invitation, redirect to invitation acceptance
+      if (inviteId) {
+        router.push(`/invite/${inviteId}`)
+      } else {
+        router.push("/dashboard")
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
@@ -89,16 +125,32 @@ export default function LoginPage() {
               </div>
             </div>
             <h1 className="text-4xl font-serif font-bold text-primary mb-2">AmbuSupply</h1>
-            <p className="text-lg text-muted-foreground font-medium">Medical Inventory Management</p>
+            <p className="text-lg text-muted-foreground font-medium">
+              {invitation ? "Sign in to join organization" : "Medical Inventory Management"}
+            </p>
           </div>
           <Card className="apple-card shadow-xl">
             <CardHeader className="pb-6">
-              <CardTitle className="text-2xl font-serif font-bold text-primary">Welcome Back</CardTitle>
+              <CardTitle className="text-2xl font-serif font-bold text-primary">
+                {invitation ? "Join Organization" : "Welcome Back"}
+              </CardTitle>
               <CardDescription className="text-base font-medium">
-                Enter your credentials to access the system
+                {invitation
+                  ? `Sign in to join ${invitation.organizations.name}`
+                  : "Enter your credentials to access the system"}
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {invitation && (
+                <Alert className="mb-6">
+                  <Building2 className="h-4 w-4" />
+                  <AlertDescription>
+                    You're being invited to join <strong>{invitation.organizations.name}</strong> as a{" "}
+                    <strong>{invitation.role}</strong>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <form onSubmit={handleLogin}>
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-3">
@@ -113,6 +165,7 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="h-12 rounded-2xl border-border/50 bg-card text-base"
+                      disabled={!!invitation}
                     />
                   </div>
                   <div className="grid gap-3">
@@ -147,7 +200,16 @@ export default function LoginPage() {
                 </div>
                 <div className="mt-6 text-center text-base">
                   <span className="text-muted-foreground">Need an account? </span>
-                  <span className="text-primary font-semibold">Contact your administrator</span>
+                  {invitation ? (
+                    <Link
+                      href={`/auth/sign-up?invite=${inviteId}`}
+                      className="text-primary font-semibold hover:underline underline-offset-4"
+                    >
+                      Sign up with invitation
+                    </Link>
+                  ) : (
+                    <span className="text-primary font-semibold">Contact your administrator</span>
+                  )}
                 </div>
               </form>
             </CardContent>
