@@ -2,22 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Allow public routes
-  const publicRoutes = ["/", "/auth/login", "/auth/sign-up", "/auth/forgot-password", "/auth/reset-password", "/invite"]
-
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next()
-  }
-
-  // Check for authentication token in cookies
-  const token = request.cookies.get("sb-access-token")
-
-  if (!token) {
-    return NextResponse.redirect(new URL("/auth/login", request.url))
-  }
-
+  // Allow all requests to pass through for now
   return NextResponse.next()
 }
 
