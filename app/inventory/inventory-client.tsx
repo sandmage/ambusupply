@@ -8,6 +8,7 @@ import { InventoryForm } from "@/components/inventory-form"
 import { TransactionHistory } from "@/components/transaction-history"
 import { InventoryReports } from "@/components/inventory-reports"
 import { BulkOperations } from "@/components/bulk-operations"
+import { LowStockReorder } from "@/components/low-stock-reorder"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -415,6 +416,8 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
               </CardContent>
             </Card>
           )}
+
+          <LowStockReorder items={items} userRole={userRole} />
 
           <InventoryTable
             items={items}
