@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ReportsClient } from "./reports-client"
+import { AppLayout } from "@/components/app-layout"
 
 export default async function ReportsPage() {
   const supabase = await createClient()
@@ -14,71 +15,136 @@ export default async function ReportsPage() {
   }
 
   // Get user profile to check role
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
 
-  // Fetch items below par level
-  const { data: belowParItems } = await supabase
-    .from("items_below_par")
+  const userProfile = profile || {
+    id: user.id,
+    email: user.email,
+    full_name: user.user_metadata?.full_name || user.email,
+    role: user.user_metadata?.role || "staff",
+  }
+
+  // Fetch inventory items for comprehensive analytics
+  const { data: inventoryItems } = await supabase
+    .from("inventory_items")
     .select(`
       id,
       name,
-      quantity,
-      min_par_level,
+      description,
+      current_quantity,
+      par_level,
       unit_of_measure,
-      location_name,
-      storage_unit_name,
-      shortage_amount
+      expiration_date,
+      lot_number,
+      created_at,
+      locations!inner (
+        id,
+        name
+      ),
+      storage_units (
+        id,
+        name,
+        unit_type
+      )
     `)
-    .order("shortage_amount", { ascending: false })
+    .order("name")
 
-  // Fetch expiring items
-  const { data: expiringItems } = await supabase
-    .from("expiring_items")
+  // Fetch recent transactions for usage analytics
+  const { data: recentTransactions } = await supabase
+    .from("transactions")
     .select(`
       id,
-      name,
-      quantity,
-      min_par_level,
-      unit_of_measure,
-      expiration_date,
-      location_name,
-      storage_unit_name,
-      days_until_expiration
+      transaction_type,
+      quantity_change,
+      reason,
+      created_at,
+      performed_by,
+      item_id
     `)
-    .order("days_until_expiration")
+    .order("created_at", { ascending: false })
+    .limit(100)
 
-  // Fetch usage trends using the database function
-  const { data: usageTrends } = await supabase.rpc("get_usage_trends", { days_back: 30 })
+  // Process data for analytics
+  const processedItems =
+    inventoryItems?.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      current_quantity: item.current_quantity,
+      par_level: item.par_level,
+      unit_of_measure: item.unit_of_measure,
+      expiration_date: item.expiration_date,
+      lot_number: item.lot_number,
+      location_name: item.locations.name,
+      storage_unit_name: item.storage_units?.name,
+      storage_unit_type: item.storage_units?.unit_type,
+      created_at: item.created_at,
+    })) || []
 
-  // Get inventory summary stats
-  const { data: inventoryStats } = await supabase.from("inventory_items").select(`
-      id,
-      quantity,
-      min_par_level,
-      expiration_date,
-      locations!inner (name)
-    `)
+  // Calculate comprehensive statistics
+  const totalItems = processedItems.length
+  const belowParItems = processedItems.filter((item) => item.current_quantity < item.par_level && item.par_level > 0)
+  const belowParCount = belowParItems.length
 
-  const totalItems = inventoryStats?.length || 0
-  const belowParCount = belowParItems?.length || 0
-  const expiringCount = expiringItems?.length || 0
+  const thirtyDaysFromNow = new Date()
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+  const expiringItems = processedItems.filter(
+    (item) => item.expiration_date && new Date(item.expiration_date) <= thirtyDaysFromNow,
+  )
+  const expiringCount = expiringItems.length
+
+  const outOfStockItems = processedItems.filter((item) => item.current_quantity === 0)
+  const outOfStockCount = outOfStockItems.length
 
   // Count unique locations
-  const uniqueLocations = new Set(inventoryStats?.map((item) => (item as any).locations.name))
+  const uniqueLocations = new Set(processedItems.map((item) => item.location_name))
   const locationCount = uniqueLocations.size
 
+  // Process usage trends from transactions
+  const usageTrends =
+    recentTransactions?.reduce((acc: any[], transaction: any) => {
+      if (transaction.transaction_type === "use") {
+        const item = processedItems.find((i) => i.id === transaction.item_id)
+        if (item) {
+          const existing = acc.find((t) => t.item_name === item.name)
+          if (existing) {
+            existing.total_used += Math.abs(transaction.quantity_change)
+            existing.transaction_count += 1
+          } else {
+            acc.push({
+              item_name: item.name,
+              total_used: Math.abs(transaction.quantity_change),
+              transaction_count: 1,
+              location_name: item.location_name,
+              avg_daily_usage: Math.abs(transaction.quantity_change) / 30,
+            })
+          }
+        }
+      }
+      return acc
+    }, []) || []
+
+  // Sort by total usage
+  usageTrends.sort((a, b) => b.total_used - a.total_used)
+
   return (
-    <ReportsClient
-      belowParItems={belowParItems || []}
-      expiringItems={expiringItems || []}
-      usageTrends={usageTrends || []}
-      stats={{
-        totalItems,
-        belowParCount,
-        expiringCount,
-        locationCount,
-      }}
-      userRole={profile?.role || "staff"}
-    />
+    <AppLayout user={userProfile} stats={{ belowParCount, expiringCount }}>
+      <ReportsClient
+        belowParItems={belowParItems}
+        expiringItems={expiringItems}
+        outOfStockItems={outOfStockItems}
+        usageTrends={usageTrends}
+        allItems={processedItems}
+        transactions={recentTransactions || []}
+        stats={{
+          totalItems,
+          belowParCount,
+          expiringCount,
+          outOfStockCount,
+          locationCount,
+        }}
+        userRole={userProfile.role}
+      />
+    </AppLayout>
   )
 }

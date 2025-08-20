@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { LocationsClient } from "./locations-client"
+import { AppLayout } from "@/components/app-layout"
 
 export default async function LocationsPage() {
   const supabase = await createClient()
@@ -14,7 +15,14 @@ export default async function LocationsPage() {
   }
 
   // Get user profile to check role
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+
+  const userProfile = profile || {
+    id: user.id,
+    email: user.email,
+    full_name: user.user_metadata?.full_name || user.email,
+    role: user.user_metadata?.role || "staff",
+  }
 
   // Fetch locations with their storage units
   const { data: locations, error: locationsError } = await supabase
@@ -78,5 +86,24 @@ export default async function LocationsPage() {
       }
     }) || []
 
-  return <LocationsClient locations={transformedLocations} userRole={profile?.role || "staff"} />
+  // Calculate stats for sidebar
+  const totalLocations = transformedLocations.length
+  const totalStorageUnits = transformedLocations.reduce((acc, location) => {
+    const countUnits = (units: any[]): number => {
+      return units.reduce((count, unit) => {
+        return count + 1 + (unit.children ? countUnits(unit.children) : 0)
+      }, 0)
+    }
+    return acc + countUnits(location.storage_units)
+  }, 0)
+
+  return (
+    <AppLayout user={userProfile} stats={{ belowParCount: 0, expiringCount: 0 }}>
+      <LocationsClient
+        locations={transformedLocations}
+        userRole={userProfile.role}
+        stats={{ totalLocations, totalStorageUnits }}
+      />
+    </AppLayout>
+  )
 }

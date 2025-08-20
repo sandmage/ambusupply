@@ -6,6 +6,7 @@ import { UserManagement } from "@/components/user-management"
 import { RecentActivity } from "@/components/recent-activity"
 import { SystemHealth } from "@/components/system-health"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AppLayout } from "@/components/app-layout"
 import Link from "next/link"
 
 export default async function DashboardPage() {
@@ -120,202 +121,182 @@ export default async function DashboardPage() {
     })) || []
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-blue-600">AmbuSupply</h1>
-              <p className="text-sm text-muted-foreground">
-                {isAdmin ? "Administrator Dashboard" : "Inventory Management System"}
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm">
-                Welcome, {userProfile?.full_name || user.email}
-                {userProfile?.role && (
-                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                    {userProfile.role}
-                  </span>
-                )}
-              </span>
-              <form action={handleSignOut}>
-                <Button variant="outline" type="submit">
-                  Sign Out
-                </Button>
-              </form>
-            </div>
+    <AppLayout user={userProfile} stats={{ belowParCount, expiringCount }}>
+      <div className="h-full bg-background">
+        <div className="border-b border-border bg-card">
+          <div className="px-6 py-4">
+            <h1 className="text-2xl font-bold text-foreground medical-heading">
+              {isAdmin ? "Administrator Dashboard" : "Dashboard"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {isAdmin ? "System overview and management tools" : "Inventory overview and quick actions"}
+            </p>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {isAdmin ? (
-          // Admin Dashboard
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="users">User Management</TabsTrigger>
-              <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-              <TabsTrigger value="system">System Health</TabsTrigger>
-            </TabsList>
+        <div className="p-6">
+          {isAdmin ? (
+            // Admin Dashboard
+            <Tabs defaultValue="overview" className="space-y-6">
+              <TabsList className="bg-muted">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="users">User Management</TabsTrigger>
+                <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+                <TabsTrigger value="system">System Health</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="overview">
-              <div className="space-y-6">
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-blue-600">{totalItems}</div>
-                      <div className="text-sm text-muted-foreground">Total Items</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-orange-600">{belowParCount}</div>
-                      <div className="text-sm text-muted-foreground">Below Par</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-red-600">{expiringCount}</div>
-                      <div className="text-sm text-muted-foreground">Expiring Soon</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-green-600">{locationCount}</div>
-                      <div className="text-sm text-muted-foreground">Locations</div>
-                    </CardContent>
-                  </Card>
+              <TabsContent value="overview">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card className="border-border">
+                      <CardContent className="p-6">
+                        <div className="text-3xl font-bold text-primary">{totalItems}</div>
+                        <div className="text-sm text-muted-foreground font-medium">Total Items</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border">
+                      <CardContent className="p-6">
+                        <div className="text-3xl font-bold text-destructive">{belowParCount}</div>
+                        <div className="text-sm text-muted-foreground font-medium">Below Par Level</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border">
+                      <CardContent className="p-6">
+                        <div className="text-3xl font-bold text-destructive">{expiringCount}</div>
+                        <div className="text-sm text-muted-foreground font-medium">Expiring Soon</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border">
+                      <CardContent className="p-6">
+                        <div className="text-3xl font-bold text-secondary">{locationCount}</div>
+                        <div className="text-sm text-muted-foreground font-medium">Storage Locations</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <Card className="border-border hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">Storage Locations</CardTitle>
+                        <CardDescription>Manage physical storage locations and organizational units</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                          <Link href="/locations">Manage Locations</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-border hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">Inventory Management</CardTitle>
+                        <CardDescription>View, add, and manage medical supply inventory</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                          <Link href="/inventory">Manage Inventory</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-border hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">Analytics & Reports</CardTitle>
+                        <CardDescription>View usage trends, alerts, and generate reports</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                          <Link href="/reports">View Reports</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
+              </TabsContent>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Locations</CardTitle>
-                      <CardDescription>Manage storage locations and units</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button asChild className="w-full">
-                        <Link href="/locations">Manage Locations</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
+              <TabsContent value="users">
+                <UserManagement users={users || []} currentUserId={user.id} />
+              </TabsContent>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Inventory</CardTitle>
-                      <CardDescription>View and manage inventory items</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button asChild className="w-full">
-                        <Link href="/inventory">Manage Inventory</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
+              <TabsContent value="activity">
+                <RecentActivity activities={transformedActivity} />
+              </TabsContent>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Reports</CardTitle>
-                      <CardDescription>View usage trends and alerts</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button asChild className="w-full">
-                        <Link href="/reports">View Reports</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
+              <TabsContent value="system">
+                <SystemHealth
+                  stats={{
+                    totalItems,
+                    belowParCount,
+                    expiringCount,
+                    locationCount,
+                    userCount,
+                    adminCount,
+                    recentActivityCount,
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            // Staff Dashboard
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <div className="text-3xl font-bold text-primary">{totalItems}</div>
+                    <div className="text-sm text-muted-foreground font-medium">Total Items</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <div className="text-3xl font-bold text-destructive">{belowParCount}</div>
+                    <div className="text-sm text-muted-foreground font-medium">Below Par Level</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <div className="text-3xl font-bold text-destructive">{expiringCount}</div>
+                    <div className="text-sm text-muted-foreground font-medium">Expiring Soon</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <div className="text-3xl font-bold text-secondary">{locationCount}</div>
+                    <div className="text-sm text-muted-foreground font-medium">Storage Locations</div>
+                  </CardContent>
+                </Card>
               </div>
-            </TabsContent>
 
-            <TabsContent value="users">
-              <UserManagement users={users || []} currentUserId={user.id} />
-            </TabsContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="border-border hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Inventory Access</CardTitle>
+                    <CardDescription>View inventory items and record usage</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                      <Link href="/inventory">Access Inventory</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
 
-            <TabsContent value="activity">
-              <RecentActivity activities={transformedActivity} />
-            </TabsContent>
+                <Card className="border-border hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Reports & Search</CardTitle>
+                    <CardDescription>View usage trends and search for items</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                      <Link href="/reports">View Reports</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
 
-            <TabsContent value="system">
-              <SystemHealth
-                stats={{
-                  totalItems,
-                  belowParCount,
-                  expiringCount,
-                  locationCount,
-                  userCount,
-                  adminCount,
-                  recentActivityCount,
-                }}
-              />
-            </TabsContent>
-          </Tabs>
-        ) : (
-          // Staff Dashboard
-          <div className="space-y-6">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">{totalItems}</div>
-                  <div className="text-sm text-muted-foreground">Total Items</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-orange-600">{belowParCount}</div>
-                  <div className="text-sm text-muted-foreground">Below Par</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-red-600">{expiringCount}</div>
-                  <div className="text-sm text-muted-foreground">Expiring Soon</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">{locationCount}</div>
-                  <div className="text-sm text-muted-foreground">Locations</div>
-                </CardContent>
-              </Card>
+              <RecentActivity activities={transformedActivity.slice(0, 5)} />
             </div>
-
-            {/* Staff Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Inventory</CardTitle>
-                  <CardDescription>View inventory and mark items as used</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button asChild className="w-full">
-                    <Link href="/inventory">View Inventory</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reports</CardTitle>
-                  <CardDescription>View usage trends and search items</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button asChild className="w-full">
-                    <Link href="/reports">View Reports</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Activity for Staff */}
-            <RecentActivity activities={transformedActivity.slice(0, 5)} />
-          </div>
-        )}
-      </main>
-    </div>
+          )}
+        </div>
+      </div>
+    </AppLayout>
   )
 }
