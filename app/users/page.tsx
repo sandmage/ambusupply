@@ -18,6 +18,13 @@ export default async function UsersPage() {
   // Get user profile to check permissions
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
 
+  console.log("[v0] Current authenticated user:", {
+    id: user.id,
+    email: user.email,
+    metadata: user.user_metadata,
+  })
+  console.log("[v0] Profile from database:", profile)
+
   const userProfile = profile || {
     id: user.id,
     email: user.email || "",
@@ -27,6 +34,8 @@ export default async function UsersPage() {
     updated_at: new Date().toISOString(),
   }
 
+  console.log("[v0] Final user profile:", userProfile)
+
   // Only admins can access user management
   if (userProfile.role !== "admin") {
     redirect("/dashboard")
@@ -34,9 +43,11 @@ export default async function UsersPage() {
 
   if (!profile) {
     try {
+      console.log("[v0] Creating new profile for user:", userProfile)
       await supabase.from("profiles").insert([userProfile])
+      console.log("[v0] Profile created successfully")
     } catch (error) {
-      console.error("Error creating user profile:", error)
+      console.error("[v0] Error creating user profile:", error)
     }
   }
 
@@ -55,6 +66,9 @@ export default async function UsersPage() {
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false })
+
+    console.log("[v0] Fetched profiles from database:", profiles)
+    console.log("[v0] Profiles error:", profilesError)
 
     if (profiles) {
       users = profiles
