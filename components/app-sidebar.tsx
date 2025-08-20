@@ -150,7 +150,8 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
             key={item.name}
             href={item.href}
             className={cn(
-              "flex items-center justify-start px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 group",
+              "flex items-center px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 group",
+              isCollapsed ? "justify-center" : "justify-start",
               item.current
                 ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
                 : "text-foreground hover:bg-primary/10 hover:scale-[1.01] active:scale-[0.99]",
@@ -189,7 +190,8 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center justify-start px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 group",
+                  "flex items-center px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 group",
+                  isCollapsed ? "justify-center" : "justify-start",
                   item.current
                     ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
                     : "text-foreground hover:bg-primary/10 hover:scale-[1.01] active:scale-[0.99]",
