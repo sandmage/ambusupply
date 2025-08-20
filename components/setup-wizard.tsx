@@ -16,6 +16,8 @@ import { Building2, User, CheckCircle, AlertTriangle, Loader2, Save } from "luci
 interface SetupWizardProps {
   user: any
   profile: any
+  existingOrganization?: any
+  isRerun?: boolean
 }
 
 interface FormData {
@@ -33,7 +35,7 @@ interface ValidationErrors {
   [key: string]: string
 }
 
-export function SetupWizard({ user, profile }: SetupWizardProps) {
+export function SetupWizard({ user, profile, existingOrganization, isRerun = false }: SetupWizardProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -43,19 +45,23 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
   const [retryCount, setRetryCount] = useState(0)
 
   const [formData, setFormData] = useState<FormData>({
-    fullName: user.user_metadata?.full_name || "",
-    role: "admin",
-    organizationName: "",
-    organizationType: "hospital",
-    address: "",
-    phone: "",
-    email: "",
-    licenseNumber: "",
+    fullName: profile?.full_name || user.user_metadata?.full_name || "",
+    role: profile?.role || "admin",
+    organizationName: existingOrganization?.name || "",
+    organizationType: existingOrganization?.organization_type || "hospital",
+    address: existingOrganization?.address || "",
+    phone: existingOrganization?.phone || "",
+    email: existingOrganization?.email || "",
+    licenseNumber: existingOrganization?.license_number || "",
   })
 
   const supabase = createClient()
 
   useEffect(() => {
+    if (isRerun && existingOrganization) {
+      return
+    }
+
     const savedData = localStorage.getItem("setup-wizard-progress")
     const savedStep = localStorage.getItem("setup-wizard-step")
 
@@ -74,7 +80,7 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
         setCurrentStep(step)
       }
     }
-  }, [])
+  }, [isRerun, existingOrganization])
 
   useEffect(() => {
     const saveProgress = async () => {
@@ -82,7 +88,6 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
       localStorage.setItem("setup-wizard-progress", JSON.stringify(formData))
       localStorage.setItem("setup-wizard-step", currentStep.toString())
 
-      // Simulate save delay for UX feedback
       setTimeout(() => setSaving(false), 500)
     }
 
@@ -166,7 +171,7 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
   }
 
   const handleComplete = async () => {
-    const errors = validateStep(2) // Validate organization data
+    const errors = validateStep(2)
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors)
       return
@@ -176,23 +181,43 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
     setError(null)
 
     try {
-      // Create organization
-      const { data: organization, error: orgError } = await supabase
-        .from("organizations")
-        .insert({
-          name: formData.organizationName.trim(),
-          organization_type: formData.organizationType,
-          address: formData.address.trim() || null,
-          phone: formData.phone.trim() || null,
-          email: formData.email.trim() || null,
-          license_number: formData.licenseNumber.trim() || null,
-        })
-        .select()
-        .single()
+      let organization = existingOrganization
 
-      if (orgError) throw orgError
+      if (isRerun && existingOrganization) {
+        const { data: updatedOrg, error: orgError } = await supabase
+          .from("organizations")
+          .update({
+            name: formData.organizationName.trim(),
+            organization_type: formData.organizationType,
+            address: formData.address.trim() || null,
+            phone: formData.phone.trim() || null,
+            email: formData.email.trim() || null,
+            license_number: formData.licenseNumber.trim() || null,
+          })
+          .eq("id", existingOrganization.id)
+          .select()
+          .single()
 
-      // Create or update user profile
+        if (orgError) throw orgError
+        organization = updatedOrg
+      } else {
+        const { data: newOrg, error: orgError } = await supabase
+          .from("organizations")
+          .insert({
+            name: formData.organizationName.trim(),
+            organization_type: formData.organizationType,
+            address: formData.address.trim() || null,
+            phone: formData.phone.trim() || null,
+            email: formData.email.trim() || null,
+            license_number: formData.licenseNumber.trim() || null,
+          })
+          .select()
+          .single()
+
+        if (orgError) throw orgError
+        organization = newOrg
+      }
+
       const profileData = {
         email: user.email,
         full_name: formData.fullName.trim(),
@@ -212,7 +237,7 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
       localStorage.removeItem("setup-wizard-progress")
       localStorage.removeItem("setup-wizard-step")
 
-      router.push("/dashboard")
+      router.push(isRerun ? "/settings" : "/dashboard")
     } catch (error: any) {
       console.error("Setup error:", error)
       setRetryCount((prev) => prev + 1)
@@ -308,8 +333,18 @@ export function SetupWizard({ user, profile }: SetupWizardProps) {
           </div>
         </div>
 
-        <CardTitle className="text-2xl">{steps[currentStep - 1].title}</CardTitle>
-        <CardDescription className="text-base">{steps[currentStep - 1].description}</CardDescription>
+        {isRerun && (
+          <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+            You're updating your organization setup. All fields have been pre-filled with your current information.
+          </div>
+        )}
+
+        <CardTitle className="text-2xl">
+          {isRerun ? `Update ${steps[currentStep - 1].title}` : steps[currentStep - 1].title}
+        </CardTitle>
+        <CardDescription className="text-base">
+          {isRerun ? `Update ${steps[currentStep - 1].description}` : steps[currentStep - 1].description}
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">

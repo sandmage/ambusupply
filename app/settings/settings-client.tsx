@@ -159,15 +159,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   const handleRerunSetup = async () => {
     setLoading(true)
     try {
-      // Mark setup as incomplete to allow re-running
-      const { error } = await supabase.from("profiles").update({ setup_completed: false }).eq("id", user.id)
-
-      if (error) throw error
-
-      showMessage("Setup wizard reset successfully")
-      setTimeout(() => {
-        router.push("/setup")
-      }, 1000)
+      router.push(`/setup?rerun=true`)
     } catch (error: any) {
       showMessage(error.message, "error")
     } finally {
