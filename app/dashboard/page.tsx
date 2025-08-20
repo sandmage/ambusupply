@@ -11,31 +11,20 @@ import Link from "next/link"
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  console.log("[v0] Dashboard: Starting dashboard load")
-
   const {
     data: { user },
     error,
   } = await supabase.auth.getUser()
 
-  console.log("[v0] Dashboard: User check result:", user ? `User found: ${user.email}` : "No user found")
-
   if (error || !user) {
-    console.log("[v0] Dashboard: No user, redirecting to login")
     redirect("/auth/login")
   }
 
-  console.log("[v0] Dashboard: Querying profile for user ID:", user.id)
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .maybeSingle() // Use maybeSingle instead of single to avoid errors when no record exists
-
-  console.log("[v0] Dashboard: Profile query result:", profile ? "Profile found" : "No profile found")
-  if (profileError) {
-    console.log("[v0] Dashboard: Profile query error:", profileError)
-  }
 
   const userProfile = profile || {
     id: user.id,
@@ -43,8 +32,6 @@ export default async function DashboardPage() {
     full_name: user.user_metadata?.full_name || user.email,
     role: user.user_metadata?.role || "staff",
   }
-
-  console.log("[v0] Dashboard: Using profile:", userProfile)
 
   const handleSignOut = async () => {
     "use server"
@@ -54,45 +41,14 @@ export default async function DashboardPage() {
   }
 
   const isAdmin = userProfile?.role === "admin"
-  console.log("[v0] Dashboard: User role:", userProfile?.role, "Is admin:", isAdmin)
 
-  console.log("[v0] Dashboard: Starting database queries")
-
-  let inventoryItems = []
-  let locations = []
-  let users = []
-  let recentTransactions = []
-
-  try {
-    const { data: inventoryData } = await supabase
-      .from("inventory_items")
-      .select("id, current_quantity, par_level, expiration_date")
-    inventoryItems = inventoryData || []
-  } catch (err) {
-    console.log("[v0] Dashboard: Inventory query error:", err)
-    inventoryItems = []
-  }
-
-  try {
-    const { data: locationsData } = await supabase.from("locations").select("id")
-    locations = locationsData || []
-  } catch (err) {
-    console.log("[v0] Dashboard: Locations query error:", err)
-    locations = []
-  }
-
-  if (isAdmin) {
-    try {
-      const { data: usersData } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
-      users = usersData || []
-    } catch (err) {
-      console.log("[v0] Dashboard: Users query error:", err)
-      users = []
-    }
-  }
-
-  try {
-    const { data: transactionsData } = await supabase
+  const [inventoryResult, locationsResult, usersResult, transactionsResult] = await Promise.all([
+    supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date"),
+    supabase.from("locations").select("id"),
+    isAdmin
+      ? supabase.from("profiles").select("*").order("created_at", { ascending: false })
+      : { data: [], error: null },
+    supabase
       .from("transactions")
       .select(`
         id,
@@ -103,15 +59,14 @@ export default async function DashboardPage() {
         performed_by
       `)
       .order("created_at", { ascending: false })
-      .limit(20)
-    recentTransactions = transactionsData || []
-  } catch (err) {
-    console.log("[v0] Dashboard: Transactions query error:", err)
-    recentTransactions = []
-  }
+      .limit(20),
+  ])
 
-  console.log("[v0] Dashboard: Database queries completed")
-  console.log("[v0] Dashboard: Items:", inventoryItems?.length || 0, "Locations:", locations?.length || 0)
+  // Handle errors and extract data
+  const inventoryItems = inventoryResult.error ? [] : inventoryResult.data
+  const locations = locationsResult.error ? [] : locationsResult.data
+  const users = usersResult.error ? [] : usersResult.data
+  const recentTransactions = transactionsResult.error ? [] : transactionsResult.data
 
   const totalItems = inventoryItems?.length || 0
   const belowParCount =
