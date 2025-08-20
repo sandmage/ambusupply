@@ -1,79 +1,11 @@
 import { redirect } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
-import { DashboardStats } from "@/components/dashboard-stats"
-import { DashboardActions } from "@/components/dashboard-actions"
-import { UserManagement } from "@/components/user-management"
-import { RecentActivity } from "@/components/recent-activity"
-import { SystemHealth } from "@/components/system-health"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-async function fetchDashboardData(supabase: any, isAdmin: boolean, userId: string) {
-  const queries = [
-    supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date"),
-    supabase.from("locations").select("id"),
-    supabase
-      .from("transactions")
-      .select(`
-      id, transaction_type, quantity_change, reason, created_at, performed_by
-    `)
-      .order("created_at", { ascending: false })
-      .limit(20),
-  ]
-
-  if (isAdmin) {
-    queries.push(supabase.from("profiles").select("*").order("created_at", { ascending: false }))
-  }
-
-  const results = await Promise.allSettled(queries)
-
-  return {
-    inventoryItems: results[0].status === "fulfilled" ? results[0].value.data || [] : [],
-    locations: results[1].status === "fulfilled" ? results[1].value.data || [] : [],
-    recentTransactions: results[2].status === "fulfilled" ? results[2].value.data || [] : [],
-    users: isAdmin && results[3]?.status === "fulfilled" ? results[3].value.data || [] : [],
-  }
-}
-
-function createUserProfile(user: any, profile: any) {
-  return (
-    profile || {
-      id: user.id,
-      email: user.email,
-      full_name: user.user_metadata?.full_name || user.email,
-      role: user.user_metadata?.role || "staff",
-    }
-  )
-}
-
-function calculateStats(inventoryItems: any[], locations: any[], users: any[], recentTransactions: any[]) {
-  const totalItems = inventoryItems.length
-  const belowParCount = inventoryItems.filter(
-    (item) => item.current_quantity < item.par_level && item.par_level > 0,
-  ).length
-
-  const thirtyDaysFromNow = new Date()
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-  const expiringCount = inventoryItems.filter(
-    (item) => item.expiration_date && new Date(item.expiration_date) <= thirtyDaysFromNow,
-  ).length
-
-  const twentyFourHoursAgo = new Date()
-  twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
-  const recentActivityCount = recentTransactions.filter(
-    (activity) => new Date(activity.created_at) > twentyFourHoursAgo,
-  ).length
-
-  return {
-    totalItems,
-    belowParCount,
-    expiringCount,
-    locationCount: locations.length,
-    userCount: users.length,
-    adminCount: users.filter((u) => u.role === "admin").length,
-    recentActivityCount,
-  }
-}
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Package, AlertTriangle, Calendar, MapPin, Activity, Plus, BarChart3 } from "lucide-react"
+import Link from "next/link"
 
 export default async function DashboardPage() {
   const supabase = createServerClient()
@@ -86,77 +18,172 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
 
-  const userProfile = createUserProfile(user, profile)
-  const isAdmin = userProfile?.role === "admin"
+  const userProfile = profile || {
+    id: user.id,
+    email: user.email,
+    full_name: user.user_metadata?.full_name || user.email,
+    role: user.user_metadata?.role || "staff",
+  }
 
-  const { inventoryItems, locations, users, recentTransactions } = await fetchDashboardData(supabase, isAdmin, user.id)
+  const [inventoryResult, locationsResult, activityResult] = await Promise.allSettled([
+    supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date, name"),
+    supabase.from("locations").select("id"),
+    supabase
+      .from("transactions")
+      .select("id, transaction_type, quantity_change, reason, created_at, performed_by")
+      .order("created_at", { ascending: false })
+      .limit(5),
+  ])
 
-  const stats = calculateStats(inventoryItems, locations, users, recentTransactions)
+  const inventoryItems = inventoryResult.status === "fulfilled" ? inventoryResult.value.data || [] : []
+  const locations = locationsResult.status === "fulfilled" ? locationsResult.value.data || [] : []
+  const recentActivity = activityResult.status === "fulfilled" ? activityResult.value.data || [] : []
 
-  const transformedActivity = recentTransactions.map((transaction: any) => ({
-    id: transaction.id,
-    transaction_type: transaction.transaction_type,
-    quantity_change: transaction.quantity_change,
-    notes: transaction.reason,
-    created_at: transaction.created_at,
-    user_name: transaction.performed_by,
-  }))
+  const totalItems = inventoryItems.length
+  const lowStockItems = inventoryItems.filter((item) => item.current_quantity < item.par_level && item.par_level > 0)
+
+  const thirtyDaysFromNow = new Date()
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+  const expiringItems = inventoryItems.filter(
+    (item) => item.expiration_date && new Date(item.expiration_date) <= thirtyDaysFromNow,
+  )
 
   return (
-    <AppLayout user={userProfile} stats={{ belowParCount: stats.belowParCount, expiringCount: stats.expiringCount }}>
-      <div className="h-full">
-        <div className="mb-8">
-          <h1 className="text-4xl font-serif font-bold text-primary mb-2">
-            {isAdmin ? "Administrator Dashboard" : "Dashboard"}
+    <AppLayout user={userProfile} stats={{ belowParCount: lowStockItems.length, expiringCount: expiringItems.length }}>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-primary mb-2">
+            Welcome back, {userProfile.full_name?.split(" ")[0]}
           </h1>
-          <p className="text-lg text-muted-foreground font-medium">
-            {isAdmin ? "System overview and management tools" : "Inventory overview and quick actions"}
-          </p>
+          <p className="text-muted-foreground">Here's what's happening with your inventory today.</p>
         </div>
 
-        {isAdmin ? (
-          <Tabs defaultValue="overview" className="space-y-8">
-            <TabsList className="bg-card border border-border/50 rounded-2xl p-2 shadow-sm">
-              <TabsTrigger value="overview" className="rounded-xl font-medium">
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="users" className="rounded-xl font-medium">
-                User Management
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="rounded-xl font-medium">
-                Recent Activity
-              </TabsTrigger>
-              <TabsTrigger value="system" className="rounded-xl font-medium">
-                System Health
-              </TabsTrigger>
-            </TabsList>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="apple-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Items</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalItems}</div>
+            </CardContent>
+          </Card>
 
-            <TabsContent value="overview">
-              <div className="space-y-8">
-                <DashboardStats stats={stats} />
-                <DashboardActions isAdmin={true} />
+          <Card className="apple-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">{lowStockItems.length}</div>
+              {lowStockItems.length > 0 && (
+                <Badge variant="outline" className="mt-2 text-orange-600 border-orange-200">
+                  Needs attention
+                </Badge>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="apple-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+              <Calendar className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{expiringItems.length}</div>
+              {expiringItems.length > 0 && (
+                <Badge variant="outline" className="mt-2 text-red-600 border-red-200">
+                  Check dates
+                </Badge>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="apple-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Locations</CardTitle>
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{locations.length}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="apple-card">
+          <CardHeader>
+            <CardTitle className="font-serif">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Button asChild className="apple-button h-auto p-4 flex-col space-y-2">
+                <Link href="/inventory">
+                  <Package className="h-6 w-6" />
+                  <span>View Inventory</span>
+                </Link>
+              </Button>
+              <Button asChild className="apple-button h-auto p-4 flex-col space-y-2">
+                <Link href="/medications">
+                  <Plus className="h-6 w-6" />
+                  <span>Medications</span>
+                </Link>
+              </Button>
+              <Button asChild className="apple-button h-auto p-4 flex-col space-y-2">
+                <Link href="/locations">
+                  <MapPin className="h-6 w-6" />
+                  <span>Locations</span>
+                </Link>
+              </Button>
+              <Button asChild className="apple-button h-auto p-4 flex-col space-y-2">
+                <Link href="/reports">
+                  <BarChart3 className="h-6 w-6" />
+                  <span>Reports</span>
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="apple-card">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="font-serif">Recent Activity</CardTitle>
+            <Activity className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {recentActivity.length > 0 ? (
+              <div className="space-y-3">
+                {recentActivity.map((activity: any) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {activity.transaction_type === "in"
+                          ? "Stock Added"
+                          : activity.transaction_type === "out"
+                            ? "Stock Removed"
+                            : "Stock Adjusted"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{activity.reason}</p>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant={activity.transaction_type === "in" ? "default" : "secondary"}>
+                        {activity.transaction_type === "in" ? "+" : ""}
+                        {activity.quantity_change}
+                      </Badge>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(activity.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </TabsContent>
-
-            <TabsContent value="users">
-              <UserManagement users={users} currentUserId={user.id} />
-            </TabsContent>
-
-            <TabsContent value="activity">
-              <RecentActivity activities={transformedActivity} />
-            </TabsContent>
-
-            <TabsContent value="system">
-              <SystemHealth stats={stats} />
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <div className="space-y-8">
-            <DashboardStats stats={stats} />
-            <DashboardActions isAdmin={false} />
-            <RecentActivity activities={transformedActivity.slice(0, 5)} />
-          </div>
-        )}
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No recent activity</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   )
