@@ -150,8 +150,8 @@ GROUP BY i.id, i.name, i.current_quantity, l.name, l.id;
 CREATE OR REPLACE FUNCTION allocate_inventory(
   p_parent_item_id UUID,
   p_child_location_id UUID,
-  p_child_storage_unit_id UUID DEFAULT NULL,
   p_quantity INTEGER,
+  p_child_storage_unit_id UUID DEFAULT NULL,
   p_par_level INTEGER DEFAULT 0,
   p_notes TEXT DEFAULT NULL
 )
