@@ -27,6 +27,7 @@ interface InventoryItem {
   notes?: string
   location_id: string
   storage_unit_id?: string
+  ordering_url?: string
 }
 
 interface Location {
@@ -47,6 +48,7 @@ interface InventoryFormProps {
   isOpen: boolean
   onClose: () => void
   onSave: (item: Omit<InventoryItem, "id">) => Promise<void>
+  userRole?: string
 }
 
 const UNIT_OPTIONS = [
@@ -69,7 +71,7 @@ const UNIT_OPTIONS = [
   "kg",
 ]
 
-export function InventoryForm({ item, locations, isOpen, onClose, onSave }: InventoryFormProps) {
+export function InventoryForm({ item, locations, isOpen, onClose, onSave, userRole }: InventoryFormProps) {
   const [name, setName] = useState(item?.name || "")
   const [description, setDescription] = useState(item?.description || "")
   const [quantity, setQuantity] = useState(item?.quantity?.toString() || "0")
@@ -79,13 +81,14 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
   const [notes, setNotes] = useState(item?.notes || "")
   const [locationId, setLocationId] = useState(item?.location_id || "")
   const [storageUnitId, setStorageUnitId] = useState(item?.storage_unit_id || "")
+  const [orderingUrl, setOrderingUrl] = useState(item?.ordering_url || "")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const selectedLocation = locations.find((loc) => loc.id === locationId)
   const availableStorageUnits = selectedLocation?.storage_units || []
+  const isAdmin = userRole === "admin"
 
-  // Reset storage unit when location changes
   useEffect(() => {
     if (locationId !== item?.location_id) {
       setStorageUnitId("")
@@ -101,13 +104,14 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
       await onSave({
         name: name.trim(),
         description: description.trim() || undefined,
-        quantity: Number.parseInt(quantity) || 0, // This gets mapped to current_quantity
-        min_par_level: Number.parseInt(minParLevel) || 0, // This gets mapped to par_level
+        quantity: Number.parseInt(quantity) || 0,
+        min_par_level: Number.parseInt(minParLevel) || 0,
         unit_of_measure: unitOfMeasure,
         expiration_date: expirationDate || undefined,
         notes: notes.trim() || undefined,
         location_id: locationId,
         storage_unit_id: storageUnitId || undefined,
+        ordering_url: orderingUrl.trim() || undefined,
       })
       onClose()
       resetForm()
@@ -128,6 +132,7 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
     setNotes(item?.notes || "")
     setLocationId(item?.location_id || "")
     setStorageUnitId(item?.storage_unit_id || "")
+    setOrderingUrl(item?.ordering_url || "")
   }
 
   const handleClose = () => {
@@ -264,6 +269,22 @@ export function InventoryForm({ item, locations, isOpen, onClose, onSave }: Inve
                 rows={2}
               />
             </div>
+
+            {isAdmin && (
+              <div className="grid gap-2">
+                <Label htmlFor="orderingUrl">Ordering URL (Admin Only)</Label>
+                <Input
+                  id="orderingUrl"
+                  type="url"
+                  placeholder="https://supplier.com/product-page"
+                  value={orderingUrl}
+                  onChange={(e) => setOrderingUrl(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Add a direct link to reorder this item from your supplier
+                </p>
+              </div>
+            )}
           </div>
           {error && <div className="text-red-500 text-sm">{error}</div>}
           <DialogFooter>
