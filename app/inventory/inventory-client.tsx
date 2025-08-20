@@ -81,21 +81,42 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
 
   const handleSaveItem = async (itemData: any) => {
     try {
+      console.log("[v0] Starting inventory item save operation")
+      console.log("[v0] Item data:", itemData)
+      console.log("[v0] Editing item:", editingItem)
+
       if (editingItem) {
         // Update existing item
+        console.log("[v0] Updating existing inventory item with ID:", editingItem.id)
         const { error } = await supabase.from("inventory_items").update(itemData).eq("id", editingItem.id)
-        if (!error) {
-          router.refresh()
+
+        if (error) {
+          console.error("[v0] Error updating inventory item:", error)
+          throw error
         }
+
+        console.log("[v0] Inventory item updated successfully")
       } else {
         // Create new item
+        console.log("[v0] Creating new inventory item")
         const { error } = await supabase.from("inventory_items").insert(itemData)
-        if (!error) {
-          router.refresh()
+
+        if (error) {
+          console.error("[v0] Error creating inventory item:", error)
+          throw error
         }
+
+        console.log("[v0] Inventory item created successfully")
       }
+
+      setIsFormOpen(false)
+      setEditingItem(undefined)
+      console.log("[v0] Form closed and editing state cleared")
+
+      router.refresh()
+      console.log("[v0] Page refresh triggered")
     } catch (error) {
-      console.error("Error saving item:", error)
+      console.error("[v0] Error saving inventory item:", error)
     }
   }
 
