@@ -178,36 +178,25 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
   const fetchStorageUnitTypes = async () => {
     try {
-      // Use raw SQL to bypass schema cache issues
-      const { data, error } = await supabase.rpc("exec_sql", {
-        sql: `
-          SELECT id, name, capacity_type, default_capacity, description, created_at, updated_at
-          FROM storage_unit_types 
-          WHERE organization_id = (
-            SELECT organization_id FROM profiles WHERE id = auth.uid()
-          )
-          ORDER BY name
-        `,
-      })
+      if (!profile?.organization_id) {
+        console.log("No organization_id available")
+        setStorageUnitTypes([])
+        return
+      }
+
+      const { data, error } = await supabase
+        .from("storage_unit_types")
+        .select("*")
+        .eq("organization_id", profile.organization_id)
+        .order("name")
 
       if (error) {
-        // If RPC doesn't exist, create a simple fallback
-        console.log("Raw SQL RPC not available, using direct query")
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from("storage_unit_types")
-          .select("*")
-          .order("name")
-
-        if (fallbackError) {
-          if (fallbackError.message.includes("schema cache")) {
-            console.log("Storage unit types table not yet available in schema cache")
-            setStorageUnitTypes([])
-            return
-          }
-          throw fallbackError
+        if (error.message.includes("schema cache")) {
+          console.log("Storage unit types table not yet available in schema cache")
+          setStorageUnitTypes([])
+          return
         }
-        setStorageUnitTypes(fallbackData || [])
-        return
+        throw error
       }
       setStorageUnitTypes(data || [])
     } catch (error: any) {
@@ -232,64 +221,24 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         return
       }
 
-      if (editingStorageType) {
-        // Use raw SQL for update
-        const { error } = await supabase.rpc("exec_sql", {
-          sql: `
-            UPDATE storage_unit_types 
-            SET name = $1, capacity_type = $2, default_capacity = $3, description = $4, updated_at = now()
-            WHERE id = $5 AND organization_id = (
-              SELECT organization_id FROM profiles WHERE id = auth.uid()
-            )
-          `,
-          args: [
-            storageTypeForm.name,
-            storageTypeForm.capacity_type,
-            storageTypeForm.default_capacity,
-            storageTypeForm.description,
-            editingStorageType.id,
-          ],
-        })
+      const storageTypeData = {
+        ...storageTypeForm,
+        organization_id: profile.organization_id,
+      }
 
-        if (error) {
-          // Fallback to direct query
-          const { error: fallbackError } = await supabase
-            .from("storage_unit_types")
-            .update({
-              ...storageTypeForm,
-              organization_id: profile.organization_id,
-            })
-            .eq("id", editingStorageType.id)
-          if (fallbackError) throw fallbackError
-        }
+      if (editingStorageType) {
+        const { error } = await supabase
+          .from("storage_unit_types")
+          .update(storageTypeData)
+          .eq("id", editingStorageType.id)
+          .eq("organization_id", profile.organization_id)
+
+        if (error) throw error
         showMessage("Storage unit type updated successfully")
       } else {
-        // Use raw SQL for insert
-        const { error } = await supabase.rpc("exec_sql", {
-          sql: `
-            INSERT INTO storage_unit_types (name, capacity_type, default_capacity, description, organization_id)
-            VALUES ($1, $2, $3, $4, (
-              SELECT organization_id FROM profiles WHERE id = auth.uid()
-            ))
-          `,
-          args: [
-            storageTypeForm.name,
-            storageTypeForm.capacity_type,
-            storageTypeForm.default_capacity,
-            storageTypeForm.description,
-          ],
-        })
+        const { error } = await supabase.from("storage_unit_types").insert([storageTypeData])
 
-        if (error) {
-          // Fallback to direct query
-          const { error: fallbackError } = await supabase.from("storage_unit_types").insert([
-            {
-              ...storageTypeForm,
-              organization_id: profile.organization_id,
-            },
-          ])
-          if (fallbackError) throw fallbackError
-        }
+        if (error) throw error
         showMessage("Storage unit type created successfully")
       }
 
@@ -297,8 +246,12 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       setEditingStorageType(null)
       fetchStorageUnitTypes()
     } catch (error: any) {
+      console.error("Storage unit type operation error:", error)
       if (error.message.includes("row-level security policy")) {
-        showMessage("Permission denied. Only administrators can manage storage unit types.", "error")
+        showMessage(
+          "Permission denied. Please ensure you have admin privileges and proper organization setup.",
+          "error",
+        )
       } else if (error.message.includes("schema cache")) {
         showMessage("Database table not ready yet. Please try again in a moment.", "error")
       } else {
@@ -319,24 +272,17 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
     setSaving(true)
     try {
-      const { error } = await supabase.rpc("exec_sql", {
-        sql: `
-          DELETE FROM storage_unit_types 
-          WHERE id = $1 AND organization_id = (
-            SELECT organization_id FROM profiles WHERE id = auth.uid()
-          )
-        `,
-        args: [id],
-      })
+      const { error } = await supabase
+        .from("storage_unit_types")
+        .delete()
+        .eq("id", id)
+        .eq("organization_id", profile.organization_id)
 
-      if (error) {
-        // Fallback to direct query
-        const { error: fallbackError } = await supabase.from("storage_unit_types").delete().eq("id", id)
-        if (fallbackError) throw fallbackError
-      }
+      if (error) throw error
       showMessage("Storage unit type deleted successfully")
       fetchStorageUnitTypes()
     } catch (error: any) {
+      console.error("Delete storage unit type error:", error)
       if (error.message.includes("row-level security policy")) {
         showMessage("Permission denied. Only administrators can delete storage unit types.", "error")
       } else {
@@ -974,9 +920,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                             Edit
                           </Button>
                           <Button
-                            onClick={() =>
-                              setStorageUnitTypes(storageUnitTypes.filter((type) => type.id !== storageType.id))
-                            }
+                            onClick={() => handleDeleteStorageType(storageType.id)}
                             variant="outline"
                             size="sm"
                             className="h-9 px-3 rounded-xl text-destructive hover:text-destructive"
