@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "tw-animate-css";
+/* Removed problematic tw-animate-css import that was causing LightningCSS to fail */
 
 @custom-variant dark (&:is(.dark *));
 
