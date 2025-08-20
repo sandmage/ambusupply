@@ -6,7 +6,19 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LayoutDashboard, Package, MapPin, BarChart3, Users, Settings, LogOut, Menu, X, Activity } from "lucide-react"
+import {
+  LayoutDashboard,
+  Package,
+  MapPin,
+  BarChart3,
+  Users,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  Activity,
+  Pill,
+} from "lucide-react"
 
 interface AppSidebarProps {
   user: {
@@ -40,6 +52,13 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
       icon: Package,
       current: pathname === "/inventory",
       badge: stats?.belowParCount ? stats.belowParCount : undefined,
+    },
+    {
+      name: "Medications",
+      href: "/medications",
+      icon: Pill,
+      current: pathname === "/medications",
+      badge: stats?.expiringCount ? stats.expiringCount : undefined,
     },
     {
       name: "Locations",
