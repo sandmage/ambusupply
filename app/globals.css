@@ -4,81 +4,81 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to true Apple-esque color palette with iOS/macOS system colors */
-  --background: oklch(1 0 0); /* Pure white */
-  --foreground: oklch(0.15 0 0); /* True black for text */
-  --card: oklch(0.98 0 0); /* Off-white cards */
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.45 0.2 250); /* Apple Blue #007AFF */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.55 0.25 145); /* Apple Green #34C759 */
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.4 0 0); /* Apple Gray */
-  --accent: oklch(0.6 0.25 35); /* Apple Orange #FF9500 */
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.55 0.3 15); /* Apple Red #FF3B30 */
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0 0); /* Light border */
-  --input: oklch(0.98 0 0);
-  --ring: oklch(0.45 0.2 250 / 0.3); /* Apple Blue with transparency */
-  --chart-1: oklch(0.45 0.2 250); /* Apple Blue */
-  --chart-2: oklch(0.55 0.25 145); /* Apple Green */
-  --chart-3: oklch(0.6 0.25 35); /* Apple Orange */
-  --chart-4: oklch(0.55 0.3 15); /* Apple Red */
-  --chart-5: oklch(0.5 0.2 280); /* Apple Purple */
-  --radius: 1rem; /* Apple's signature rounded corners */
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.45 0.2 250);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.92 0 0);
-  --sidebar-ring: oklch(0.45 0.2 250 / 0.3);
-  /* Updated to Apple-esque typography using Inter and system fonts */
-  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Updated to hierarchical inventory design palette */
+  --background: #ffffff; /* Main background for the interface */
+  --foreground: #374151; /* Primary text color */
+  --card: #fefce8; /* Background for cards and sections */
+  --card-foreground: #374151; /* Text color for cards */
+  --popover: #ffffff; /* Background for popovers */
+  --popover-foreground: #374151; /* Text color for popovers */
+  --primary: #d97706; /* Primary actions (e.g., buttons) */
+  --primary-foreground: #ffffff; /* Text color for primary actions */
+  --secondary: #8b5cf6; /* Secondary actions */
+  --secondary-foreground: #ffffff; /* Text color for secondary actions */
+  --muted: #fefce8; /* Muted backgrounds */
+  --muted-foreground: #374151; /* Muted text */
+  --accent: #8b5cf6; /* Accent features */
+  --accent-foreground: #ffffff; /* Text color for accents */
+  --destructive: #dc2626; /* Color for destructive actions (e.g., delete) */
+  --destructive-foreground: #ffffff; /* Text color for destructive actions */
+  --border: #e5e7eb; /* Borders for sections */
+  --input: #f1f5f9; /* Input backgrounds */
+  --ring: #d97706; /* Focus ring color */
+  --chart-1: #d97706; /* Chart color 1 */
+  --chart-2: #8b5cf6; /* Chart color 2 */
+  --chart-3: #dc2626; /* Chart color 3 */
+  --chart-4: #f59e0b; /* Chart color 4 */
+  --chart-5: #374151; /* Chart color 5 */
+  --radius: 0.5rem; /* Corner rounding size */
+  --sidebar: #ffffff; /* Sidebar background */
+  --sidebar-foreground: #374151; /* Sidebar text color */
+  --sidebar-primary: #fefce8; /* Sidebar primary background */
+  --sidebar-primary-foreground: #374151; /* Sidebar primary text */
+  --sidebar-accent: #8b5cf6; /* Sidebar accent color */
+  --sidebar-accent-foreground: #ffffff; /* Sidebar accent text */
+  --sidebar-border: #e5e7eb; /* Sidebar borders */
+  --sidebar-ring: #d97706; /* Sidebar focus ring */
+
+  /* Updated to hierarchical inventory typography */
+  --font-space-grotesk: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-dm-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-jetbrains: "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", monospace;
 }
 
 .dark {
-  /* Updated dark mode to match Apple's dark appearance */
-  --background: oklch(0.05 0 0); /* True black background */
-  --foreground: oklch(0.95 0 0); /* White text */
-  --card: oklch(0.08 0 0); /* Dark cards */
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.08 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.55 0.2 250); /* Brighter Apple Blue for dark mode */
-  --primary-foreground: oklch(0.05 0 0);
-  --secondary: oklch(0.65 0.25 145); /* Brighter Apple Green */
-  --secondary-foreground: oklch(0.05 0 0);
-  --muted: oklch(0.12 0 0);
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.7 0.25 35); /* Brighter Apple Orange */
-  --accent-foreground: oklch(0.05 0 0);
-  --destructive: oklch(0.65 0.3 15); /* Brighter Apple Red */
-  --destructive-foreground: oklch(0.05 0 0);
-  --border: oklch(0.2 0 0);
-  --input: oklch(0.12 0 0);
-  --ring: oklch(0.55 0.2 250 / 0.3);
-  --chart-1: oklch(0.55 0.2 250);
-  --chart-2: oklch(0.65 0.25 145);
-  --chart-3: oklch(0.7 0.25 35);
-  --chart-4: oklch(0.65 0.3 15);
-  --chart-5: oklch(0.6 0.2 280);
-  --sidebar: oklch(0.06 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.55 0.2 250);
-  --sidebar-primary-foreground: oklch(0.05 0 0);
-  --sidebar-accent: oklch(0.12 0 0);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.2 0 0);
-  --sidebar-ring: oklch(0.55 0.2 250 / 0.3);
-  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-jetbrains: "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", monospace;
+  /* Dark mode variants for hierarchical inventory */
+  --background: #111827; /* Dark background */
+  --foreground: #f9fafb; /* Light text */
+  --card: #1f2937; /* Dark cards */
+  --card-foreground: #f9fafb;
+  --popover: #1f2937;
+  --popover-foreground: #f9fafb;
+  --primary: #f59e0b; /* Brighter amber for dark mode */
+  --primary-foreground: #111827;
+  --secondary: #a78bfa; /* Brighter purple */
+  --secondary-foreground: #111827;
+  --muted: #374151;
+  --muted-foreground: #9ca3af;
+  --accent: #a78bfa;
+  --accent-foreground: #111827;
+  --destructive: #ef4444;
+  --destructive-foreground: #f9fafb;
+  --border: #374151;
+  --input: #374151;
+  --ring: #f59e0b;
+  --chart-1: #f59e0b;
+  --chart-2: #a78bfa;
+  --chart-3: #ef4444;
+  --chart-4: #fbbf24;
+  --chart-5: #6b7280;
+  --sidebar: #1f2937;
+  --sidebar-foreground: #f9fafb;
+  --sidebar-primary: #374151;
+  --sidebar-primary-foreground: #f9fafb;
+  --sidebar-accent: #a78bfa;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-border: #374151;
+  --sidebar-ring: #f59e0b;
 }
 
 @theme inline {
@@ -118,9 +118,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Updated font mappings to use Inter as primary sans-serif */
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-inter); /* Using Inter for both sans and serif for consistency */
+
+  /* Updated font mappings for hierarchical inventory design */
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-space-grotesk);
   --font-mono: var(--font-jetbrains);
 }
 
@@ -130,7 +131,6 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
-    /* Added smooth transitions for Apple-like interactions */
     transition: background-color 0.2s ease, color 0.2s ease;
   }
   h1,
@@ -139,39 +139,42 @@
   h4,
   h5,
   h6 {
-    /* Updated headings to use Inter with Apple-esque weight and spacing */
-    @apply font-sans font-semibold tracking-tight;
+    /* Updated headings to use Space Grotesk for hierarchical inventory */
+    @apply font-serif font-bold tracking-tight;
   }
-  /* Updated utility classes for true Apple aesthetic */
-  .apple-heading {
-    @apply text-primary font-sans font-semibold tracking-tight;
+
+  /* Added hierarchical inventory specific utility classes */
+  .hierarchy-heading {
+    @apply text-primary font-serif font-bold tracking-tight;
   }
-  .apple-card {
-    @apply bg-card border border-border rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 ease-out;
+  .hierarchy-card {
+    @apply bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ease-out;
   }
-  .apple-button {
-    @apply bg-primary text-primary-foreground rounded-2xl px-6 py-3 font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
+  .hierarchy-button {
+    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2 font-medium transition-all duration-200 hover:shadow-md hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
   }
-  .apple-button-secondary {
-    @apply bg-secondary text-secondary-foreground rounded-2xl px-6 py-3 font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
+  .hierarchy-button-secondary {
+    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2 font-medium transition-all duration-200 hover:shadow-md hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
   }
-  .status-indicator {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  .allocation-indicator {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
   }
-  .status-low {
-    @apply bg-destructive/10 text-destructive;
-  }
-  .status-normal {
+  .allocation-full {
     @apply bg-secondary/10 text-secondary;
   }
-  .status-high {
+  .allocation-partial {
     @apply bg-primary/10 text-primary;
   }
-  /* Enhanced Apple-inspired glass morphism with better blur and transparency */
-  .apple-glass {
-    @apply backdrop-blur-2xl bg-white/70 border border-white/30 shadow-xl;
+  .allocation-low {
+    @apply bg-destructive/10 text-destructive;
   }
-  .dark .apple-glass {
-    @apply backdrop-blur-2xl bg-black/30 border border-white/10 shadow-2xl;
+  .hierarchy-tree-line {
+    @apply border-l-2 border-border ml-4 pl-4;
+  }
+  .parent-location {
+    @apply bg-primary/5 border-primary/20;
+  }
+  .child-location {
+    @apply bg-muted border-border ml-6;
   }
 }
