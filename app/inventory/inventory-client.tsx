@@ -5,10 +5,25 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { InventoryTable } from "@/components/inventory-table"
 import { InventoryForm } from "@/components/inventory-form"
+import { TransactionHistory } from "@/components/transaction-history"
+import { InventoryReports } from "@/components/inventory-reports"
+import { BulkOperations } from "@/components/bulk-operations"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Package, AlertTriangle, Clock, TrendingDown } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Plus,
+  Package,
+  AlertTriangle,
+  Clock,
+  TrendingDown,
+  History,
+  BarChart3,
+  Settings,
+  Download,
+  Layers,
+} from "lucide-react"
 
 interface InventoryItem {
   id: string
@@ -46,6 +61,8 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
   const [items, setItems] = useState<InventoryItem[]>(initialItems)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>()
+  const [activeTab, setActiveTab] = useState("inventory")
+  const [selectedItems, setSelectedItems] = useState<string[]>([])
   const router = useRouter()
 
   const supabase = createClient()
@@ -206,6 +223,60 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
     }
   }
 
+  const handleBulkRestock = async (itemIds: string[], quantity: number) => {
+    try {
+      for (const itemId of itemIds) {
+        await handleRestockItem(itemId, quantity)
+      }
+      setSelectedItems([])
+    } catch (error) {
+      console.error("Error with bulk restock:", error)
+    }
+  }
+
+  const handleBulkTransfer = async (itemIds: string[], targetLocationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("inventory_items")
+        .update({ location_id: targetLocationId })
+        .in("id", itemIds)
+
+      if (!error) {
+        router.refresh()
+        setSelectedItems([])
+      }
+    } catch (error) {
+      console.error("Error with bulk transfer:", error)
+    }
+  }
+
+  const handleExportInventory = () => {
+    const csvContent = [
+      ["Name", "Description", "Quantity", "Par Level", "Unit", "Location", "Storage Unit", "Expiration", "Lot Number"],
+      ...items.map((item) => [
+        item.name,
+        item.description || "",
+        item.quantity.toString(),
+        item.min_par_level.toString(),
+        item.unit_of_measure,
+        item.location_name,
+        item.storage_unit_name || "",
+        item.expiration_date || "",
+        item.lot_number || "",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `inventory-${new Date().toISOString().split("T")[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="h-full">
       <div className="mb-8">
@@ -216,117 +287,175 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
               {isAdmin ? "Manage medical supplies and track usage" : "View inventory and record usage"}
             </p>
           </div>
-          {isAdmin && (
-            <Button onClick={handleAddItem} className="apple-button-secondary">
-              <Plus className="h-5 w-5 mr-2" />
-              Add Item
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/inventory/hierarchical")}
+              className="apple-button-outline"
+            >
+              <Layers className="h-5 w-5 mr-2" />
+              Hierarchical View
             </Button>
+
+            <Button variant="outline" onClick={handleExportInventory} className="apple-button-outline bg-transparent">
+              <Download className="h-5 w-5 mr-2" />
+              Export
+            </Button>
+
+            {isAdmin && (
+              <Button onClick={handleAddItem} className="apple-button-secondary">
+                <Plus className="h-5 w-5 mr-2" />
+                Add Item
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
+          <TabsTrigger value="inventory" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Inventory
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            History
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Reports
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Bulk Ops
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="inventory" className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-primary/10 transition-transform duration-200 group-hover:scale-110">
+                    <Package className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <div className="text-3xl font-serif font-bold text-primary mb-2">{totalItems}</div>
+                <div className="text-sm text-muted-foreground font-medium">Total Items</div>
+              </CardContent>
+            </Card>
+
+            <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-destructive/10 transition-transform duration-200 group-hover:scale-110">
+                    <AlertTriangle className="h-6 w-6 text-destructive" />
+                  </div>
+                </div>
+                <div className="text-3xl font-serif font-bold text-destructive mb-2">{belowParCount}</div>
+                <div className="text-sm text-muted-foreground font-medium">Below Par Level</div>
+              </CardContent>
+            </Card>
+
+            <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-orange-100 transition-transform duration-200 group-hover:scale-110">
+                    <Clock className="h-6 w-6 text-orange-600" />
+                  </div>
+                </div>
+                <div className="text-3xl font-serif font-bold text-orange-600 mb-2">{expiringCount}</div>
+                <div className="text-sm text-muted-foreground font-medium">Expiring Soon</div>
+              </CardContent>
+            </Card>
+
+            <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-destructive/10 transition-transform duration-200 group-hover:scale-110">
+                    <TrendingDown className="h-6 w-6 text-destructive" />
+                  </div>
+                </div>
+                <div className="text-3xl font-serif font-bold text-destructive mb-2">{outOfStockCount}</div>
+                <div className="text-sm text-muted-foreground font-medium">Out of Stock</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {(belowParCount > 0 || expiringCount > 0 || outOfStockCount > 0) && (
+            <Card className="apple-card border-destructive/30 bg-gradient-to-r from-destructive/5 to-orange-50">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3 text-destructive">
+                  <div className="p-2 rounded-xl bg-destructive/10">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <span className="font-serif font-bold">Inventory Alerts</span>
+                </CardTitle>
+                <CardDescription className="text-base">Items requiring immediate attention</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  {belowParCount > 0 && (
+                    <Badge variant="destructive" className="text-sm font-medium px-3 py-1 rounded-xl">
+                      {belowParCount} items below par level
+                    </Badge>
+                  )}
+                  {expiringCount > 0 && (
+                    <Badge className="text-sm font-medium px-3 py-1 rounded-xl bg-orange-500 text-white hover:bg-orange-600">
+                      {expiringCount} items expiring soon
+                    </Badge>
+                  )}
+                  {outOfStockCount > 0 && (
+                    <Badge variant="destructive" className="text-sm font-medium px-3 py-1 rounded-xl">
+                      {outOfStockCount} items out of stock
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </div>
-      </div>
 
-      <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-2xl bg-primary/10 transition-transform duration-200 group-hover:scale-110">
-                  <Package className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-              <div className="text-3xl font-serif font-bold text-primary mb-2">{totalItems}</div>
-              <div className="text-sm text-muted-foreground font-medium">Total Items</div>
-            </CardContent>
-          </Card>
-
-          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-2xl bg-destructive/10 transition-transform duration-200 group-hover:scale-110">
-                  <AlertTriangle className="h-6 w-6 text-destructive" />
-                </div>
-              </div>
-              <div className="text-3xl font-serif font-bold text-destructive mb-2">{belowParCount}</div>
-              <div className="text-sm text-muted-foreground font-medium">Below Par Level</div>
-            </CardContent>
-          </Card>
-
-          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-2xl bg-orange-100 transition-transform duration-200 group-hover:scale-110">
-                  <Clock className="h-6 w-6 text-orange-600" />
-                </div>
-              </div>
-              <div className="text-3xl font-serif font-bold text-orange-600 mb-2">{expiringCount}</div>
-              <div className="text-sm text-muted-foreground font-medium">Expiring Soon</div>
-            </CardContent>
-          </Card>
-
-          <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-2xl bg-destructive/10 transition-transform duration-200 group-hover:scale-110">
-                  <TrendingDown className="h-6 w-6 text-destructive" />
-                </div>
-              </div>
-              <div className="text-3xl font-serif font-bold text-destructive mb-2">{outOfStockCount}</div>
-              <div className="text-sm text-muted-foreground font-medium">Out of Stock</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {(belowParCount > 0 || expiringCount > 0 || outOfStockCount > 0) && (
-          <Card className="apple-card border-destructive/30 bg-gradient-to-r from-destructive/5 to-orange-50">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-3 text-destructive">
-                <div className="p-2 rounded-xl bg-destructive/10">
-                  <AlertTriangle className="h-5 w-5" />
-                </div>
-                <span className="font-serif font-bold">Inventory Alerts</span>
-              </CardTitle>
-              <CardDescription className="text-base">Items requiring immediate attention</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-3">
-                {belowParCount > 0 && (
-                  <Badge variant="destructive" className="text-sm font-medium px-3 py-1 rounded-xl">
-                    {belowParCount} items below par level
-                  </Badge>
-                )}
-                {expiringCount > 0 && (
-                  <Badge className="text-sm font-medium px-3 py-1 rounded-xl bg-orange-500 text-white hover:bg-orange-600">
-                    {expiringCount} items expiring soon
-                  </Badge>
-                )}
-                {outOfStockCount > 0 && (
-                  <Badge variant="destructive" className="text-sm font-medium px-3 py-1 rounded-xl">
-                    {outOfStockCount} items out of stock
-                  </Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <InventoryTable
-          items={items}
-          onEditItem={handleEditItem}
-          onUseItem={handleUseItem}
-          onRestockItem={handleRestockItem}
-          userRole={userRole}
-        />
-
-        {isAdmin && (
-          <InventoryForm
-            item={editingItem}
-            locations={locations}
-            isOpen={isFormOpen}
-            onClose={() => setIsFormOpen(false)}
-            onSave={handleSaveItem}
+          <InventoryTable
+            items={items}
+            onEditItem={handleEditItem}
+            onUseItem={handleUseItem}
+            onRestockItem={handleRestockItem}
+            userRole={userRole}
+            selectedItems={selectedItems}
+            onSelectionChange={setSelectedItems}
           />
-        )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <TransactionHistory />
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <InventoryReports items={items} />
+        </TabsContent>
+
+        <TabsContent value="bulk">
+          <BulkOperations
+            items={items}
+            locations={locations}
+            onBulkRestock={handleBulkRestock}
+            onBulkTransfer={handleBulkTransfer}
+            userRole={userRole}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Existing form */}
+      {isAdmin && (
+        <InventoryForm
+          item={editingItem}
+          locations={locations}
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSave={handleSaveItem}
+        />
+      )}
     </div>
   )
 }
