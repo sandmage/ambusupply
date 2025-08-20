@@ -211,6 +211,8 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
           console.error("[v0] Error updating storage unit:", error)
         } else {
           console.log("[v0] Storage unit updated successfully")
+          setIsStorageFormOpen(false)
+          setEditingStorageUnit(undefined)
           router.refresh()
         }
       } else {
@@ -230,12 +232,16 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
           console.error("[v0] Error creating storage unit:", error)
         } else {
           console.log("[v0] Storage unit created successfully:", data)
+          setIsStorageFormOpen(false)
+          setEditingStorageUnit(undefined)
           router.refresh()
         }
       }
     } catch (error) {
       console.error("[v0] Exception in storage unit save:", error)
     }
+
+    console.log("[v0] Storage unit save completed successfully")
   }
 
   const handleDeleteStorageUnit = async (unitId: string, locationId: string) => {
