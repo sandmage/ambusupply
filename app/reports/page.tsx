@@ -1,39 +1,84 @@
-import { ReportsHeader } from "@/components/reports/reports-header"
-import { ReportsOverview } from "@/components/reports/reports-overview"
-import { FleetAnalytics } from "@/components/reports/fleet-analytics"
-import { InventoryAnalytics } from "@/components/reports/inventory-analytics"
-import { OrderAnalytics } from "@/components/reports/order-analytics"
-import { PerformanceMetrics } from "@/components/reports/performance-metrics"
-import { DailyChecksAnalytics } from "@/components/reports/daily-checks-analytics"
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import { ReportsClient } from "./reports-client"
 
-export default function ReportsPage() {
+export default async function ReportsPage() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+  if (error || !user) {
+    redirect("/auth/login")
+  }
+
+  // Get user profile to check role
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+
+  // Fetch items below par level
+  const { data: belowParItems } = await supabase
+    .from("items_below_par")
+    .select(`
+      id,
+      name,
+      quantity,
+      min_par_level,
+      unit_of_measure,
+      location_name,
+      storage_unit_name,
+      shortage_amount
+    `)
+    .order("shortage_amount", { ascending: false })
+
+  // Fetch expiring items
+  const { data: expiringItems } = await supabase
+    .from("expiring_items")
+    .select(`
+      id,
+      name,
+      quantity,
+      min_par_level,
+      unit_of_measure,
+      expiration_date,
+      location_name,
+      storage_unit_name,
+      days_until_expiration
+    `)
+    .order("days_until_expiration")
+
+  // Fetch usage trends using the database function
+  const { data: usageTrends } = await supabase.rpc("get_usage_trends", { days_back: 30 })
+
+  // Get inventory summary stats
+  const { data: inventoryStats } = await supabase.from("inventory_items").select(`
+      id,
+      quantity,
+      min_par_level,
+      expiration_date,
+      locations!inner (name)
+    `)
+
+  const totalItems = inventoryStats?.length || 0
+  const belowParCount = belowParItems?.length || 0
+  const expiringCount = expiringItems?.length || 0
+
+  // Count unique locations
+  const uniqueLocations = new Set(inventoryStats?.map((item) => (item as any).locations.name))
+  const locationCount = uniqueLocations.size
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="space-y-8">
-          <ReportsHeader />
-          <ReportsOverview />
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <div className="min-w-0 w-full overflow-hidden">
-              <FleetAnalytics />
-            </div>
-            <div className="min-w-0 w-full overflow-hidden">
-              <InventoryAnalytics />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <div className="min-w-0 w-full overflow-hidden">
-              <OrderAnalytics />
-            </div>
-            <div className="min-w-0 w-full overflow-hidden">
-              <PerformanceMetrics />
-            </div>
-          </div>
-          <div className="min-w-0 w-full overflow-hidden">
-            <DailyChecksAnalytics />
-          </div>
-        </div>
-      </div>
-    </div>
+    <ReportsClient
+      belowParItems={belowParItems || []}
+      expiringItems={expiringItems || []}
+      usageTrends={usageTrends || []}
+      stats={{
+        totalItems,
+        belowParCount,
+        expiringCount,
+        locationCount,
+      }}
+      userRole={profile?.role || "staff"}
+    />
   )
 }

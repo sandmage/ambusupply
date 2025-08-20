@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -10,16 +10,14 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  /* Updated primary color to emerald-600 (#059669) as per design brief */
-  --primary: oklch(0.4 0.15 160);
+  --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  /* Updated accent to bright emerald (#10b981) for interactive elements */
-  --accent: oklch(0.65 0.18 160);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -30,7 +28,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.75rem;
+  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -113,9 +111,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Updated font configuration for Work Sans and Open Sans */
-  --font-sans: var(--font-open-sans);
-  --font-heading: var(--font-work-sans);
 }
 
 @layer base {
@@ -124,81 +119,5 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-  /* Added heading font class */
-  .font-heading {
-    font-family: var(--font-heading);
-  }
-}
-
-/* Added custom animations and hover effects */
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
-  }
-
-  .hover-lift {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Mobile-first touch optimizations */
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  .mobile-safe-area {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  /* Custom scrollbar for mobile */
-  .mobile-scroll {
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .mobile-scroll::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-/* Added responsive breakpoint for extra small screens */
-@media (max-width: 475px) {
-  .xs\:block {
-    display: block;
-  }
-
-  .xs\:hidden {
-    display: none;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
