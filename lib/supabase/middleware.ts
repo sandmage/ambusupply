@@ -2,12 +2,9 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function updateSession(request: NextRequest) {
-  if (!process.env.ambusupply_NEXT_PUBLIC_SUPABASE_URL || !process.env.ambusupply_NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    // Skip authentication if Supabase is not configured
-    return NextResponse.next({
-      request,
-    })
-  }
+  const supabaseUrl = "https://oympqgqucvyonipelhsr.supabase.co"
+  const supabaseAnonKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95bXBxZ3F1Y3Z5b25pcGVsaHNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyMjU0NjIsImV4cCI6MjA3MDgwMTQ2Mn0.VPnOfggyWgM4MaNT6G4R8ekqBNxqXc-KcaeZwcloqeU"
 
   let supabaseResponse = NextResponse.next({
     request,
@@ -15,24 +12,20 @@ export async function updateSession(request: NextRequest) {
 
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
-  const supabase = createServerClient(
-    process.env.ambusupply_NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.ambusupply_NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        supabaseResponse = NextResponse.next({
+          request,
+        })
+        cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
       },
     },
-  )
+  })
 
   // Do not run code between createServerClient and
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
