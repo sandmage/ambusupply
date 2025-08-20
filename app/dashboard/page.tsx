@@ -58,13 +58,41 @@ export default async function DashboardPage() {
 
   console.log("[v0] Dashboard: Starting database queries")
 
-  const [inventoryResult, locationsResult, usersResult, transactionsResult] = await Promise.all([
-    supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date"),
-    supabase.from("locations").select("id"),
-    isAdmin
-      ? supabase.from("profiles").select("*").order("created_at", { ascending: false })
-      : { data: [], error: null },
-    supabase
+  let inventoryItems = []
+  let locations = []
+  let users = []
+  let recentTransactions = []
+
+  try {
+    const { data: inventoryData } = await supabase
+      .from("inventory_items")
+      .select("id, current_quantity, par_level, expiration_date")
+    inventoryItems = inventoryData || []
+  } catch (err) {
+    console.log("[v0] Dashboard: Inventory query error:", err)
+    inventoryItems = []
+  }
+
+  try {
+    const { data: locationsData } = await supabase.from("locations").select("id")
+    locations = locationsData || []
+  } catch (err) {
+    console.log("[v0] Dashboard: Locations query error:", err)
+    locations = []
+  }
+
+  if (isAdmin) {
+    try {
+      const { data: usersData } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
+      users = usersData || []
+    } catch (err) {
+      console.log("[v0] Dashboard: Users query error:", err)
+      users = []
+    }
+  }
+
+  try {
+    const { data: transactionsData } = await supabase
       .from("transactions")
       .select(`
         id,
@@ -75,19 +103,12 @@ export default async function DashboardPage() {
         performed_by
       `)
       .order("created_at", { ascending: false })
-      .limit(20),
-  ])
-
-  // Handle errors and extract data
-  const inventoryItems = inventoryResult.error ? [] : inventoryResult.data
-  const locations = locationsResult.error ? [] : locationsResult.data
-  const users = usersResult.error ? [] : usersResult.data
-  const recentTransactions = transactionsResult.error ? [] : transactionsResult.data
-
-  if (inventoryResult.error) console.log("[v0] Dashboard: Inventory query error:", inventoryResult.error)
-  if (locationsResult.error) console.log("[v0] Dashboard: Locations query error:", locationsResult.error)
-  if (usersResult.error) console.log("[v0] Dashboard: Users query error:", usersResult.error)
-  if (transactionsResult.error) console.log("[v0] Dashboard: Transactions query error:", transactionsResult.error)
+      .limit(20)
+    recentTransactions = transactionsData || []
+  } catch (err) {
+    console.log("[v0] Dashboard: Transactions query error:", err)
+    recentTransactions = []
+  }
 
   console.log("[v0] Dashboard: Database queries completed")
   console.log("[v0] Dashboard: Items:", inventoryItems?.length || 0, "Locations:", locations?.length || 0)
