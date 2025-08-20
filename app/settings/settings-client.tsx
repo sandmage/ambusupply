@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,6 +70,62 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     default_capacity: 0,
   })
 
+  const [currentProfile, setCurrentProfile] = useState(profile)
+  const [profileLoading, setProfileLoading] = useState(!profile)
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!profile && user?.id) {
+        console.log("[v0] Profile not provided, fetching from database...")
+        setProfileLoading(true)
+        try {
+          const { data: profileData, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+          if (error) {
+            console.log("[v0] Profile fetch error:", error)
+            if (error.code === "PGRST116") {
+              // Profile doesn't exist, create one
+              console.log("[v0] Creating new profile for user...")
+              const { data: newProfile, error: createError } = await supabase
+                .from("profiles")
+                .insert([
+                  {
+                    id: user.id,
+                    email: user.email,
+                    role: "admin", // Default to admin for now
+                    organization_id: organization?.id || null,
+                  },
+                ])
+                .select()
+                .single()
+
+              if (createError) {
+                console.error("[v0] Error creating profile:", createError)
+                showMessage("Error creating user profile. Please contact support.", "error")
+              } else {
+                console.log("[v0] New profile created:", newProfile)
+                setCurrentProfile(newProfile)
+              }
+            }
+          } else {
+            console.log("[v0] Profile fetched successfully:", profileData)
+            setCurrentProfile(profileData)
+          }
+        } catch (error) {
+          console.error("[v0] Error in profile fetch:", error)
+          showMessage("Error loading user profile", "error")
+        } finally {
+          setProfileLoading(false)
+        }
+      } else {
+        setCurrentProfile(profile)
+        setProfileLoading(false)
+      }
+    }
+
+    fetchUserProfile()
+  }, [user, profile, organization, supabase])
+
   const showMessage = (msg: string, type: "success" | "error" = "success") => {
     setMessage(msg)
     setTimeout(() => setMessage(""), 3000)
@@ -106,7 +164,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   }
 
   const handleOrganizationUpdate = async () => {
-    if (!organization || profile?.role !== "admin") return
+    if (!organization || currentProfile?.role !== "admin") return
 
     setSaving(true)
     try {
@@ -178,7 +236,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
   const fetchStorageUnitTypes = async () => {
     try {
-      if (!profile?.organization_id) {
+      if (!currentProfile?.organization_id) {
         console.log("No organization_id available")
         setStorageUnitTypes([])
         return
@@ -187,7 +245,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       const { data, error } = await supabase
         .from("storage_unit_types")
         .select("*")
-        .eq("organization_id", profile.organization_id)
+        .eq("organization_id", currentProfile.organization_id)
         .order("name")
 
       if (error) {
@@ -208,31 +266,33 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     }
   }
 
-  const handleStorageTypeSubmit = async () => {
+  const handleStorageTypeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    console.log("[v0] User profile data:", currentProfile)
+    console.log("[v0] User role:", currentProfile?.role)
+    console.log("[v0] User organization_id:", currentProfile?.organization_id)
+    console.log("[v0] Is admin check:", currentProfile?.role === "admin")
+
+    if (currentProfile?.role !== "admin") {
+      console.log("[v0] Permission denied - user role is not admin")
+      showMessage("Only administrators can manage storage unit types", "error")
+      return
+    }
+
+    if (!currentProfile?.organization_id) {
+      console.log("[v0] No organization_id available")
+      showMessage("No organization associated with your account", "error")
+      return
+    }
+
     setSaving(true)
     try {
-      console.log("[v0] User profile data:", profile)
-      console.log("[v0] User role:", profile?.role)
-      console.log("[v0] User organization_id:", profile?.organization_id)
-      console.log("[v0] Is admin check:", profile?.role === "admin")
-
-      if (profile?.role !== "admin") {
-        console.log("[v0] Permission denied - user role is not admin")
-        showMessage("Only administrators can manage storage unit types", "error")
-        return
-      }
-
-      if (!profile?.organization_id) {
-        console.log("[v0] No organization_id found in profile")
-        showMessage("Organization information not available. Please complete setup first.", "error")
-        return
-      }
-
       console.log("[v0] Proceeding with storage type operation...")
 
       const storageTypeData = {
         ...storageTypeForm,
-        organization_id: profile.organization_id,
+        organization_id: currentProfile.organization_id,
       }
 
       console.log("[v0] Storage type data to submit:", storageTypeData)
@@ -242,7 +302,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
           .from("storage_unit_types")
           .update(storageTypeData)
           .eq("id", editingStorageType.id)
-          .eq("organization_id", profile.organization_id)
+          .eq("organization_id", currentProfile.organization_id)
 
         if (error) throw error
         showMessage("Storage unit type updated successfully")
@@ -275,7 +335,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   }
 
   const handleDeleteStorageType = async (id: string) => {
-    if (profile?.role !== "admin") {
+    if (currentProfile?.role !== "admin") {
       showMessage("Only administrators can delete storage unit types", "error")
       return
     }
@@ -288,7 +348,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         .from("storage_unit_types")
         .delete()
         .eq("id", id)
-        .eq("organization_id", profile.organization_id)
+        .eq("organization_id", currentProfile.organization_id)
 
       if (error) throw error
       showMessage("Storage unit type deleted successfully")
@@ -342,7 +402,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
           <TabsTrigger
             value="organization"
             className="flex items-center gap-2 rounded-xl font-medium"
-            disabled={profile?.role !== "admin"}
+            disabled={currentProfile?.role !== "admin"}
           >
             <Building2 className="h-4 w-4" />
             Organization
@@ -416,10 +476,10 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
               <div className="flex items-center gap-3">
                 <Badge
-                  variant={profile?.role === "admin" ? "default" : "secondary"}
+                  variant={currentProfile?.role === "admin" ? "default" : "secondary"}
                   className="text-sm font-medium px-3 py-1 rounded-xl"
                 >
-                  {profile?.role || "staff"}
+                  {currentProfile?.role || "staff"}
                 </Badge>
                 <span className="text-base text-muted-foreground font-medium">Current Role</span>
               </div>
@@ -518,7 +578,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
         {/* Organization Settings */}
         <TabsContent value="organization" className="space-y-8">
-          {profile?.role === "admin" ? (
+          {currentProfile?.role === "admin" ? (
             <Card className="apple-card">
               <CardHeader>
                 <CardTitle className="text-2xl font-serif font-bold text-primary">Organization Details</CardTitle>
@@ -996,7 +1056,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                 </div>
                 <Button
                   variant="outline"
-                  disabled={profile?.role !== "admin"}
+                  disabled={currentProfile?.role !== "admin"}
                   className="apple-button-secondary h-12 px-6 bg-transparent"
                 >
                   <Database className="h-4 w-4 mr-2" />
@@ -1011,7 +1071,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                 </div>
                 <Button
                   variant="outline"
-                  disabled={profile?.role !== "admin"}
+                  disabled={currentProfile?.role !== "admin"}
                   className="apple-button-secondary h-12 px-6 bg-transparent"
                 >
                   <Clock className="h-4 w-4 mr-2" />
