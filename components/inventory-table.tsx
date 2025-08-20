@@ -358,18 +358,27 @@ export function InventoryTable({ items, onEditItem, onUseItem, onRestockItem, us
                     <TableCell className="py-4">
                       <div className="flex items-center justify-end gap-3">
                         <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            min="1"
-                            max={item.quantity}
-                            value={useQuantities[item.id] || ""}
-                            onChange={(e) =>
-                              setUseQuantities((prev) => ({ ...prev, [item.id]: Number.parseInt(e.target.value) || 0 }))
-                            }
-                            placeholder="1"
-                            className="w-16 h-9 text-sm rounded-xl border-border/50"
-                            aria-label="Quantity to use/consume"
-                          />
+                          <div className="flex flex-col items-center gap-1">
+                            <label htmlFor={`use-qty-${item.id}`} className="text-xs text-muted-foreground font-medium">
+                              Use Qty
+                            </label>
+                            <Input
+                              id={`use-qty-${item.id}`}
+                              type="number"
+                              min="1"
+                              max={item.quantity}
+                              value={useQuantities[item.id] || ""}
+                              onChange={(e) =>
+                                setUseQuantities((prev) => ({
+                                  ...prev,
+                                  [item.id]: Number.parseInt(e.target.value) || 0,
+                                }))
+                              }
+                              placeholder="1"
+                              className="w-16 h-9 text-sm rounded-xl border-border/50"
+                              aria-label="Quantity to use/consume"
+                            />
+                          </div>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -399,20 +408,29 @@ export function InventoryTable({ items, onEditItem, onUseItem, onRestockItem, us
 
                         {isAdmin && (
                           <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              min="1"
-                              value={restockQuantities[item.id] || ""}
-                              onChange={(e) =>
-                                setRestockQuantities((prev) => ({
-                                  ...prev,
-                                  [item.id]: Number.parseInt(e.target.value) || 0,
-                                }))
-                              }
-                              placeholder="1"
-                              className="w-16 h-9 text-sm rounded-xl border-border/50"
-                              aria-label="Quantity to restock"
-                            />
+                            <div className="flex flex-col items-center gap-1">
+                              <label
+                                htmlFor={`restock-qty-${item.id}`}
+                                className="text-xs text-muted-foreground font-medium"
+                              >
+                                Restock Qty
+                              </label>
+                              <Input
+                                id={`restock-qty-${item.id}`}
+                                type="number"
+                                min="1"
+                                value={restockQuantities[item.id] || ""}
+                                onChange={(e) =>
+                                  setRestockQuantities((prev) => ({
+                                    ...prev,
+                                    [item.id]: Number.parseInt(e.target.value) || 0,
+                                  }))
+                                }
+                                placeholder="1"
+                                className="w-16 h-9 text-sm rounded-xl border-border/50"
+                                aria-label="Quantity to restock"
+                              />
+                            </div>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
