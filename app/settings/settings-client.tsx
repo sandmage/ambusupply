@@ -211,20 +211,31 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   const handleStorageTypeSubmit = async () => {
     setSaving(true)
     try {
+      console.log("[v0] User profile data:", profile)
+      console.log("[v0] User role:", profile?.role)
+      console.log("[v0] User organization_id:", profile?.organization_id)
+      console.log("[v0] Is admin check:", profile?.role === "admin")
+
       if (profile?.role !== "admin") {
+        console.log("[v0] Permission denied - user role is not admin")
         showMessage("Only administrators can manage storage unit types", "error")
         return
       }
 
       if (!profile?.organization_id) {
+        console.log("[v0] No organization_id found in profile")
         showMessage("Organization information not available. Please complete setup first.", "error")
         return
       }
+
+      console.log("[v0] Proceeding with storage type operation...")
 
       const storageTypeData = {
         ...storageTypeForm,
         organization_id: profile.organization_id,
       }
+
+      console.log("[v0] Storage type data to submit:", storageTypeData)
 
       if (editingStorageType) {
         const { error } = await supabase
@@ -246,7 +257,8 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       setEditingStorageType(null)
       fetchStorageUnitTypes()
     } catch (error: any) {
-      console.error("Storage unit type operation error:", error)
+      console.error("[v0] Storage unit type operation error:", error)
+      console.log("[v0] Error details:", error.message, error.code, error.details)
       if (error.message.includes("row-level security policy")) {
         showMessage(
           "Permission denied. Please ensure you have admin privileges and proper organization setup.",
