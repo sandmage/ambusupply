@@ -3,9 +3,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Package, AlertTriangle, Calendar, MapPin, Activity, Plus, BarChart3 } from "lucide-react"
-import Link from "next/link"
+import { Package, AlertTriangle, Calendar, MapPin, Activity } from "lucide-react"
 
 export default async function DashboardPage() {
   const supabase = createServerClient()
@@ -109,40 +107,6 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-        <Card className="apple-card">
-          <CardHeader>
-            <CardTitle className="font-serif">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Button asChild className="apple-button h-auto p-4 flex-col space-y-2">
-                <Link href="/inventory">
-                  <Package className="h-6 w-6" />
-                  <span>View Inventory</span>
-                </Link>
-              </Button>
-              <Button asChild className="apple-button h-auto p-4 flex-col space-y-2">
-                <Link href="/medications">
-                  <Plus className="h-6 w-6" />
-                  <span>Medications</span>
-                </Link>
-              </Button>
-              <Button asChild className="apple-button h-auto p-4 flex-col space-y-2">
-                <Link href="/locations">
-                  <MapPin className="h-6 w-6" />
-                  <span>Locations</span>
-                </Link>
-              </Button>
-              <Button asChild className="apple-button h-auto p-4 flex-col space-y-2">
-                <Link href="/reports">
-                  <BarChart3 className="h-6 w-6" />
-                  <span>Reports</span>
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card className="apple-card">
           <CardHeader className="flex flex-row items-center justify-between">

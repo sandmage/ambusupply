@@ -304,7 +304,7 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
             </Button>
 
             {isAdmin && (
-              <Button onClick={handleAddItem} className="apple-button-secondary">
+              <Button onClick={handleAddItem} className="apple-button">
                 <Plus className="h-5 w-5 mr-2" />
                 Add Item
               </Button>
