@@ -25,7 +25,7 @@ export default async function HierarchicalInventoryPage() {
         </div>
       </div>
 
-      <Suspense fallback={<div>Loading inventory allocation...</div>}>
+      <Suspense fallback={<div>Loading inventory allocations...</div>}>
         <HierarchicalInventoryClient
           initialInventory={hierarchicalInventory || []}
           locations={locations || []}
