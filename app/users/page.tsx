@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { UsersClient } from "./users-client"
+import { AppLayout } from "@/components/app-layout"
 
 export default async function UsersPage() {
   const supabase = createServerClient()
@@ -75,5 +76,9 @@ export default async function UsersPage() {
     console.error("Error fetching users:", error)
   }
 
-  return <UsersClient users={users} userStats={userStats} currentUser={userProfile} />
+  return (
+    <AppLayout user={userProfile}>
+      <UsersClient users={users} userStats={userStats} currentUser={userProfile} />
+    </AppLayout>
+  )
 }
