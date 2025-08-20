@@ -178,12 +178,38 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
 
   const fetchStorageUnitTypes = async () => {
     try {
-      const { data, error } = await supabase.from("storage_unit_types").select("*").order("name")
+      const { data, error } = await supabase.rpc("get_storage_unit_types")
 
-      if (error) throw error
+      if (error) {
+        // If RPC doesn't exist, fall back to direct query
+        if (error.message.includes("function") || error.message.includes("does not exist")) {
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("storage_unit_types")
+            .select("*")
+            .order("name")
+
+          if (fallbackError) {
+            // Handle schema cache error specifically
+            if (fallbackError.message.includes("schema cache")) {
+              console.log("Storage unit types table not yet available in schema cache")
+              setStorageUnitTypes([])
+              return
+            }
+            throw fallbackError
+          }
+          setStorageUnitTypes(fallbackData || [])
+          return
+        }
+        throw error
+      }
       setStorageUnitTypes(data || [])
     } catch (error: any) {
       console.error("Error fetching storage unit types:", error)
+      // Don't show error to user for schema cache issues
+      if (!error.message.includes("schema cache")) {
+        showMessage(`Error loading storage unit types: ${error.message}`, "error")
+      }
+      setStorageUnitTypes([])
     }
   }
 
@@ -191,17 +217,23 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     setSaving(true)
     try {
       if (editingStorageType) {
-        // Update existing storage unit type
         const { error } = await supabase
           .from("storage_unit_types")
-          .update(storageTypeForm)
+          .update({
+            ...storageTypeForm,
+            organization_id: organization?.id,
+          })
           .eq("id", editingStorageType.id)
 
         if (error) throw error
         showMessage("Storage unit type updated successfully")
       } else {
-        // Create new storage unit type
-        const { error } = await supabase.from("storage_unit_types").insert([storageTypeForm])
+        const { error } = await supabase.from("storage_unit_types").insert([
+          {
+            ...storageTypeForm,
+            organization_id: organization?.id,
+          },
+        ])
 
         if (error) throw error
         showMessage("Storage unit type created successfully")
@@ -211,7 +243,11 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
       setEditingStorageType(null)
       fetchStorageUnitTypes()
     } catch (error: any) {
-      showMessage(error.message, "error")
+      if (error.message.includes("schema cache")) {
+        showMessage("Database table not ready yet. Please try again in a moment.", "error")
+      } else {
+        showMessage(error.message, "error")
+      }
     } finally {
       setSaving(false)
     }
