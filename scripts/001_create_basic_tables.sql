@@ -1,5 +1,9 @@
 -- Create user roles enum
-CREATE TYPE IF NOT EXISTS user_role AS ENUM ('admin', 'staff');
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('admin', 'staff');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Create profiles table (simplified version)
 CREATE TABLE IF NOT EXISTS public.profiles (
