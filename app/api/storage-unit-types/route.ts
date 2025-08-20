@@ -1,15 +1,25 @@
 import { createClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
 
-const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
+console.log("[v0] API Route - Environment variables check:", {
+  supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+  anonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  serviceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
 })
+
+const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  : null
 
 export async function GET(request: NextRequest) {
   try {
+    console.log("[v0] GET /api/storage-unit-types - Starting request")
+
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
     // Get the current user
@@ -17,40 +27,54 @@ export async function GET(request: NextRequest) {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
+
+    console.log("[v0] Auth check:", { user: !!user, error: !!authError })
+
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user's profile to check organization using admin client
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const clientToUse = supabaseAdmin || supabase
+    console.log("[v0] Using client:", supabaseAdmin ? "admin" : "regular")
+
+    // Get user's profile to check organization
+    const { data: profile, error: profileError } = await clientToUse
       .from("profiles")
       .select("organization_id, role")
       .eq("id", user.id)
       .single()
 
+    console.log("[v0] Profile check:", { profile: !!profile, error: !!profileError })
+
     if (profileError || !profile?.organization_id) {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 })
     }
 
-    // Fetch storage unit types using admin client (bypasses RLS)
-    const { data: storageTypes, error } = await supabaseAdmin
+    // Fetch storage unit types
+    const { data: storageTypes, error } = await clientToUse
       .from("storage_unit_types")
       .select("*")
       .eq("organization_id", profile.organization_id)
       .order("name")
 
+    console.log("[v0] Storage types query:", { count: storageTypes?.length, error: !!error })
+
     if (error) {
+      console.log("[v0] Storage types error:", error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ data: storageTypes })
+    return NextResponse.json({ data: storageTypes || [] })
   } catch (error: any) {
+    console.log("[v0] GET error:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("[v0] POST /api/storage-unit-types - Starting request")
+
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
     // Get the current user
@@ -58,12 +82,15 @@ export async function POST(request: NextRequest) {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user's profile to check organization and role using admin client
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const clientToUse = supabaseAdmin || supabase
+
+    // Get user's profile to check organization and role
+    const { data: profile, error: profileError } = await clientToUse
       .from("profiles")
       .select("organization_id, role")
       .eq("id", user.id)
@@ -81,8 +108,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, capacity_type, default_capacity } = body
 
-    // Create storage unit type using admin client (bypasses RLS)
-    const { data, error } = await supabaseAdmin
+    console.log("[v0] Creating storage unit type:", { name, capacity_type, organization_id: profile.organization_id })
+
+    // Create storage unit type
+    const { data, error } = await clientToUse
       .from("storage_unit_types")
       .insert([
         {
@@ -97,17 +126,22 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
+      console.log("[v0] Insert error:", error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log("[v0] Storage unit type created successfully")
     return NextResponse.json({ data })
   } catch (error: any) {
+    console.log("[v0] POST error:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
+    console.log("[v0] PUT /api/storage-unit-types - Starting request")
+
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
     // Get the current user
@@ -115,12 +149,15 @@ export async function PUT(request: NextRequest) {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user's profile to check organization and role using admin client
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const clientToUse = supabaseAdmin || supabase
+
+    // Get user's profile to check organization and role
+    const { data: profile, error: profileError } = await clientToUse
       .from("profiles")
       .select("organization_id, role")
       .eq("id", user.id)
@@ -138,8 +175,15 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { id, name, description, capacity_type, default_capacity } = body
 
-    // Update storage unit type using admin client (bypasses RLS)
-    const { data, error } = await supabaseAdmin
+    console.log("[v0] Updating storage unit type:", {
+      id,
+      name,
+      capacity_type,
+      organization_id: profile.organization_id,
+    })
+
+    // Update storage unit type
+    const { data, error } = await clientToUse
       .from("storage_unit_types")
       .update({
         name,
@@ -153,17 +197,22 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (error) {
+      console.log("[v0] Update error:", error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log("[v0] Storage unit type updated successfully")
     return NextResponse.json({ data })
   } catch (error: any) {
+    console.log("[v0] PUT error:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
+    console.log("[v0] DELETE /api/storage-unit-types - Starting request")
+
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
     // Get the current user
@@ -171,12 +220,15 @@ export async function DELETE(request: NextRequest) {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user's profile to check organization and role using admin client
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const clientToUse = supabaseAdmin || supabase
+
+    // Get user's profile to check organization and role
+    const { data: profile, error: profileError } = await clientToUse
       .from("profiles")
       .select("organization_id, role")
       .eq("id", user.id)
@@ -198,19 +250,24 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Storage unit type ID is required" }, { status: 400 })
     }
 
-    // Delete storage unit type using admin client (bypasses RLS)
-    const { error } = await supabaseAdmin
+    console.log("[v0] Deleting storage unit type:", { id, organization_id: profile.organization_id })
+
+    // Delete storage unit type
+    const { error } = await clientToUse
       .from("storage_unit_types")
       .delete()
       .eq("id", id)
       .eq("organization_id", profile.organization_id)
 
     if (error) {
+      console.log("[v0] Delete error:", error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log("[v0] Storage unit type deleted successfully")
     return NextResponse.json({ success: true })
   } catch (error: any) {
+    console.log("[v0] DELETE error:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
