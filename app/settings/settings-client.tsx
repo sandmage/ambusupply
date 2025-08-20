@@ -66,7 +66,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   const [storageTypeForm, setStorageTypeForm] = useState({
     name: "",
     description: "",
-    capacity_type: "items",
+    capacity_type: "count",
     default_capacity: 0,
   })
 
@@ -311,7 +311,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         showMessage("Storage unit type created successfully")
       }
 
-      setStorageTypeForm({ name: "", description: "", capacity_type: "items", default_capacity: 0 })
+      setStorageTypeForm({ name: "", description: "", capacity_type: "count", default_capacity: 0 })
       setEditingStorageType(null)
       fetchStorageUnitTypes()
     } catch (error: any) {
@@ -885,9 +885,10 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-border/50">
-                        <SelectItem value="items">Items</SelectItem>
+                        <SelectItem value="count">Count</SelectItem>
                         <SelectItem value="volume">Volume (L)</SelectItem>
                         <SelectItem value="weight">Weight (kg)</SelectItem>
+                        <SelectItem value="custom">Custom</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
