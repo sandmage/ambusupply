@@ -5,22 +5,7 @@ import { ChevronDown, ChevronRight, Plus, Edit, Trash2, MapPin, Package, Buildin
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-
-interface StorageUnit {
-  id: string
-  name: string
-  type: string
-  position_order: number
-  description?: string
-  children?: StorageUnit[]
-}
-
-interface Location {
-  id: string
-  name: string
-  description?: string
-  storage_units: StorageUnit[]
-}
+import type { Location, StorageUnit } from "@/lib/types"
 
 interface LocationTreeProps {
   locations: Location[]
