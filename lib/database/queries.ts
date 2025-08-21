@@ -3,13 +3,13 @@ import { createClient } from "@/lib/supabase/client"
 import type { InventoryItem, Location, Organization, User } from "@/lib/types"
 
 export class DatabaseQueries {
-  private static getClient(isServer = false) {
-    return isServer ? createServerClient() : createClient()
+  private static async getClient(isServer = false) {
+    return isServer ? await createServerClient() : createClient()
   }
 
   // Inventory queries
   static async getInventoryItems(organizationId: string, isServer = false): Promise<InventoryItem[]> {
-    const supabase = this.getClient(isServer)
+    const supabase = await this.getClient(isServer)
     const { data, error } = await supabase
       .from("inventory_items")
       .select(`
@@ -26,7 +26,7 @@ export class DatabaseQueries {
 
   // Location queries
   static async getLocations(organizationId: string, isServer = false): Promise<Location[]> {
-    const supabase = this.getClient(isServer)
+    const supabase = await this.getClient(isServer)
     const { data, error } = await supabase
       .from("locations")
       .select(`
@@ -42,7 +42,7 @@ export class DatabaseQueries {
 
   // Organization queries
   static async getOrganization(id: string, isServer = false): Promise<Organization | null> {
-    const supabase = this.getClient(isServer)
+    const supabase = await this.getClient(isServer)
     const { data, error } = await supabase.from("organizations").select("*").eq("id", id).single()
 
     if (error) throw error
@@ -51,7 +51,7 @@ export class DatabaseQueries {
 
   // User queries
   static async getCurrentUser(isServer = false): Promise<User | null> {
-    const supabase = this.getClient(isServer)
+    const supabase = await this.getClient(isServer)
     const {
       data: { user },
       error,
