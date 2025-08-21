@@ -79,12 +79,16 @@ export default function LoginPage() {
     setError(null)
 
     try {
+      console.log("[v0] Starting login process...")
       const supabase = createClient()
+      console.log("[v0] Supabase client created, attempting sign in...")
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+
+      console.log("[v0] Sign in response:", { data: !!data, error: error?.message })
 
       if (error) {
         throw error
@@ -97,7 +101,22 @@ export default function LoginPage() {
         router.push("/dashboard")
       }
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      console.error("[v0] Login error:", error)
+
+      let errorMessage = "An error occurred during login"
+
+      if (error instanceof Error) {
+        if (error.message.includes("Failed to fetch")) {
+          errorMessage =
+            "Unable to connect to authentication service. Please check your internet connection and try again."
+        } else if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Invalid email or password. Please check your credentials and try again."
+        } else {
+          errorMessage = error.message
+        }
+      }
+
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
