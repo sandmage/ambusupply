@@ -1,14 +1,42 @@
 import { createClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
 
+function validateSupabaseConfig(url: string, key: string) {
+  if (!url || !key) {
+    throw new Error("Missing Supabase environment variables in API route")
+  }
+
+  // Check if URL is properly formatted
+  if (!url.match(/^https:\/\/[a-zA-Z0-9-]+\.supabase\.co$/)) {
+    throw new Error(`Invalid Supabase URL format in API route: ${url}`)
+  }
+
+  // Check if key is properly formatted
+  if (key.length < 100) {
+    throw new Error("Invalid Supabase API key format in API route")
+  }
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+// Validate main environment variables
+validateSupabaseConfig(supabaseUrl, supabaseAnonKey)
+
+// Validate service role key if present
+if (serviceRoleKey && serviceRoleKey.length < 100) {
+  throw new Error("Invalid Supabase service role key format")
+}
+
 console.log("[v0] API Route - Environment variables check:", {
-  supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-  anonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  serviceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  supabaseUrl: !!supabaseUrl,
+  anonKey: !!supabaseAnonKey,
+  serviceRoleKey: !!serviceRoleKey,
 })
 
-const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+const supabaseAdmin = serviceRoleKey
+  ? createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -20,7 +48,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log("[v0] GET /api/storage-unit-types - Starting request")
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
     // Get the current user
     const {
@@ -75,7 +103,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] POST /api/storage-unit-types - Starting request")
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
     // Get the current user
     const {
@@ -142,7 +170,7 @@ export async function PUT(request: NextRequest) {
   try {
     console.log("[v0] PUT /api/storage-unit-types - Starting request")
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
     // Get the current user
     const {
@@ -213,7 +241,7 @@ export async function DELETE(request: NextRequest) {
   try {
     console.log("[v0] DELETE /api/storage-unit-types - Starting request")
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
     // Get the current user
     const {
