@@ -9,6 +9,60 @@ export default function TestConnectionPage() {
   const [results, setResults] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
+  const testAuthentication = async () => {
+    setLoading(true)
+
+    const authResults: any = {
+      clientCreation: null,
+      authTest: null,
+      networkError: null,
+      httpStatus: null,
+      errorDetails: null,
+    }
+
+    try {
+      console.log("[v0] Testing authentication specifically...")
+      const supabase = createClient()
+      authResults.clientCreation = "success"
+
+      // Test with a fake login to see the exact network error
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: "test@example.com",
+          password: "testpassword123",
+        })
+
+        if (error) {
+          authResults.authTest = `Auth error: ${error.message}`
+          authResults.errorDetails = error
+        } else {
+          authResults.authTest = "Unexpected success (should fail with invalid credentials)"
+        }
+      } catch (networkError: any) {
+        console.log("[v0] Network error caught:", networkError)
+        authResults.networkError = {
+          message: networkError.message,
+          name: networkError.name,
+          stack: networkError.stack,
+        }
+
+        // Try to extract HTTP status from the error
+        if (networkError.message.includes("429")) {
+          authResults.httpStatus = "429 - Too Many Requests (Rate Limited)"
+        } else if (networkError.message.includes("500")) {
+          authResults.httpStatus = "500 - Internal Server Error"
+        } else if (networkError.message.includes("Failed to fetch")) {
+          authResults.httpStatus = "Network Error - Failed to fetch (CORS or connectivity issue)"
+        }
+      }
+    } catch (err: any) {
+      authResults.errorDetails = err
+    }
+
+    setResults({ ...results, authTest: authResults })
+    setLoading(false)
+  }
+
   const testConnection = async () => {
     setLoading(true)
 
@@ -98,12 +152,45 @@ export default function TestConnectionPage() {
           <CardTitle>Supabase Connection Test</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={testConnection} disabled={loading}>
-            {loading ? "Testing..." : "Test Connection"}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={testConnection} disabled={loading}>
+              {loading ? "Testing..." : "Test Connection"}
+            </Button>
+            <Button onClick={testAuthentication} disabled={loading} variant="outline">
+              Test Authentication
+            </Button>
+          </div>
 
           {results && (
             <div className="space-y-4">
+              {results.authTest && (
+                <div>
+                  <h3 className="font-semibold">Authentication Test Results:</h3>
+                  <div className="bg-blue-50 p-3 rounded space-y-2">
+                    <p>
+                      <strong>Client Creation:</strong> {results.authTest.clientCreation}
+                    </p>
+                    <p>
+                      <strong>Auth Test:</strong> {results.authTest.authTest}
+                    </p>
+                    {results.authTest.httpStatus && (
+                      <p>
+                        <strong>HTTP Status:</strong>{" "}
+                        <span className="text-red-600">{results.authTest.httpStatus}</span>
+                      </p>
+                    )}
+                    {results.authTest.networkError && (
+                      <div>
+                        <strong>Network Error:</strong>
+                        <pre className="bg-red-100 p-2 rounded text-sm mt-1">
+                          {JSON.stringify(results.authTest.networkError, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <h3 className="font-semibold">Environment Variables:</h3>
                 <pre className="bg-gray-100 p-2 rounded text-sm">{JSON.stringify(results.envVars, null, 2)}</pre>
@@ -144,6 +231,12 @@ export default function TestConnectionPage() {
                   <li>• If key is undefined: Set NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel environment variables</li>
                   <li>• If "Failed to fetch": Check Supabase project status and CORS settings</li>
                   <li>• Environment variables must start with NEXT_PUBLIC_ for client-side access</li>
+                  <li>
+                    • If auth fails but connection works: Check if Email authentication is enabled in Supabase Auth
+                    settings
+                  </li>
+                  <li>• If 429 error: You're being rate limited, wait a few minutes</li>
+                  <li>• If 500 error: Check Supabase project status or database triggers</li>
                 </ul>
               </div>
             </div>
