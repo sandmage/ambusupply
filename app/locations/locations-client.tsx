@@ -14,7 +14,7 @@ import { Plus, Package, Search, Building, AlertCircle } from "lucide-react"
 interface StorageUnit {
   id: string
   name: string
-  unit_type: string
+  type: string
   position_order: number
   description?: string
   children?: StorageUnit[]
@@ -99,7 +99,7 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
       location.storage_units.some(
         (unit) =>
           unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          unit.unit_type.toLowerCase().includes(searchTerm.toLowerCase()),
+          unit.type.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     return matchesSearch
   })
@@ -200,7 +200,7 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
         console.log("[v0] Updating existing storage unit:", unit.id)
         const updateData = {
           name: unitData.name,
-          unit_type: unitData.unit_type,
+          unit_type: unitData.type,
           parent_unit_id: parentUnitId || null,
         }
         console.log("[v0] Update data:", updateData)
@@ -220,7 +220,7 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
         console.log("[v0] Creating new storage unit")
         const insertData = {
           name: unitData.name,
-          unit_type: unitData.unit_type,
+          unit_type: unitData.type,
           location_id: locationId,
           parent_unit_id: parentUnitId || null,
         }
