@@ -52,7 +52,7 @@ interface Location {
 interface StorageUnit {
   id: string
   name: string
-  unit_type: string
+  type: string // Changed unit_type to type to match InventoryForm component expectations
 }
 
 interface InventoryClientProps {
