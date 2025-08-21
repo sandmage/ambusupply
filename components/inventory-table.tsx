@@ -23,6 +23,8 @@ interface InventoryItem {
   location_name: string
   storage_unit_name?: string
   created_at: string
+  location_id: string
+  storage_unit_id: string
 }
 
 interface InventoryTableProps {
