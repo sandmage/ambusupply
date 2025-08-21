@@ -9,9 +9,10 @@ import { StorageUnitForm } from "@/components/storage-unit-form"
 import { StorageUnitTypeForm } from "@/components/storage-unit-type-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Package, Search, Building, AlertCircle, Settings, Edit, Trash2 } from "lucide-react"
+import { Plus, Package, Search, Building, AlertCircle, Settings, Edit, Trash2, Layers, MapPin } from "lucide-react"
 import type { StorageUnit, Location } from "@/lib/types"
 
 interface StorageUnitType {
@@ -287,16 +288,18 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
     }
   }
 
+  const [activeTab, setActiveTab] = useState("hierarchy")
+
   return (
     <div className="h-full">
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-serif font-bold text-primary mb-2">Storage Locations</h1>
+            <h1 className="text-4xl font-serif font-bold text-primary mb-2">Storage Management</h1>
             <p className="text-lg text-muted-foreground font-medium">
               {isAdmin
-                ? "Manage physical storage locations and organizational units"
-                : "View storage locations (Read Only)"}
+                ? "Organize and manage your storage hierarchy, locations, and unit types"
+                : "View storage organization and locations (Read Only)"}
             </p>
           </div>
           {isAdmin && (
@@ -357,87 +360,210 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
           </Card>
         </div>
 
-        {isAdmin && (
-          <Card className="apple-card">
-            <CardHeader className="pb-6">
-              <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Unit Types</CardTitle>
-              <CardDescription className="text-base font-medium">
-                Manage the types of storage units available in your organization
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between mb-6">
-                <div className="text-sm text-muted-foreground">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="hierarchy" className="flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Storage Hierarchy
+            </TabsTrigger>
+            <TabsTrigger value="locations" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Storage Locations
+            </TabsTrigger>
+            <TabsTrigger value="types" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Storage Unit Types
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="hierarchy" className="space-y-6">
+            <Card className="apple-card">
+              <CardHeader className="pb-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Hierarchy</CardTitle>
+                    <CardDescription className="text-base font-medium">
+                      Organize and arrange your storage locations and units
+                    </CardDescription>
+                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-3">
+                      <Button onClick={handleAddLocation} className="apple-button-secondary">
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add Location
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative mb-6">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search locations, descriptions, or storage units..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-12 rounded-2xl border-border/50 bg-card text-base"
+                  />
+                </div>
+
+                <LocationTree
+                  locations={filteredLocations}
+                  onAddLocation={isAdmin ? handleAddLocation : undefined}
+                  onEditLocation={isAdmin ? handleEditLocation : undefined}
+                  onDeleteLocation={isAdmin ? handleDeleteLocation : undefined}
+                  onAddStorageUnit={isAdmin ? handleAddStorageUnit : undefined}
+                  onEditStorageUnit={isAdmin ? handleEditStorageUnit : undefined}
+                  onDeleteStorageUnit={isAdmin ? handleDeleteStorageUnit : undefined}
+                  searchTerm={searchTerm}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="locations" className="space-y-6">
+            <Card className="apple-card">
+              <CardHeader className="pb-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Locations</CardTitle>
+                    <CardDescription className="text-base font-medium">
+                      Create and manage physical storage locations
+                    </CardDescription>
+                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-3">
+                      <Button onClick={handleAddLocation} className="apple-button-secondary">
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add Location
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative mb-6">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search locations..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-12 rounded-2xl border-border/50 bg-card text-base"
+                  />
+                </div>
+
+                <div className="grid gap-4">
+                  {filteredLocations.map((location) => (
+                    <Card key={location.id} className="apple-card">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-serif font-bold text-primary mb-2">{location.name}</h3>
+                            {location.description && (
+                              <p className="text-muted-foreground mb-3">{location.description}</p>
+                            )}
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>{location.storage_units.length} storage units</span>
+                              {location.address && <span>{location.address}</span>}
+                            </div>
+                          </div>
+                          {isAdmin && (
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => handleEditLocation(location)}
+                                variant="outline"
+                                size="sm"
+                                className="h-9 px-3 rounded-xl"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteLocation(location.id)}
+                                variant="outline"
+                                size="sm"
+                                className="h-9 px-3 rounded-xl text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="types" className="space-y-6">
+            <Card className="apple-card">
+              <CardHeader className="pb-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Unit Types</CardTitle>
+                    <CardDescription className="text-base font-medium">
+                      Manage the types of storage units available in your organization
+                    </CardDescription>
+                  </div>
+                  {isAdmin && (
+                    <Button onClick={handleAddStorageType} className="apple-button-secondary">
+                      <Plus className="h-5 w-5 mr-2" />
+                      Add Storage Type
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground mb-6">
                   {storageUnitTypes.length} storage unit types configured
                 </div>
-                <Button onClick={handleAddStorageType} size="sm" className="apple-button">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Storage Type
-                </Button>
-              </div>
 
-              <div className="grid gap-3">
-                {storageUnitTypes.map((storageType) => (
-                  <div
-                    key={storageType.id}
-                    className="flex items-center justify-between p-4 bg-card rounded-2xl border border-border/50"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h5 className="font-semibold">{storageType.name}</h5>
-                        <Badge variant="secondary" className="text-xs">
-                          {storageType.capacity_type}
-                        </Badge>
+                <div className="grid gap-3">
+                  {storageUnitTypes.map((storageType) => (
+                    <div
+                      key={storageType.id}
+                      className="flex items-center justify-between p-4 bg-card rounded-2xl border border-border/50"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <h5 className="font-semibold">{storageType.name}</h5>
+                          <Badge variant="secondary" className="text-xs">
+                            {storageType.capacity_type}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                          <span>Capacity: {storageType.default_capacity || 0}</span>
+                          {storageType.description && <span>{storageType.description}</span>}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                        <span>Capacity: {storageType.default_capacity || 0}</span>
-                        {storageType.description && <span>{storageType.description}</span>}
-                      </div>
+                      {isAdmin && (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleEditStorageType(storageType)}
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3 rounded-xl"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteStorageType(storageType.id)}
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3 rounded-xl text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleEditStorageType(storageType)}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 px-3 rounded-xl"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleDeleteStorageType(storageType.id)}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 px-3 rounded-xl text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="apple-card">
-          <CardHeader className="pb-6">
-            <CardTitle className="text-2xl font-serif font-bold text-primary">Search & Filter</CardTitle>
-            <CardDescription className="text-base font-medium">
-              Find locations and storage units quickly
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search locations, descriptions, or storage units..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 rounded-2xl border-border/50 bg-card text-base"
-              />
-            </div>
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {!isAdmin && (
           <Card className="apple-card border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50">
@@ -449,25 +575,14 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
                 <div>
                   <div className="font-serif font-bold text-orange-800 text-lg mb-1">View Only Access</div>
                   <div className="text-base text-orange-700 font-medium">
-                    You can view location information but cannot make changes. Contact an administrator to modify
-                    locations.
+                    You can view storage information but cannot make changes. Contact an administrator to modify storage
+                    settings.
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
-
-        <LocationTree
-          locations={filteredLocations}
-          onAddLocation={isAdmin ? handleAddLocation : undefined}
-          onEditLocation={isAdmin ? handleEditLocation : undefined}
-          onDeleteLocation={isAdmin ? handleDeleteLocation : undefined}
-          onAddStorageUnit={isAdmin ? handleAddStorageUnit : undefined}
-          onEditStorageUnit={isAdmin ? handleEditStorageUnit : undefined}
-          onDeleteStorageUnit={isAdmin ? handleDeleteStorageUnit : undefined}
-          searchTerm={searchTerm}
-        />
 
         {isAdmin && (
           <>
