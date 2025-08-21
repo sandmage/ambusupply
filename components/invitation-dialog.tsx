@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { useSession } from "./session-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,6 +22,7 @@ export function InvitationDialog({ organizationId, onInvitationSent }: Invitatio
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("staff")
 
+  const { user } = useSession()
   const supabase = createClient()
 
   const handleSendInvitation = async () => {
@@ -29,14 +31,13 @@ export function InvitationDialog({ organizationId, onInvitationSent }: Invitatio
       return
     }
 
+    if (!user) {
+      toast.error("Not authenticated")
+      return
+    }
+
     setIsLoading(true)
     try {
-      // Get current user profile
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) throw new Error("Not authenticated")
-
       const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single()
 
       if (!profile) throw new Error("Profile not found")

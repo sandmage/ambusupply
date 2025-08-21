@@ -6,42 +6,16 @@ import { Badge } from "@/components/ui/badge"
 import { Package, AlertTriangle, Calendar, MapPin, Activity } from "lucide-react"
 
 export default async function DashboardPage() {
-  console.log("[v0] Dashboard: Creating server client...")
-
   try {
     const supabase = await createServerClient()
-    console.log("[v0] Dashboard: Server client created successfully")
-
-    console.log("[v0] Dashboard: Attempting to get user...")
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser()
 
-    if (error) {
-      console.log("[v0] Dashboard: Auth error:", error.message)
-      redirect("/auth/login")
-    }
+    if (error || !user) redirect("/auth/login")
 
-    if (!user) {
-      console.log("[v0] Dashboard: No user found, redirecting to login")
-      redirect("/auth/login")
-    }
-
-    console.log("[v0] Dashboard: User authenticated successfully:", user.id)
-
-    console.log("[v0] Dashboard: Fetching user profile...")
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle()
-
-    if (profileError) {
-      console.log("[v0] Dashboard: Profile query error:", profileError.message)
-    } else {
-      console.log("[v0] Dashboard: Profile query successful")
-    }
+    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
 
     const userProfile = profile || {
       id: user.id,
@@ -50,75 +24,19 @@ export default async function DashboardPage() {
       role: user.user_metadata?.role || "staff",
     }
 
-    console.log("[v0] Dashboard: Starting parallel database queries...")
-
     const [inventoryResult, locationsResult, activityResult] = await Promise.allSettled([
-      (async () => {
-        console.log("[v0] Dashboard: Fetching inventory items...")
-        try {
-          const result = await supabase
-            .from("inventory_items")
-            .select("id, current_quantity, par_level, expiration_date, name")
-          console.log("[v0] Dashboard: Inventory query successful, items:", result.data?.length || 0)
-          return result
-        } catch (error) {
-          console.log("[v0] Dashboard: Inventory query failed:", error)
-          throw error
-        }
-      })(),
-      (async () => {
-        console.log("[v0] Dashboard: Fetching locations...")
-        try {
-          const result = await supabase.from("locations").select("id")
-          console.log("[v0] Dashboard: Locations query successful, count:", result.data?.length || 0)
-          return result
-        } catch (error) {
-          console.log("[v0] Dashboard: Locations query failed:", error)
-          throw error
-        }
-      })(),
-      (async () => {
-        console.log("[v0] Dashboard: Fetching recent activity...")
-        try {
-          const result = await supabase
-            .from("transactions")
-            .select("id, transaction_type, quantity_change, reason, created_at, performed_by")
-            .order("created_at", { ascending: false })
-            .limit(5)
-          console.log("[v0] Dashboard: Activity query successful, items:", result.data?.length || 0)
-          return result
-        } catch (error) {
-          console.log("[v0] Dashboard: Activity query failed:", error)
-          throw error
-        }
-      })(),
+      supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date, name"),
+      supabase.from("locations").select("id"),
+      supabase
+        .from("transactions")
+        .select("id, transaction_type, quantity_change, reason, created_at, performed_by")
+        .order("created_at", { ascending: false })
+        .limit(5),
     ])
-
-    console.log("[v0] Dashboard: Query results:", {
-      inventory: inventoryResult.status,
-      locations: locationsResult.status,
-      activity: activityResult.status,
-    })
-
-    if (inventoryResult.status === "rejected") {
-      console.log("[v0] Dashboard: Inventory query rejection reason:", inventoryResult.reason)
-    }
-    if (locationsResult.status === "rejected") {
-      console.log("[v0] Dashboard: Locations query rejection reason:", locationsResult.reason)
-    }
-    if (activityResult.status === "rejected") {
-      console.log("[v0] Dashboard: Activity query rejection reason:", activityResult.reason)
-    }
 
     const inventoryItems = inventoryResult.status === "fulfilled" ? inventoryResult.value.data || [] : []
     const locations = locationsResult.status === "fulfilled" ? locationsResult.value.data || [] : []
     const recentActivity = activityResult.status === "fulfilled" ? activityResult.value.data || [] : []
-
-    console.log("[v0] Dashboard: Final data counts:", {
-      inventoryItems: inventoryItems.length,
-      locations: locations.length,
-      recentActivity: recentActivity.length,
-    })
 
     const totalItems = inventoryItems.length
     const lowStockItems = inventoryItems.filter((item) => item.current_quantity < item.par_level && item.par_level > 0)
@@ -238,7 +156,6 @@ export default async function DashboardPage() {
       </AppLayout>
     )
   } catch (serverError) {
-    console.log("[v0] Dashboard: Server error:", serverError)
     redirect("/auth/login")
   }
 }
