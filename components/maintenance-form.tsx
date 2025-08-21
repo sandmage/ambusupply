@@ -390,7 +390,11 @@ export function MaintenanceForm({ maintenance, onSave, onCancel }: MaintenanceFo
           {!maintenance && (
             <div className="space-y-4 p-4 border rounded-xl">
               <div className="flex items-center space-x-2">
-                <Checkbox id="recurring" checked={isRecurring} onCheckedChange={setIsRecurring} />
+                <Checkbox
+                  id="recurring"
+                  checked={isRecurring}
+                  onCheckedChange={(checked) => setIsRecurring(checked === true)}
+                />
                 <Label htmlFor="recurring">Set up recurring maintenance</Label>
               </div>
               {isRecurring && (
