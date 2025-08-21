@@ -257,6 +257,39 @@ export default function TestConnectionPage() {
 
           {results && (
             <div className="space-y-4">
+              {results.actualValues && !results.actualValues.urlValid && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded">
+                  <h3 className="font-semibold text-red-800">🚨 CRITICAL: Truncated Supabase URL Detected</h3>
+                  <div className="mt-2 text-red-700">
+                    <p>
+                      <strong>Current URL:</strong> <code>{results.actualValues.url}</code>
+                    </p>
+                    <p>
+                      <strong>Expected URL:</strong> <code>https://oympqgqucvyonipelhsr.supabase.co</code>
+                    </p>
+
+                    <div className="mt-3 p-3 bg-red-100 rounded">
+                      <strong>How to Fix:</strong>
+                      <ol className="list-decimal list-inside mt-1 space-y-1 text-sm">
+                        <li>Go to your Vercel project dashboard</li>
+                        <li>Navigate to Settings → Environment Variables</li>
+                        <li>
+                          Find <code>NEXT_PUBLIC_SUPABASE_URL</code>
+                        </li>
+                        <li>
+                          Update it to: <code>https://oympqgqucvyonipelhsr.supabase.co</code>
+                        </li>
+                        <li>Redeploy your application</li>
+                      </ol>
+                      <p className="mt-2 text-xs">
+                        <strong>Note:</strong> The URL must end with <code>.supabase.co</code> - yours is missing the
+                        "o"
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {results.authTest && (
                 <div>
                   <h3 className="font-semibold">Authentication Diagnostics:</h3>
@@ -346,12 +379,13 @@ export default function TestConnectionPage() {
                 <h3 className="font-semibold text-yellow-800">Troubleshooting Guide:</h3>
                 <ul className="text-sm text-yellow-700 mt-2 space-y-1">
                   <li>
-                    • <strong>Most Likely Issue:</strong> Email authentication is disabled in Supabase
+                    • <strong>FIRST:</strong> Fix truncated URL - must end with .supabase.co (not .supabase.c)
+                  </li>
+                  <li>• Update NEXT_PUBLIC_SUPABASE_URL in Vercel environment variables</li>
+                  <li>
+                    • <strong>Then:</strong> Email authentication might be disabled in Supabase
                   </li>
                   <li>• Go to Supabase Dashboard → Authentication → Settings → Enable email provider</li>
-                  <li>
-                    • <strong>Check URL Format:</strong> Must be https://[project-id].supabase.co (not truncated)
-                  </li>
                   <li>• Check if your Supabase project is paused or has billing issues</li>
                   <li>• Verify CORS settings allow your domain in Supabase Dashboard → Settings → API</li>
                   <li>• If 429 error: You're rate limited, wait 15+ minutes</li>
