@@ -4,118 +4,155 @@ import { InventoryClient } from "./inventory-client"
 import { AppLayout } from "@/components/app-layout"
 
 export default async function InventoryPage() {
-  const supabase = await createClient()
+  console.log("[v0] [SERVER] Starting inventory page render...")
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) {
-    redirect("/auth/login")
-  }
+  try {
+    console.log("[v0] [SERVER] Creating Supabase server client...")
+    const supabase = await createClient()
+    console.log("[v0] [SERVER] Supabase server client created successfully")
 
-  // Get user profile to check role
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+    console.log("[v0] [SERVER] Attempting to get user...")
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
 
-  const userProfile = profile || {
-    id: user.id,
-    email: user.email,
-    full_name: user.user_metadata?.full_name || user.email,
-    role: user.user_metadata?.role || "staff",
-  }
+    if (error) {
+      console.error("[v0] [SERVER] Auth error:", error)
+      redirect("/auth/login")
+    }
 
-  // Fetch inventory items with location information
-  const { data: inventoryItems, error: inventoryError } = await supabase
-    .from("inventory_items")
-    .select(`
-      id,
-      name,
-      description,
-      current_quantity,
-      par_level,
-      unit_of_measure,
-      expiration_date,
-      lot_number,
-      created_at,
-      locations!inner (
-        id,
-        name
-      ),
-      storage_units (
-        id,
-        name,
-        unit_type
-      )
-    `)
-    .order("name")
+    if (!user) {
+      console.log("[v0] [SERVER] No user found, redirecting to login")
+      redirect("/auth/login")
+    }
 
-  if (inventoryError) {
-    return <div>Error loading inventory. Please refresh the page.</div>
-  }
+    console.log("[v0] [SERVER] User authenticated successfully:", user.id)
 
-  // Fetch locations with storage units for the form
-  const { data: locations, error: locationsError } = await supabase
-    .from("locations")
-    .select(`
-      id,
-      name,
-      storage_units (
+    console.log("[v0] [SERVER] Fetching user profile...")
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    if (profileError) {
+      console.error("[v0] [SERVER] Profile query error:", profileError)
+    } else {
+      console.log("[v0] [SERVER] Profile query successful")
+    }
+
+    const userProfile = profile || {
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name || user.email,
+      role: user.user_metadata?.role || "staff",
+    }
+
+    console.log("[v0] [SERVER] Fetching inventory items...")
+    const { data: inventoryItems, error: inventoryError } = await supabase
+      .from("inventory_items")
+      .select(`
         id,
         name,
-        unit_type
-      )
-    `)
-    .order("name")
+        description,
+        current_quantity,
+        par_level,
+        unit_of_measure,
+        expiration_date,
+        lot_number,
+        created_at,
+        locations!inner (
+          id,
+          name
+        ),
+        storage_units (
+          id,
+          name,
+          unit_type
+        )
+      `)
+      .order("name")
 
-  if (locationsError) {
-    return <div>Error loading locations. Please refresh the page.</div>
+    if (inventoryError) {
+      console.error("[v0] [SERVER] Inventory query error:", inventoryError)
+      return <div>Error loading inventory. Please refresh the page.</div>
+    }
+
+    console.log("[v0] [SERVER] Inventory query successful, items count:", inventoryItems?.length || 0)
+
+    console.log("[v0] [SERVER] Fetching locations...")
+    const { data: locations, error: locationsError } = await supabase
+      .from("locations")
+      .select(`
+        id,
+        name,
+        storage_units (
+          id,
+          name,
+          unit_type
+        )
+      `)
+      .order("name")
+
+    if (locationsError) {
+      console.error("[v0] [SERVER] Locations query error:", locationsError)
+      return <div>Error loading locations. Please refresh the page.</div>
+    }
+
+    console.log("[v0] [SERVER] Locations query successful, locations count:", locations?.length || 0)
+
+    // Transform inventory data
+    const transformedInventory =
+      inventoryItems?.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        quantity: item.current_quantity,
+        min_par_level: item.par_level,
+        unit_of_measure: item.unit_of_measure,
+        expiration_date: item.expiration_date,
+        lot_number: item.lot_number,
+        location_id: item.locations.id,
+        storage_unit_id: item.storage_units?.id || "",
+        location_name: item.locations.name,
+        storage_unit_name: item.storage_units?.name,
+        storage_unit_type: item.storage_units?.unit_type,
+        created_at: item.created_at,
+      })) || []
+
+    // Calculate stats for sidebar
+    const belowParCount = transformedInventory.filter(
+      (item) => item.quantity < item.min_par_level && item.min_par_level > 0,
+    ).length
+    const thirtyDaysFromNow = new Date()
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+    const expiringCount = transformedInventory.filter(
+      (item) => item.expiration_date && new Date(item.expiration_date) <= thirtyDaysFromNow,
+    ).length
+
+    const transformedLocations =
+      locations?.map((location: any) => ({
+        id: location.id,
+        name: location.name,
+        storage_units:
+          location.storage_units?.map((unit: any) => ({
+            id: unit.id,
+            name: unit.name,
+            type: unit.unit_type, // Map unit_type to type
+            location_id: location.id, // Add missing location_id
+          })) || [],
+      })) || []
+
+    console.log("[v0] [SERVER] All queries completed successfully, rendering page...")
+
+    return (
+      <AppLayout user={userProfile} stats={{ belowParCount, expiringCount }}>
+        <InventoryClient items={transformedInventory} locations={transformedLocations} userRole={userProfile.role} />
+      </AppLayout>
+    )
+  } catch (error) {
+    console.error("[v0] [SERVER] Unexpected error in inventory page:", error)
+    return <div>An unexpected error occurred. Please refresh the page.</div>
   }
-
-  // Transform inventory data
-  const transformedInventory =
-    inventoryItems?.map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      quantity: item.current_quantity,
-      min_par_level: item.par_level,
-      unit_of_measure: item.unit_of_measure,
-      expiration_date: item.expiration_date,
-      lot_number: item.lot_number,
-      location_id: item.locations.id,
-      storage_unit_id: item.storage_units?.id || "",
-      location_name: item.locations.name,
-      storage_unit_name: item.storage_units?.name,
-      storage_unit_type: item.storage_units?.unit_type,
-      created_at: item.created_at,
-    })) || []
-
-  // Calculate stats for sidebar
-  const belowParCount = transformedInventory.filter(
-    (item) => item.quantity < item.min_par_level && item.min_par_level > 0,
-  ).length
-  const thirtyDaysFromNow = new Date()
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-  const expiringCount = transformedInventory.filter(
-    (item) => item.expiration_date && new Date(item.expiration_date) <= thirtyDaysFromNow,
-  ).length
-
-  const transformedLocations =
-    locations?.map((location: any) => ({
-      id: location.id,
-      name: location.name,
-      storage_units:
-        location.storage_units?.map((unit: any) => ({
-          id: unit.id,
-          name: unit.name,
-          type: unit.unit_type, // Map unit_type to type
-          location_id: location.id, // Add missing location_id
-        })) || [],
-    })) || []
-
-  return (
-    <AppLayout user={userProfile} stats={{ belowParCount, expiringCount }}>
-      <InventoryClient items={transformedInventory} locations={transformedLocations} userRole={userProfile.role} />
-    </AppLayout>
-  )
 }
