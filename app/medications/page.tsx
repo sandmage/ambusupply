@@ -65,7 +65,9 @@ export default async function MedicationsPage() {
       storage_units (
         id,
         name,
-        unit_type
+        type,
+        location_id,
+        position_order
       )
     `)
     .order("name")
