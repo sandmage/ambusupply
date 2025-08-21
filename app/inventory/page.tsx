@@ -100,9 +100,22 @@ export default async function InventoryPage() {
     (item) => item.expiration_date && new Date(item.expiration_date) <= thirtyDaysFromNow,
   ).length
 
+  const transformedLocations =
+    locations?.map((location: any) => ({
+      id: location.id,
+      name: location.name,
+      storage_units:
+        location.storage_units?.map((unit: any) => ({
+          id: unit.id,
+          name: unit.name,
+          type: unit.unit_type, // Map unit_type to type
+          location_id: location.id, // Add missing location_id
+        })) || [],
+    })) || []
+
   return (
     <AppLayout user={userProfile} stats={{ belowParCount, expiringCount }}>
-      <InventoryClient items={transformedInventory} locations={locations || []} userRole={userProfile.role} />
+      <InventoryClient items={transformedInventory} locations={transformedLocations} userRole={userProfile.role} />
     </AppLayout>
   )
 }
