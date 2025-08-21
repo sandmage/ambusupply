@@ -108,7 +108,7 @@ export default async function MedicationsPage() {
   ).length
 
   return (
-    <AppLayout user={userProfile} stats={{ expiredCount, expiringSoonCount, lowStockCount }}>
+    <AppLayout user={userProfile} stats={{ belowParCount: lowStockCount, expiringCount: expiringSoonCount }}>
       <MedicationsClient medications={transformedMedications} locations={locations || []} userRole={userProfile.role} />
     </AppLayout>
   )
