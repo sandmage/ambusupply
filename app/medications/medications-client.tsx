@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -12,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { MedicationForm } from "@/components/medication-form"
 import { Plus, Pill, AlertTriangle, Clock, TrendingDown, Search, Filter, Calendar, Package } from "lucide-react"
 import type { Medication, Location } from "@/lib/types"
 
@@ -26,20 +25,7 @@ export function MedicationsClient({ medications: initialMedications, locations, 
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<"all" | "expired" | "expiring" | "low_stock" | "good">("all")
   const [sortBy, setSortBy] = useState<"expiration" | "name" | "quantity">("expiration")
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    lot_number: "",
-    quantity: "",
-    unit_of_measure: "units",
-    expiration_date: "",
-    location_id: "",
-    storage_unit_id: "",
-    min_par_level: "",
-    max_par_level: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMedicationFormOpen, setIsMedicationFormOpen] = useState(false)
   const router = useRouter()
 
   const supabase = createClient()
@@ -160,76 +146,33 @@ export function MedicationsClient({ medications: initialMedications, locations, 
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleAddMedication = () => {
+    setIsMedicationFormOpen(true)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isAdmin) return
+  const handleSaveMedication = async (medicationData: any) => {
+    console.log("[v0] Submitting medication form:", medicationData)
 
-    setIsSubmitting(true)
-    try {
-      console.log("[v0] Submitting medication form:", formData)
+    const response = await fetch("/api/medications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(medicationData),
+    })
 
-      // Basic validation
-      if (!formData.name || !formData.quantity || !formData.location_id) {
-        alert("Please fill in all required fields")
-        return
-      }
+    const result = await response.json()
 
-      const response = await fetch("/api/medications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description || null,
-          quantity: Number.parseInt(formData.quantity),
-          unit_of_measure: formData.unit_of_measure,
-          expiration_date: formData.expiration_date || null,
-          lot_number: formData.lot_number || null,
-          location_id: formData.location_id,
-          storage_unit_id: formData.storage_unit_id || null,
-          par_level: Number.parseInt(formData.min_par_level) || 0,
-          notes: null,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to create medication")
-      }
-
-      console.log("[v0] Medication created successfully:", result)
-      alert("Medication added successfully!")
-
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        lot_number: "",
-        quantity: "",
-        unit_of_measure: "units",
-        expiration_date: "",
-        location_id: "",
-        storage_unit_id: "",
-        min_par_level: "",
-        max_par_level: "",
-      })
-      setShowAddForm(false)
-
-      setTimeout(() => {
-        router.refresh()
-      }, 500)
-    } catch (error) {
-      console.error("[v0] Error submitting medication:", error)
-      alert(`Error adding medication: ${error instanceof Error ? error.message : "Please try again."}`)
-    } finally {
-      setIsSubmitting(false)
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to create medication")
     }
+
+    console.log("[v0] Medication created successfully:", result)
+
+    // Refresh the page after successful creation
+    setTimeout(() => {
+      router.refresh()
+    }, 500)
   }
 
   return (
@@ -243,7 +186,7 @@ export function MedicationsClient({ medications: initialMedications, locations, 
             </p>
           </div>
           {isAdmin && (
-            <Button onClick={() => setShowAddForm(true)} className="apple-button-secondary">
+            <Button onClick={handleAddMedication} className="apple-button-secondary">
               <Plus className="h-5 w-5 mr-2" />
               Add Medication
             </Button>
@@ -252,176 +195,6 @@ export function MedicationsClient({ medications: initialMedications, locations, 
       </div>
 
       <div className="space-y-8">
-        {showAddForm && (
-          <Card className="apple-card border-primary/30 bg-gradient-to-r from-primary/5 to-blue-50">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="font-serif font-bold text-primary">Add New Medication</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAddForm(false)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  ✕
-                </Button>
-              </CardTitle>
-              <CardDescription>Add a new medication to the inventory system</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Basic Information */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Medication Name *</label>
-                      <Input
-                        value={formData.name}
-                        onChange={(e) => handleInputChange("name", e.target.value)}
-                        placeholder="Enter medication name"
-                        className="h-12 rounded-2xl"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Description</label>
-                      <Input
-                        value={formData.description}
-                        onChange={(e) => handleInputChange("description", e.target.value)}
-                        placeholder="Enter description (optional)"
-                        className="h-12 rounded-2xl"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Lot Number</label>
-                      <Input
-                        value={formData.lot_number}
-                        onChange={(e) => handleInputChange("lot_number", e.target.value)}
-                        placeholder="Enter lot number (optional)"
-                        className="h-12 rounded-2xl"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Quantity and Location */}
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Quantity *</label>
-                        <Input
-                          type="number"
-                          value={formData.quantity}
-                          onChange={(e) => handleInputChange("quantity", e.target.value)}
-                          placeholder="0"
-                          className="h-12 rounded-2xl"
-                          min="0"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Unit</label>
-                        <Select
-                          value={formData.unit_of_measure}
-                          onValueChange={(value) => handleInputChange("unit_of_measure", value)}
-                        >
-                          <SelectTrigger className="h-12 rounded-2xl">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="units">Units</SelectItem>
-                            <SelectItem value="tablets">Tablets</SelectItem>
-                            <SelectItem value="capsules">Capsules</SelectItem>
-                            <SelectItem value="vials">Vials</SelectItem>
-                            <SelectItem value="bottles">Bottles</SelectItem>
-                            <SelectItem value="boxes">Boxes</SelectItem>
-                            <SelectItem value="ml">Milliliters</SelectItem>
-                            <SelectItem value="mg">Milligrams</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Location *</label>
-                      <Select
-                        value={formData.location_id}
-                        onValueChange={(value) => handleInputChange("location_id", value)}
-                      >
-                        <SelectTrigger className="h-12 rounded-2xl">
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {locations.map((location) => (
-                            <SelectItem key={location.id} value={location.id}>
-                              {location.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Expiration Date</label>
-                      <Input
-                        type="date"
-                        value={formData.expiration_date}
-                        onChange={(e) => handleInputChange("expiration_date", e.target.value)}
-                        className="h-12 rounded-2xl"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Par Levels */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Par Levels (Optional)</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Minimum Par Level</label>
-                      <Input
-                        type="number"
-                        value={formData.min_par_level}
-                        onChange={(e) => handleInputChange("min_par_level", e.target.value)}
-                        placeholder="0"
-                        className="h-12 rounded-2xl"
-                        min="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Maximum Par Level</label>
-                      <Input
-                        type="number"
-                        value={formData.max_par_level}
-                        onChange={(e) => handleInputChange("max_par_level", e.target.value)}
-                        placeholder="0"
-                        className="h-12 rounded-2xl"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Form Actions */}
-                <div className="flex justify-end gap-4 pt-6 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddForm(false)}
-                    className="px-6 h-12 rounded-2xl"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting} className="px-6 h-12 rounded-2xl apple-button-primary">
-                    {isSubmitting ? "Adding..." : "Add Medication"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
@@ -688,6 +461,16 @@ export function MedicationsClient({ medications: initialMedications, locations, 
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog component for adding medication */}
+      {isAdmin && (
+        <MedicationForm
+          isOpen={isMedicationFormOpen}
+          onClose={() => setIsMedicationFormOpen(false)}
+          onSave={handleSaveMedication}
+          locations={locations}
+        />
+      )}
     </div>
   )
 }
