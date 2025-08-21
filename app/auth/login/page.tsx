@@ -79,39 +79,17 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      console.log("[v0] Login attempt starting", { email, hasPassword: !!password })
-
       const supabase = createClient()
-      console.log("[v0] Supabase client created successfully")
 
-      console.log("[v0] Attempting signInWithPassword...")
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+        },
       })
 
-      console.log("[v0] SignIn response:", {
-        hasData: !!data,
-        hasUser: !!data?.user,
-        hasError: !!error,
-        errorMessage: error?.message,
-      })
-
-      if (error) {
-        console.error("[v0] Login error:", error)
-
-        if (error.message.includes("fetch")) {
-          throw new Error("Network connection failed. Please check your internet connection and try again.")
-        } else if (error.message.includes("Invalid login credentials")) {
-          throw new Error("Invalid email or password. Please check your credentials and try again.")
-        } else if (error.message.includes("Email not confirmed")) {
-          throw new Error("Please check your email and click the confirmation link before signing in.")
-        } else {
-          throw error
-        }
-      }
-
-      console.log("[v0] Login successful, redirecting...")
+      if (error) throw error
 
       // If logging in with invitation, redirect to invitation acceptance
       if (inviteId) {
@@ -120,15 +98,7 @@ export default function LoginPage() {
         router.push("/dashboard")
       }
     } catch (error: unknown) {
-      console.error("[v0] Login catch block:", error)
-
-      if (error instanceof TypeError && error.message.includes("fetch")) {
-        setError("Failed to connect to the server. Please check your internet connection and try again.")
-      } else if (error instanceof Error) {
-        setError(error.message)
-      } else {
-        setError("An unexpected error occurred. Please try again.")
-      }
+      setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
     }
