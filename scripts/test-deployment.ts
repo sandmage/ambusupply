@@ -5,7 +5,7 @@ import type { InventoryItem, Location } from "@/lib/types"
 async function testDatabaseConnection() {
   console.log("[v0] Testing database connection...")
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     const { data, error } = await supabase.from("organizations").select("id").limit(1)
 
     if (error) {
