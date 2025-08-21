@@ -6,21 +6,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Activity, Minus, Plus, Package, MapPin, Clock, User, ChevronDown, ChevronUp } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
-
-interface ActivityItem {
-  id: string
-  transaction_type: string
-  quantity_change: number
-  quantity_after?: number
-  notes?: string
-  created_at: string
-  item_name?: string
-  location_name?: string
-  user_name?: string
-}
+import type { Transaction } from "@/lib/types"
 
 interface RecentActivityProps {
-  activities: ActivityItem[]
+  activities: Transaction[]
 }
 
 export function RecentActivity({ activities }: RecentActivityProps) {

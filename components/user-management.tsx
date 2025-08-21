@@ -11,15 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Trash2, UserPlus, Shield, User, Search, Filter } from "lucide-react"
 import { format } from "date-fns"
-
-interface UserProfile {
-  id: string
-  email: string
-  full_name?: string
-  role: "admin" | "staff"
-  created_at: string
-  updated_at: string
-}
+import type { UserProfile } from "@/lib/types"
 
 interface UserManagementProps {
   users: UserProfile[]

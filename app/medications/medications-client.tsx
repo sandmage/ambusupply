@@ -11,32 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Pill, AlertTriangle, Clock, TrendingDown, Search, Filter, Calendar, Package } from "lucide-react"
-
-interface Medication {
-  id: string
-  name: string
-  description?: string
-  quantity: number
-  min_par_level: number
-  unit_of_measure: string
-  expiration_date?: string
-  lot_number?: string
-  location_name: string
-  storage_unit_name?: string
-  created_at: string
-}
-
-interface Location {
-  id: string
-  name: string
-  storage_units: StorageUnit[]
-}
-
-interface StorageUnit {
-  id: string
-  name: string
-  unit_type: string
-}
+import type { Medication, Location } from "@/lib/types"
 
 interface MedicationsClientProps {
   medications: Medication[]
