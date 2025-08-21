@@ -31,12 +31,22 @@ interface InventoryTableProps {
   onUseItem: (itemId: string, quantity: number) => void
   onRestockItem: (itemId: string, quantity: number) => void
   userRole: string
+  selectedItems?: string[]
+  onSelectionChange?: (items: string[]) => void
 }
 
 type SortField = "name" | "quantity" | "min_par_level" | "expiration_date" | "location_name"
 type SortDirection = "asc" | "desc"
 
-export function InventoryTable({ items, onEditItem, onUseItem, onRestockItem, userRole }: InventoryTableProps) {
+export function InventoryTable({
+  items,
+  onEditItem,
+  onUseItem,
+  onRestockItem,
+  userRole,
+  selectedItems = [],
+  onSelectionChange,
+}: InventoryTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<"all" | "low" | "expiring" | "out_of_stock">("all")
   const [sortField, setSortField] = useState<SortField>("name")
@@ -178,6 +188,18 @@ export function InventoryTable({ items, onEditItem, onUseItem, onRestockItem, us
     }
   }
 
+  const handleSelectItem = (itemId: string) => {
+    if (onSelectionChange) {
+      if (selectedItems.includes(itemId)) {
+        onSelectionChange(selectedItems.filter((id) => id !== itemId))
+      } else {
+        onSelectionChange([...selectedItems, itemId])
+      }
+    }
+  }
+
+  const isSelected = (itemId: string) => selectedItems.includes(itemId)
+
   if (items.length === 0) {
     return (
       <Card className="apple-card">
@@ -315,7 +337,10 @@ export function InventoryTable({ items, onEditItem, onUseItem, onRestockItem, us
               </TableHeader>
               <TableBody>
                 {filteredAndSortedItems.map((item) => (
-                  <TableRow key={item.id} className="hover:bg-muted/20 transition-all duration-200 h-16">
+                  <TableRow
+                    key={item.id}
+                    className={`hover:bg-muted/20 transition-all duration-200 h-16 ${isSelected(item.id) ? "bg-primary/10" : ""}`}
+                  >
                     <TableCell className="py-4">
                       <div className="space-y-1">
                         <div className="font-semibold text-foreground text-base">{item.name}</div>
