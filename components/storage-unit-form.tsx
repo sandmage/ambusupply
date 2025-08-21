@@ -16,14 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
-interface StorageUnit {
-  id?: string
-  name: string
-  type: string
-  description?: string
-  position_order?: number
-}
+import type { StorageUnit } from "@/lib/types"
 
 interface StorageUnitType {
   id: string
@@ -37,7 +30,7 @@ interface StorageUnitFormProps {
   unit?: StorageUnit
   isOpen: boolean
   onClose: () => void
-  onSave: (unit: Omit<StorageUnit, "id">) => Promise<void>
+  onSave: (unit: Omit<StorageUnit, "id" | "location_id">) => Promise<void>
   parentUnitName?: string
   storageUnitTypes?: StorageUnitType[]
 }
