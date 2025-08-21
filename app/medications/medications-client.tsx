@@ -156,7 +156,7 @@ export function MedicationsClient({ medications: initialMedications, locations, 
             </p>
           </div>
           {isAdmin && (
-            <Button onClick={() => router.push("/inventory?category=medication")} className="apple-button-secondary">
+            <Button onClick={() => setShowAddForm(true)} className="apple-button-secondary">
               <Plus className="h-5 w-5 mr-2" />
               Add Medication
             </Button>
@@ -165,6 +165,44 @@ export function MedicationsClient({ medications: initialMedications, locations, 
       </div>
 
       <div className="space-y-8">
+        {/* Added inline medication form when showAddForm is true */}
+        {showAddForm && (
+          <Card className="apple-card border-primary/30 bg-gradient-to-r from-primary/5 to-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="font-serif font-bold text-primary">Add New Medication</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAddForm(false)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </Button>
+              </CardTitle>
+              <CardDescription>Add a new medication to the inventory system</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <div className="p-6 rounded-3xl bg-primary/10 inline-flex mb-4">
+                  <Pill className="h-8 w-8 text-primary" />
+                </div>
+                <p className="text-lg font-medium mb-2">Medication Form Coming Soon</p>
+                <p className="text-sm">For now, please use the inventory page to add medications.</p>
+                <Button
+                  onClick={() => {
+                    setShowAddForm(false)
+                    router.push("/inventory?category=medication")
+                  }}
+                  className="mt-4"
+                >
+                  Go to Inventory
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card className="apple-card group hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
