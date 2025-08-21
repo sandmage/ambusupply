@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 interface StorageUnit {
   id: string
   name: string
-  unit_type: string
+  type: string
   position_order: number
   description?: string
   children?: StorageUnit[]
@@ -140,12 +140,12 @@ export function LocationTree({
           </button>
 
           <div className="p-2 rounded-xl bg-muted/50 group-hover:bg-primary/10 transition-colors duration-200">
-            {getUnitTypeIcon(unit.unit_type)}
+            {getUnitTypeIcon(unit.type)}
           </div>
 
           <div className="flex-1 flex items-center gap-4">
             <span className="font-semibold text-foreground text-base">{highlightText(unit.name, searchTerm)}</span>
-            {getUnitTypeBadge(unit.unit_type)}
+            {getUnitTypeBadge(unit.type)}
             {unit.description && (
               <span className="text-sm text-muted-foreground font-medium">
                 {highlightText(unit.description, searchTerm)}
