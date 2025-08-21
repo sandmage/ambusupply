@@ -466,7 +466,7 @@ export function FleetClient() {
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedVehicle && (
             <VehicleDetail
-              vehicleId={selectedVehicle.id}
+              vehicleId={selectedVehicle.id!}
               onEdit={() => {
                 setShowVehicleDetail(false)
                 setShowVehicleForm(true)
