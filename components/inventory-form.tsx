@@ -22,7 +22,7 @@ interface InventoryFormProps {
   locations: Location[]
   isOpen: boolean
   onClose: () => void
-  onSave: (item: Omit<InventoryItem, "id">) => Promise<void>
+  onSave: (item: Omit<InventoryItem, "id" | "created_at" | "location_name">) => Promise<void>
   userRole?: string
 }
 
