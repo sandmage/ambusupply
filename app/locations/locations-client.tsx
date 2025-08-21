@@ -6,10 +6,12 @@ import { createClient } from "@/lib/supabase/client"
 import { LocationTree } from "@/components/location-tree"
 import { LocationForm } from "@/components/location-form"
 import { StorageUnitForm } from "@/components/storage-unit-form"
+import { StorageUnitTypeForm } from "@/components/storage-unit-type-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Plus, Package, Search, Building, AlertCircle } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Plus, Package, Search, Building, AlertCircle, Settings, Edit, Trash2 } from "lucide-react"
 import type { StorageUnit, Location } from "@/lib/types"
 
 interface StorageUnitType {
@@ -34,6 +36,8 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
   const [storageUnitTypes, setStorageUnitTypes] = useState<StorageUnitType[]>([])
   const [isLocationFormOpen, setIsLocationFormOpen] = useState(false)
   const [isStorageFormOpen, setIsStorageFormOpen] = useState(false)
+  const [isStorageTypeFormOpen, setIsStorageTypeFormOpen] = useState(false)
+  const [editingStorageType, setEditingStorageType] = useState<StorageUnitType | undefined>()
   const [editingLocation, setEditingLocation] = useState<Location | undefined>()
   const [editingStorageUnit, setEditingStorageUnit] = useState<{
     unit?: StorageUnit
@@ -256,6 +260,33 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
     }
   }
 
+  const handleAddStorageType = () => {
+    setEditingStorageType(undefined)
+    setIsStorageTypeFormOpen(true)
+  }
+
+  const handleEditStorageType = (storageType: StorageUnitType) => {
+    setEditingStorageType(storageType)
+    setIsStorageTypeFormOpen(true)
+  }
+
+  const handleSaveStorageType = async (storageTypeData: Omit<StorageUnitType, "id">) => {
+    console.log("[v0] Storage unit type operations are temporarily disabled")
+    // Simulate success for now
+    setTimeout(() => {
+      setIsStorageTypeFormOpen(false)
+      setEditingStorageType(undefined)
+      // In a real implementation, this would refresh the storage unit types list
+    }, 500)
+  }
+
+  const handleDeleteStorageType = async (storageTypeId: string) => {
+    if (confirm("Are you sure you want to delete this storage unit type?")) {
+      console.log("[v0] Storage unit type operations are temporarily disabled")
+      // In a real implementation, this would delete the storage type
+    }
+  }
+
   return (
     <div className="h-full">
       <div className="mb-8">
@@ -269,10 +300,20 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
             </p>
           </div>
           {isAdmin && (
-            <Button onClick={handleAddLocation} className="apple-button-secondary">
-              <Plus className="h-5 w-5 mr-2" />
-              Add Location
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={handleAddStorageType}
+                variant="outline"
+                className="apple-button-secondary bg-transparent"
+              >
+                <Settings className="h-5 w-5 mr-2" />
+                Manage Storage Types
+              </Button>
+              <Button onClick={handleAddLocation} className="apple-button-secondary">
+                <Plus className="h-5 w-5 mr-2" />
+                Add Location
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -315,6 +356,68 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
             </CardContent>
           </Card>
         </div>
+
+        {isAdmin && (
+          <Card className="apple-card">
+            <CardHeader className="pb-6">
+              <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Unit Types</CardTitle>
+              <CardDescription className="text-base font-medium">
+                Manage the types of storage units available in your organization
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-6">
+                <div className="text-sm text-muted-foreground">
+                  {storageUnitTypes.length} storage unit types configured
+                </div>
+                <Button onClick={handleAddStorageType} size="sm" className="apple-button">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Storage Type
+                </Button>
+              </div>
+
+              <div className="grid gap-3">
+                {storageUnitTypes.map((storageType) => (
+                  <div
+                    key={storageType.id}
+                    className="flex items-center justify-between p-4 bg-card rounded-2xl border border-border/50"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h5 className="font-semibold">{storageType.name}</h5>
+                        <Badge variant="secondary" className="text-xs">
+                          {storageType.capacity_type}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                        <span>Capacity: {storageType.default_capacity || 0}</span>
+                        {storageType.description && <span>{storageType.description}</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleEditStorageType(storageType)}
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-3 rounded-xl"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDeleteStorageType(storageType.id)}
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-3 rounded-xl text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="apple-card">
           <CardHeader className="pb-6">
@@ -382,6 +485,13 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
               onSave={handleSaveStorageUnit}
               parentUnitName={editingStorageUnit?.parentUnitName}
               storageUnitTypes={storageUnitTypes}
+            />
+
+            <StorageUnitTypeForm
+              storageType={editingStorageType}
+              isOpen={isStorageTypeFormOpen}
+              onClose={() => setIsStorageTypeFormOpen(false)}
+              onSave={handleSaveStorageType}
             />
           </>
         )}

@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { User, Building2, Shield, Bell, Database, Download, Save, AlertTriangle, Clock } from "lucide-react"
 
@@ -688,146 +687,26 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
             </CardContent>
           </Card>
 
+          {/* Storage Unit Types */}
           <Card className="apple-card">
             <CardHeader>
               <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Unit Types</CardTitle>
               <CardDescription className="text-base font-medium">
-                Create and manage storage unit types for your organization
+                Storage unit type management has been moved to the Locations page
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Storage Unit Type Form */}
-              <div className="p-6 bg-muted/30 rounded-2xl border border-border/50">
-                <h4 className="text-lg font-semibold mb-4">
-                  {editingStorageType ? "Edit Storage Unit Type" : "Add New Storage Unit Type"}
-                </h4>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="storage_type_name">Name</Label>
-                    <Input
-                      id="storage_type_name"
-                      value={storageTypeForm.name}
-                      onChange={(e) => setStorageTypeForm((prev) => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Cabinet, Drawer, Shelf"
-                      className="h-12 rounded-2xl border-border/50 bg-card"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="capacity_type">Capacity Type</Label>
-                    <Select
-                      value={storageTypeForm.capacity_type}
-                      onValueChange={(value) => setStorageTypeForm((prev) => ({ ...prev, capacity_type: value }))}
-                    >
-                      <SelectTrigger className="h-12 rounded-2xl border-border/50 bg-card">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-border/50">
-                        <SelectItem value="count">Count</SelectItem>
-                        <SelectItem value="volume">Volume (L)</SelectItem>
-                        <SelectItem value="weight">Weight (kg)</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+              <div className="text-center py-8">
+                <div className="p-4 rounded-3xl bg-blue-100 inline-flex mb-6">
+                  <Database className="h-12 w-12 text-blue-600" />
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="default_capacity">Default Capacity</Label>
-                    <Input
-                      id="default_capacity"
-                      type="number"
-                      value={storageTypeForm.default_capacity}
-                      onChange={(e) =>
-                        setStorageTypeForm((prev) => ({
-                          ...prev,
-                          default_capacity: Number.parseInt(e.target.value) || 0,
-                        }))
-                      }
-                      className="h-12 rounded-2xl border-border/50 bg-card"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="storage_description">Description</Label>
-                    <Input
-                      id="storage_description"
-                      value={storageTypeForm.description}
-                      onChange={(e) => setStorageTypeForm((prev) => ({ ...prev, description: e.target.value }))}
-                      placeholder="Optional description"
-                      className="h-12 rounded-2xl border-border/50 bg-card"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleStorageTypeSubmit}
-                    disabled={saving || !storageTypeForm.name}
-                    className="apple-button h-12 px-6"
-                  >
-                    {saving ? "Saving..." : editingStorageType ? "Update Type" : "Add Type"}
-                  </Button>
-                  {editingStorageType && (
-                    <Button
-                      onClick={() => setEditingStorageType(null)}
-                      variant="outline"
-                      size="sm"
-                      className="h-9 px-3 rounded-xl bg-transparent"
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Storage Unit Types List */}
-              <div className="space-y-3">
-                <h4 className="text-lg font-semibold">Existing Storage Unit Types</h4>
-                {storageUnitTypes.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No storage unit types configured yet.</p>
-                    <p className="text-sm">Add your first storage unit type above.</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-3">
-                    {storageUnitTypes.map((storageType) => (
-                      <div
-                        key={storageType.id}
-                        className="flex items-center justify-between p-4 bg-card rounded-2xl border border-border/50"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <h5 className="font-semibold">{storageType.name}</h5>
-                            <Badge variant="secondary" className="text-xs">
-                              {storageType.capacity_type}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                            <span>Capacity: {storageType.default_capacity}</span>
-                            {storageType.description && <span>{storageType.description}</span>}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => setEditingStorageType(storageType)}
-                            variant="outline"
-                            size="sm"
-                            className="h-9 px-3 rounded-xl"
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            onClick={() => handleDeleteStorageType(storageType.id)}
-                            variant="outline"
-                            size="sm"
-                            className="h-9 px-3 rounded-xl text-destructive hover:text-destructive"
-                            disabled={saving}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <h3 className="text-xl font-serif font-bold mb-3 text-primary">Moved to Locations</h3>
+                <p className="text-base text-muted-foreground font-medium mb-4">
+                  Storage unit type management is now available on the Locations page for better organization.
+                </p>
+                <Button onClick={() => router.push("/locations")} className="apple-button">
+                  Go to Locations
+                </Button>
               </div>
             </CardContent>
           </Card>
