@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/app-layout"
 import { SettingsClient } from "./settings-client"
 
 export default async function SettingsPage() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const {
     data: { user },
