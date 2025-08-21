@@ -7,8 +7,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start",
-    "type-check": "tsc --noEmit"
+    "start": "next start"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -74,9 +73,5 @@
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "typescript": "^5"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
   }
 }

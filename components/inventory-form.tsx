@@ -15,32 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
-interface InventoryItem {
-  id?: string
-  name: string
-  description?: string
-  quantity: number // Form uses quantity, maps to current_quantity in database
-  min_par_level: number // Form uses min_par_level, maps to par_level in database
-  unit_of_measure: string
-  expiration_date?: string
-  notes?: string
-  location_id: string
-  storage_unit_id?: string
-  ordering_url?: string
-}
-
-interface Location {
-  id: string
-  name: string
-  storage_units: StorageUnit[]
-}
-
-interface StorageUnit {
-  id: string
-  name: string
-  type: string
-}
+import type { InventoryItem, Location } from "@/lib/types"
 
 interface InventoryFormProps {
   item?: InventoryItem

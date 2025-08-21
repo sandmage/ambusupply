@@ -25,36 +25,7 @@ import {
   Download,
   Layers,
 } from "lucide-react"
-
-interface InventoryItem {
-  id: string
-  name: string
-  description?: string
-  quantity: number // This maps to current_quantity in database
-  min_par_level: number // This maps to par_level in database
-  unit_of_measure: string
-  expiration_date?: string
-  lot_number?: string
-  location_name: string
-  storage_unit_name?: string
-  created_at: string
-  ordering_url?: string
-  location_id: string
-  storage_unit_id: string
-  notes?: string // Added to match InventoryForm expectations
-}
-
-interface Location {
-  id: string
-  name: string
-  storage_units: StorageUnit[]
-}
-
-interface StorageUnit {
-  id: string
-  name: string
-  type: string // Standardized to 'type' across all components
-}
+import type { InventoryItem, Location } from "@/lib/types"
 
 interface InventoryClientProps {
   items: InventoryItem[]
@@ -166,9 +137,8 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
 
       setEditingItem({
         ...item,
-        location_id: location?.id || item.location_id || "",
-        storage_unit_id: storageUnit?.id || item.storage_unit_id || "",
-        notes: item.notes || "", // Ensure notes field exists
+        location_id: location?.id || "",
+        storage_unit_id: storageUnit?.id || "",
       })
       setIsFormOpen(true)
     },

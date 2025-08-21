@@ -10,24 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
-interface InventoryItem {
-  id: string
-  name: string
-  description?: string
-  quantity: number
-  min_par_level: number
-  unit_of_measure: string
-  expiration_date?: string
-  lot_number?: string
-  location_name: string
-  storage_unit_name?: string
-  created_at: string
-  location_id: string
-  storage_unit_id: string
-  ordering_url?: string
-  notes?: string // Added for consistency
-}
+import type { InventoryItem } from "@/lib/types"
 
 interface InventoryTableProps {
   items: InventoryItem[]
