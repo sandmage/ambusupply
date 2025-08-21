@@ -401,7 +401,7 @@ export function FleetClient() {
                           </div>
                         </div>
                         <Badge variant="secondary" className="text-xs rounded-lg">
-                          {new Date(record.completed_date).toLocaleDateString()}
+                          {record.completed_date ? new Date(record.completed_date).toLocaleDateString() : "N/A"}
                         </Badge>
                       </div>
                     ))}
