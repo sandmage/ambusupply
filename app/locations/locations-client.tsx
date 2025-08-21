@@ -200,7 +200,7 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
         console.log("[v0] Updating existing storage unit:", unit.id)
         const updateData = {
           name: unitData.name,
-          unit_type: unitData.type,
+          unit_type: unitData.type, // Map frontend 'type' to database 'unit_type'
           parent_unit_id: parentUnitId || null,
         }
         console.log("[v0] Update data:", updateData)
@@ -220,7 +220,7 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
         console.log("[v0] Creating new storage unit")
         const insertData = {
           name: unitData.name,
-          unit_type: unitData.type,
+          unit_type: unitData.type, // Map frontend 'type' to database 'unit_type'
           location_id: locationId,
           parent_unit_id: parentUnitId || null,
         }

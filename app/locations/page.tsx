@@ -51,9 +51,13 @@ export default async function LocationsPage() {
       const storageUnitsMap = new Map()
       const rootUnits: any[] = []
 
-      // First pass: create all units
+      // First pass: create all units and map unit_type to type
       location.storage_units.forEach((unit: any) => {
-        storageUnitsMap.set(unit.id, { ...unit, children: [] })
+        storageUnitsMap.set(unit.id, {
+          ...unit,
+          type: unit.unit_type, // Map unit_type from database to type for frontend
+          children: [],
+        })
       })
 
       // Second pass: build hierarchy
