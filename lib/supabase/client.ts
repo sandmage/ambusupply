@@ -33,7 +33,8 @@ export function createClient() {
   return createBrowserClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
-      persistSession: true,
+      persistSession: false,
+      detectSessionInUrl: false,
     },
   })
 }
