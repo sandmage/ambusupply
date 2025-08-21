@@ -1,9 +1,9 @@
 import { Suspense } from "react"
-import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { HierarchicalInventoryClient } from "./hierarchical-inventory-client"
 
 export default async function HierarchicalInventoryPage() {
-  const supabase = createClient()
+  const supabase = await createServerClient()
 
   const { data: hierarchicalInventory } = await supabase
     .from("hierarchical_inventory_overview")
