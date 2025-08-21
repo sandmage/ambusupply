@@ -19,6 +19,14 @@ const nextConfig = {
       exclude: ['error', 'warn']
     } : false,
   },
+  output: 'standalone',
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
+  generateBuildId: async () => {
+    return 'ambulance-supply-build'
+  },
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
@@ -31,6 +39,12 @@ const nextConfig = {
           },
         },
       }
+    }
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
     }
     return config
   },

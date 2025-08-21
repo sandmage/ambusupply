@@ -16,7 +16,23 @@ export async function createServerClient() {
     )
   }
 
-  const cookieStore = await cookies()
+  let cookieStore
+  try {
+    cookieStore = await cookies()
+  } catch (error) {
+    // During build time or in environments where cookies aren't available
+    console.warn("Cookies not available, using fallback client")
+    return createSupabaseClient(url, key, {
+      cookies: {
+        getAll() {
+          return []
+        },
+        setAll() {
+          /* no-op during build */
+        },
+      },
+    })
+  }
 
   return createSupabaseClient(url, key, {
     cookies: {
