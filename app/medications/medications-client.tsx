@@ -178,8 +178,33 @@ export function MedicationsClient({ medications: initialMedications, locations, 
         return
       }
 
-      // For now, show success message and reset form
-      alert("Medication form submitted successfully! (Database integration coming soon)")
+      const response = await fetch("/api/medications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description || null,
+          quantity: Number.parseInt(formData.quantity),
+          unit_of_measure: formData.unit_of_measure,
+          expiration_date: formData.expiration_date || null,
+          lot_number: formData.lot_number || null,
+          location_id: formData.location_id,
+          storage_unit_id: formData.storage_unit_id || null,
+          par_level: Number.parseInt(formData.min_par_level) || 0,
+          notes: null,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create medication")
+      }
+
+      console.log("[v0] Medication created successfully:", result)
+      alert("Medication added successfully!")
 
       // Reset form
       setFormData({
@@ -195,9 +220,11 @@ export function MedicationsClient({ medications: initialMedications, locations, 
         max_par_level: "",
       })
       setShowAddForm(false)
+
+      router.refresh()
     } catch (error) {
       console.error("[v0] Error submitting medication:", error)
-      alert("Error submitting medication. Please try again.")
+      alert(`Error adding medication: ${error instanceof Error ? error.message : "Please try again."}`)
     } finally {
       setIsSubmitting(false)
     }
