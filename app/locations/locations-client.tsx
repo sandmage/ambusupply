@@ -369,14 +369,6 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
                       Organize and arrange your storage locations and units
                     </CardDescription>
                   </div>
-                  {isAdmin && (
-                    <div className="flex gap-3">
-                      <Button onClick={handleAddLocation} className="apple-button-secondary">
-                        <Plus className="h-5 w-5 mr-2" />
-                        Add Location
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </CardHeader>
               <CardContent>
