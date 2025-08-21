@@ -4,18 +4,55 @@ import { MedicationsClient } from "./medications-client"
 import { AppLayout } from "@/components/app-layout"
 
 export default async function MedicationsPage() {
-  const supabase = await createServerClient()
+  console.log("[v0] [SERVER] Starting medications page render...")
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) {
+  let supabase
+  try {
+    console.log("[v0] [SERVER] Creating Supabase server client...")
+    supabase = await createServerClient()
+    console.log("[v0] [SERVER] Supabase server client created successfully")
+  } catch (error) {
+    console.error("[v0] [SERVER] Failed to create Supabase client:", error)
+    return <div>Error connecting to database. Please refresh the page.</div>
+  }
+
+  let user
+  try {
+    console.log("[v0] [SERVER] Attempting to get user...")
+    const { data: userData, error } = await supabase.auth.getUser()
+    if (error) {
+      console.error("[v0] [SERVER] Auth error:", error)
+      redirect("/auth/login")
+    }
+    if (!userData?.user) {
+      console.log("[v0] [SERVER] No user found, redirecting to login")
+      redirect("/auth/login")
+    }
+    user = userData.user
+    console.log("[v0] [SERVER] User authenticated successfully:", user.id)
+  } catch (error) {
+    console.error("[v0] [SERVER] Failed to authenticate user:", error)
     redirect("/auth/login")
   }
 
-  // Get user profile to check role
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+  let profile
+  try {
+    console.log("[v0] [SERVER] Fetching user profile...")
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle()
+    if (profileError) {
+      console.error("[v0] [SERVER] Profile query error:", profileError)
+    } else {
+      console.log("[v0] [SERVER] Profile query successful")
+    }
+    profile = profileData
+  } catch (error) {
+    console.error("[v0] [SERVER] Failed to fetch profile:", error)
+    profile = null
+  }
 
   const userProfile = profile || {
     id: user.id,
@@ -24,57 +61,79 @@ export default async function MedicationsPage() {
     role: user.user_metadata?.role || "staff",
   }
 
-  // Fetch medication items (filtering for medication categories)
-  const { data: medicationItems, error: medicationError } = await supabase
-    .from("inventory_items")
-    .select(`
-      id,
-      name,
-      description,
-      current_quantity,
-      par_level,
-      unit_of_measure,
-      expiration_date,
-      lot_number,
-      created_at,
-      locations!inner (
-        id,
-        name
-      ),
-      storage_units (
+  let medicationItems = []
+  try {
+    console.log("[v0] [SERVER] Fetching medication items...")
+    const { data: medicationData, error: medicationError } = await supabase
+      .from("inventory_items")
+      .select(`
         id,
         name,
-        unit_type
+        description,
+        current_quantity,
+        par_level,
+        unit_of_measure,
+        expiration_date,
+        lot_number,
+        created_at,
+        locations!inner (
+          id,
+          name
+        ),
+        storage_units (
+          id,
+          name,
+          unit_type
+        )
+      `)
+      .or(
+        "category.ilike.%medication%,category.ilike.%drug%,category.ilike.%pharmaceutical%,name.ilike.%mg%,name.ilike.%ml%,unit_of_measure.in.(mg,ml,dose,vial,ampule)",
       )
-    `)
-    .or(
-      "category.ilike.%medication%,category.ilike.%drug%,category.ilike.%pharmaceutical%,name.ilike.%mg%,name.ilike.%ml%,unit_of_measure.in.(mg,ml,dose,vial,ampule)",
-    )
-    .order("expiration_date", { ascending: true, nullsFirst: false })
+      .order("expiration_date", { ascending: true, nullsFirst: false })
 
-  if (medicationError) {
-    return <div>Error loading medications. Please refresh the page.</div>
+    if (medicationError) {
+      console.error("[v0] [SERVER] Medication query error:", medicationError)
+      medicationItems = []
+    } else {
+      medicationItems = medicationData || []
+      console.log("[v0] [SERVER] Medication query successful, items count:", medicationItems.length)
+    }
+  } catch (error) {
+    console.error("[v0] [SERVER] Failed to fetch medication items:", error)
+    medicationItems = []
   }
 
-  // Fetch locations with storage units for the form
-  const { data: locations, error: locationsError } = await supabase
-    .from("locations")
-    .select(`
-      id,
-      name,
-      storage_units (
+  let locations = []
+  try {
+    console.log("[v0] [SERVER] Fetching locations...")
+    const { data: locationsData, error: locationsError } = await supabase
+      .from("locations")
+      .select(`
         id,
         name,
-        type,
-        location_id,
-        position_order
-      )
-    `)
-    .order("name")
+        storage_units (
+          id,
+          name,
+          type,
+          location_id,
+          position_order
+        )
+      `)
+      .order("name")
 
-  if (locationsError) {
-    return <div>Error loading locations. Please refresh the page.</div>
+    if (locationsError) {
+      console.error("[v0] [SERVER] Locations query error:", locationsError)
+      locations = []
+    } else {
+      locations = locationsData || []
+      console.log("[v0] [SERVER] Locations query successful, locations count:", locations.length)
+    }
+  } catch (error) {
+    console.error("[v0] [SERVER] Failed to fetch locations:", error)
+    locations = []
   }
+
+  console.log("[v0] [SERVER] All queries completed, rendering page...")
 
   // Transform medication data
   const transformedMedications =
@@ -87,8 +146,8 @@ export default async function MedicationsPage() {
       unit_of_measure: item.unit_of_measure,
       expiration_date: item.expiration_date,
       lot_number: item.lot_number,
-      location_id: item.locations.id,
-      location_name: item.locations.name,
+      location_id: item.locations?.id,
+      location_name: item.locations?.name,
       storage_unit_name: item.storage_units?.name,
       storage_unit_type: item.storage_units?.unit_type,
       created_at: item.created_at,
@@ -112,7 +171,7 @@ export default async function MedicationsPage() {
 
   return (
     <AppLayout user={userProfile} stats={{ belowParCount: lowStockCount, expiringCount: expiringSoonCount }}>
-      <MedicationsClient medications={transformedMedications} locations={locations || []} userRole={userProfile.role} />
+      <MedicationsClient medications={transformedMedications} locations={locations} userRole={userProfile.role} />
     </AppLayout>
   )
 }
