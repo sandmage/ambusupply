@@ -12,7 +12,7 @@ export interface InventoryItem {
   created_at: string
   ordering_url?: string
   location_id: string
-  storage_unit_id: string
+  storage_unit_id?: string // Made storage_unit_id optional to match form logic and database schema
   notes?: string
 }
 
