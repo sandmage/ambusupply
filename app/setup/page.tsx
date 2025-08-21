@@ -5,7 +5,7 @@ import { SetupWizard } from "@/components/setup-wizard"
 export default async function SetupPage({
   searchParams,
 }: {
-  searchParams: { rerun?: string }
+  searchParams: Promise<{ rerun?: string }>
 }) {
   const supabase = createServerClient()
 
@@ -24,11 +24,8 @@ export default async function SetupPage({
     .eq("email", user.email)
     .maybeSingle()
 
-  const isRerun = searchParams.rerun === "true"
-
-  if (profile?.setup_completed && !isRerun) {
-    redirect("/dashboard")
-  }
+  const resolvedSearchParams = await searchParams
+  const isRerun = resolvedSearchParams.rerun === "true"
 
   const existingOrganization = profile?.organizations
 
