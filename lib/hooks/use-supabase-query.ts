@@ -60,7 +60,7 @@ export function useSupabaseQuery<T = any>(options: UseSupabaseQueryOptions<T>): 
 
       if (queryError) throw queryError
 
-      setData(result || [])
+      setData((result as T[]) || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
       if (process.env.NODE_ENV === "development") {
