@@ -24,29 +24,24 @@ async function testDatabaseConnection() {
 async function testTypeDefinitions() {
   console.log("[v0] Testing type definitions...")
 
-  // Test InventoryItem type
   const testItem: InventoryItem = {
     id: "test-id",
     name: "Test Item",
     description: "Test Description",
     quantity: 10,
-    unit: "pieces",
+    min_par_level: 5,
+    unit_of_measure: "pieces",
+    location_name: "Test Location",
     location_id: "test-location-id",
     storage_unit_id: "test-storage-id",
-    organization_id: "test-org-id",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   }
 
-  // Test Location type
   const testLocation: Location = {
     id: "test-location-id",
     name: "Test Location",
     description: "Test Location Description",
-    organization_id: "test-org-id",
     storage_units: [],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   }
 
   console.log("[v0] Type definitions are valid")
