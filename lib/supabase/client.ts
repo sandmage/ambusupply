@@ -30,5 +30,10 @@ export function createClient() {
   console.log("[v0] URL:", supabaseUrl)
   console.log("[v0] Key length:", supabaseAnonKey.length)
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: true,
+    },
+  })
 }
