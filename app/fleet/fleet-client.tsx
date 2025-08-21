@@ -25,6 +25,10 @@ interface Vehicle {
   status: string
   mileage: number
   current_location?: any
+  vin?: string
+  license_plate?: string
+  vehicle_type?: string
+  fuel_capacity?: number
 }
 
 interface MaintenanceRecord {
