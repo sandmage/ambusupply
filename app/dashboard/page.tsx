@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Package, AlertTriangle, Calendar, MapPin, Activity } from "lucide-react"
 
 export default async function DashboardPage() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const {
     data: { user },
