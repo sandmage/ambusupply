@@ -79,8 +79,16 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const supabase = createClient()
+      console.log("[v0] Starting login process...")
+      console.log("[v0] Environment check:", {
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "present" : "missing",
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "present" : "missing",
+      })
 
+      const supabase = createClient()
+      console.log("[v0] Supabase client created successfully")
+
+      console.log("[v0] Attempting signInWithPassword...")
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -89,8 +97,12 @@ export default function LoginPage() {
         },
       })
 
-      if (error) throw error
+      if (error) {
+        console.log("[v0] Login error:", error)
+        throw error
+      }
 
+      console.log("[v0] Login successful, redirecting...")
       // If logging in with invitation, redirect to invitation acceptance
       if (inviteId) {
         router.push(`/invite/${inviteId}`)
@@ -98,6 +110,14 @@ export default function LoginPage() {
         router.push("/dashboard")
       }
     } catch (error: unknown) {
+      console.log("[v0] Login failed with error:", error)
+      if (error instanceof Error) {
+        console.log("[v0] Error details:", {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        })
+      }
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
