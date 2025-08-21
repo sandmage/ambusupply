@@ -302,22 +302,6 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
                 : "View storage organization and locations (Read Only)"}
             </p>
           </div>
-          {isAdmin && (
-            <div className="flex gap-3">
-              <Button
-                onClick={handleAddStorageType}
-                variant="outline"
-                className="apple-button-secondary bg-transparent"
-              >
-                <Settings className="h-5 w-5 mr-2" />
-                Manage Storage Types
-              </Button>
-              <Button onClick={handleAddLocation} className="apple-button-secondary">
-                <Plus className="h-5 w-5 mr-2" />
-                Add Location
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -381,7 +365,6 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
               <CardHeader className="pb-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-2xl font-serif font-bold text-primary">Storage Hierarchy</CardTitle>
                     <CardDescription className="text-base font-medium">
                       Organize and arrange your storage locations and units
                     </CardDescription>
@@ -507,10 +490,12 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
                     </CardDescription>
                   </div>
                   {isAdmin && (
-                    <Button onClick={handleAddStorageType} className="apple-button-secondary">
-                      <Plus className="h-5 w-5 mr-2" />
-                      Add Storage Type
-                    </Button>
+                    <div className="flex gap-3">
+                      <Button onClick={handleAddStorageType} className="apple-button-secondary">
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add Storage Type
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
