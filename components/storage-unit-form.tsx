@@ -88,7 +88,7 @@ export function StorageUnitForm({
     try {
       const unitData = {
         name: name.trim(),
-        unit_type: type, // Fixed field name from 'type' to 'unit_type'
+        type: type, // Changed from unit_type to type
         description: description.trim() || undefined,
         position_order: Number.parseInt(positionOrder) || 0,
       }
