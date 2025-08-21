@@ -384,7 +384,6 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
 
                 <LocationTree
                   locations={filteredLocations}
-                  onAddLocation={isAdmin ? handleAddLocation : undefined}
                   onEditLocation={isAdmin ? handleEditLocation : undefined}
                   onDeleteLocation={isAdmin ? handleDeleteLocation : undefined}
                   onAddStorageUnit={isAdmin ? handleAddStorageUnit : undefined}
