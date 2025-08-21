@@ -25,8 +25,18 @@ export default function TestConnectionPage() {
 
     try {
       console.log("[v0] Testing authentication comprehensively...")
+      try {
+        const supabase = createClient()
+        authResults.clientCreation = "success"
+      } catch (clientError: any) {
+        authResults.clientCreation = `failed: ${clientError.message}`
+        authResults.recommendations.push("Fix Supabase URL format - must be https://[project-id].supabase.co")
+        setResults({ ...results, authTest: authResults })
+        setLoading(false)
+        return
+      }
+
       const supabase = createClient()
-      authResults.clientCreation = "success"
 
       // Test 1: Check if we can access auth configuration
       try {
@@ -84,6 +94,7 @@ export default function TestConnectionPage() {
           )
           authResults.recommendations.push("Verify Supabase project is not paused or deleted")
           authResults.recommendations.push("Check CORS settings in Supabase Dashboard")
+          authResults.recommendations.push("Verify Supabase URL ends with .supabase.co (not truncated)")
         }
       }
 
@@ -162,6 +173,8 @@ export default function TestConnectionPage() {
         url: process.env.NEXT_PUBLIC_SUPABASE_URL,
         keyPresent: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         keyLength: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length || 0,
+        urlValid: process.env.NEXT_PUBLIC_SUPABASE_URL?.includes(".supabase.co") || false,
+        urlFormat: process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("https://") || false,
       },
       clientCreation: null,
       connectionTest: null,
@@ -173,35 +186,41 @@ export default function TestConnectionPage() {
       console.log("[v0] URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
       console.log("[v0] Key present:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
-      const supabase = createClient()
-      testResults.clientCreation = "success"
-      console.log("[v0] Supabase client created successfully")
-
-      console.log("[v0] Testing Supabase connection with health check...")
-
       try {
-        const { data, error } = await supabase.auth.getSession()
-        if (error) {
-          console.log("[v0] Auth session error:", error)
-          testResults.connectionTest = `auth error: ${error.message}`
-          testResults.error = error
-        } else {
-          console.log("[v0] Auth session check successful")
-          testResults.connectionTest = "auth connection successful"
-        }
-      } catch (authError: any) {
-        console.log("[v0] Auth test failed, trying database query...")
+        const supabase = createClient()
+        testResults.clientCreation = "success"
+        console.log("[v0] Supabase client created successfully")
 
-        const { data, error } = await supabase.from("profiles").select("count").limit(1)
+        console.log("[v0] Testing Supabase connection with health check...")
 
-        if (error) {
-          console.log("[v0] Database query error:", error)
-          testResults.connectionTest = `database error: ${error.message}`
-          testResults.error = error
-        } else {
-          console.log("[v0] Database query successful:", data)
-          testResults.connectionTest = "database connection successful"
+        try {
+          const { data, error } = await supabase.auth.getSession()
+          if (error) {
+            console.log("[v0] Auth session error:", error)
+            testResults.connectionTest = `auth error: ${error.message}`
+            testResults.error = error
+          } else {
+            console.log("[v0] Auth session check successful")
+            testResults.connectionTest = "auth connection successful"
+          }
+        } catch (authError: any) {
+          console.log("[v0] Auth test failed, trying database query...")
+
+          const { data, error } = await supabase.from("profiles").select("count").limit(1)
+
+          if (error) {
+            console.log("[v0] Database query error:", error)
+            testResults.connectionTest = `database error: ${error.message}`
+            testResults.error = error
+          } else {
+            console.log("[v0] Database query successful:", data)
+            testResults.connectionTest = "database connection successful"
+          }
         }
+      } catch (clientError: any) {
+        testResults.clientCreation = `failed: ${clientError.message}`
+        testResults.connectionTest = "skipped due to client creation failure"
+        testResults.error = clientError
       }
     } catch (err: any) {
       console.log("[v0] Test failed with error:", err)
@@ -330,6 +349,9 @@ export default function TestConnectionPage() {
                     • <strong>Most Likely Issue:</strong> Email authentication is disabled in Supabase
                   </li>
                   <li>• Go to Supabase Dashboard → Authentication → Settings → Enable email provider</li>
+                  <li>
+                    • <strong>Check URL Format:</strong> Must be https://[project-id].supabase.co (not truncated)
+                  </li>
                   <li>• Check if your Supabase project is paused or has billing issues</li>
                   <li>• Verify CORS settings allow your domain in Supabase Dashboard → Settings → API</li>
                   <li>• If 429 error: You're rate limited, wait 15+ minutes</li>
