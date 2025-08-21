@@ -14,52 +14,127 @@ export default function TestConnectionPage() {
 
     const authResults: any = {
       clientCreation: null,
-      authTest: null,
+      authConfigTest: null,
+      signInTest: null,
+      signUpTest: null,
       networkError: null,
       httpStatus: null,
       errorDetails: null,
+      recommendations: [],
     }
 
     try {
-      console.log("[v0] Testing authentication specifically...")
+      console.log("[v0] Testing authentication comprehensively...")
       const supabase = createClient()
       authResults.clientCreation = "success"
 
-      // Test with a fake login to see the exact network error
+      // Test 1: Check if we can access auth configuration
       try {
+        console.log("[v0] Testing auth configuration access...")
+        const { data: session } = await supabase.auth.getSession()
+        authResults.authConfigTest = "Auth service accessible"
+      } catch (configError: any) {
+        authResults.authConfigTest = `Auth config error: ${configError.message}`
+      }
+
+      // Test 2: Try sign up (might give different error than sign in)
+      try {
+        console.log("[v0] Testing sign up endpoint...")
+        const { data, error } = await supabase.auth.signUp({
+          email: "test@example.com",
+          password: "testpassword123",
+        })
+
+        if (error) {
+          authResults.signUpTest = `Sign up error: ${error.message}`
+          if (error.message.includes("Email signups are disabled")) {
+            authResults.recommendations.push("Enable email authentication in Supabase Auth settings")
+          }
+        } else {
+          authResults.signUpTest = "Sign up endpoint accessible (but didn't create user)"
+        }
+      } catch (signUpError: any) {
+        authResults.signUpTest = `Sign up network error: ${signUpError.message}`
+        authResults.networkError = signUpError
+      }
+
+      // Test 3: Try sign in (original failing test)
+      try {
+        console.log("[v0] Testing sign in endpoint...")
         const { data, error } = await supabase.auth.signInWithPassword({
           email: "test@example.com",
           password: "testpassword123",
         })
 
         if (error) {
-          authResults.authTest = `Auth error: ${error.message}`
-          authResults.errorDetails = error
+          authResults.signInTest = `Sign in error: ${error.message}`
         } else {
-          authResults.authTest = "Unexpected success (should fail with invalid credentials)"
+          authResults.signInTest = "Unexpected success (should fail with invalid credentials)"
         }
-      } catch (networkError: any) {
-        console.log("[v0] Network error caught:", networkError)
-        authResults.networkError = {
-          message: networkError.message,
-          name: networkError.name,
-          stack: networkError.stack,
-        }
+      } catch (signInError: any) {
+        console.log("[v0] Sign in network error:", signInError)
+        authResults.signInTest = `Sign in network error: ${signInError.message}`
+        authResults.networkError = signInError
 
-        // Try to extract HTTP status from the error
-        if (networkError.message.includes("429")) {
-          authResults.httpStatus = "429 - Too Many Requests (Rate Limited)"
-        } else if (networkError.message.includes("500")) {
-          authResults.httpStatus = "500 - Internal Server Error"
-        } else if (networkError.message.includes("Failed to fetch")) {
-          authResults.httpStatus = "Network Error - Failed to fetch (CORS or connectivity issue)"
+        // Analyze the specific error
+        if (signInError.message.includes("Failed to fetch")) {
+          authResults.httpStatus = "Network Error - Failed to fetch"
+          authResults.recommendations.push(
+            "Check if Email authentication is enabled in Supabase Dashboard > Authentication > Settings",
+          )
+          authResults.recommendations.push("Verify Supabase project is not paused or deleted")
+          authResults.recommendations.push("Check CORS settings in Supabase Dashboard")
         }
+      }
+
+      // Add general recommendations
+      if (authResults.networkError) {
+        authResults.recommendations.push("Open browser Network tab and retry to see HTTP status code")
+        authResults.recommendations.push("Check Supabase project status at https://status.supabase.com/")
       }
     } catch (err: any) {
       authResults.errorDetails = err
     }
 
     setResults({ ...results, authTest: authResults })
+    setLoading(false)
+  }
+
+  const testDirectAuthURL = async () => {
+    setLoading(true)
+
+    const directResults: any = {
+      urlTest: null,
+      fetchTest: null,
+      error: null,
+    }
+
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const authUrl = `${supabaseUrl}/auth/v1/token?grant_type=password`
+
+      console.log("[v0] Testing direct auth URL:", authUrl)
+
+      // Test if we can reach the auth endpoint directly
+      const response = await fetch(authUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+        },
+        body: JSON.stringify({
+          email: "test@example.com",
+          password: "test123",
+        }),
+      })
+
+      directResults.urlTest = `Auth URL accessible: ${response.status}`
+      directResults.fetchTest = await response.text()
+    } catch (err: any) {
+      directResults.error = err.message
+    }
+
+    setResults({ ...results, directTest: directResults })
     setLoading(false)
   }
 
@@ -94,7 +169,6 @@ export default function TestConnectionPage() {
     }
 
     try {
-      // Test client creation
       console.log("[v0] Testing Supabase client creation...")
       console.log("[v0] URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
       console.log("[v0] Key present:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
@@ -105,7 +179,6 @@ export default function TestConnectionPage() {
 
       console.log("[v0] Testing Supabase connection with health check...")
 
-      // Try a simple health check first
       try {
         const { data, error } = await supabase.auth.getSession()
         if (error) {
@@ -119,7 +192,6 @@ export default function TestConnectionPage() {
       } catch (authError: any) {
         console.log("[v0] Auth test failed, trying database query...")
 
-        // Fallback to database query
         const { data, error } = await supabase.from("profiles").select("count").limit(1)
 
         if (error) {
@@ -149,15 +221,18 @@ export default function TestConnectionPage() {
     <div className="container mx-auto p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Supabase Connection Test</CardTitle>
+          <CardTitle>Supabase Connection & Auth Diagnostics</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={testConnection} disabled={loading}>
               {loading ? "Testing..." : "Test Connection"}
             </Button>
             <Button onClick={testAuthentication} disabled={loading} variant="outline">
               Test Authentication
+            </Button>
+            <Button onClick={testDirectAuthURL} disabled={loading} variant="secondary">
+              Test Direct Auth URL
             </Button>
           </div>
 
@@ -165,27 +240,51 @@ export default function TestConnectionPage() {
             <div className="space-y-4">
               {results.authTest && (
                 <div>
-                  <h3 className="font-semibold">Authentication Test Results:</h3>
+                  <h3 className="font-semibold">Authentication Diagnostics:</h3>
                   <div className="bg-blue-50 p-3 rounded space-y-2">
                     <p>
                       <strong>Client Creation:</strong> {results.authTest.clientCreation}
                     </p>
                     <p>
-                      <strong>Auth Test:</strong> {results.authTest.authTest}
+                      <strong>Auth Config Test:</strong> {results.authTest.authConfigTest}
                     </p>
-                    {results.authTest.httpStatus && (
-                      <p>
-                        <strong>HTTP Status:</strong>{" "}
-                        <span className="text-red-600">{results.authTest.httpStatus}</span>
-                      </p>
-                    )}
-                    {results.authTest.networkError && (
-                      <div>
-                        <strong>Network Error:</strong>
-                        <pre className="bg-red-100 p-2 rounded text-sm mt-1">
-                          {JSON.stringify(results.authTest.networkError, null, 2)}
-                        </pre>
+                    <p>
+                      <strong>Sign Up Test:</strong> {results.authTest.signUpTest}
+                    </p>
+                    <p>
+                      <strong>Sign In Test:</strong> {results.authTest.signInTest}
+                    </p>
+
+                    {results.authTest.recommendations.length > 0 && (
+                      <div className="mt-3 p-3 bg-yellow-100 rounded">
+                        <strong>Recommendations:</strong>
+                        <ul className="list-disc list-inside mt-1 space-y-1">
+                          {results.authTest.recommendations.map((rec: string, i: number) => (
+                            <li key={i} className="text-sm">
+                              {rec}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {results.directTest && (
+                <div>
+                  <h3 className="font-semibold">Direct Auth URL Test:</h3>
+                  <div className="bg-green-50 p-3 rounded space-y-2">
+                    <p>
+                      <strong>URL Test:</strong> {results.directTest.urlTest}
+                    </p>
+                    <p>
+                      <strong>Response:</strong> {results.directTest.fetchTest}
+                    </p>
+                    {results.directTest.error && (
+                      <p className="text-red-600">
+                        <strong>Error:</strong> {results.directTest.error}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -225,18 +324,16 @@ export default function TestConnectionPage() {
               )}
 
               <div className="mt-6 p-4 bg-yellow-50 rounded">
-                <h3 className="font-semibold text-yellow-800">Troubleshooting:</h3>
+                <h3 className="font-semibold text-yellow-800">Troubleshooting Guide:</h3>
                 <ul className="text-sm text-yellow-700 mt-2 space-y-1">
-                  <li>• If URL is undefined: Set NEXT_PUBLIC_SUPABASE_URL in Vercel environment variables</li>
-                  <li>• If key is undefined: Set NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel environment variables</li>
-                  <li>• If "Failed to fetch": Check Supabase project status and CORS settings</li>
-                  <li>• Environment variables must start with NEXT_PUBLIC_ for client-side access</li>
                   <li>
-                    • If auth fails but connection works: Check if Email authentication is enabled in Supabase Auth
-                    settings
+                    • <strong>Most Likely Issue:</strong> Email authentication is disabled in Supabase
                   </li>
-                  <li>• If 429 error: You're being rate limited, wait a few minutes</li>
-                  <li>• If 500 error: Check Supabase project status or database triggers</li>
+                  <li>• Go to Supabase Dashboard → Authentication → Settings → Enable email provider</li>
+                  <li>• Check if your Supabase project is paused or has billing issues</li>
+                  <li>• Verify CORS settings allow your domain in Supabase Dashboard → Settings → API</li>
+                  <li>• If 429 error: You're rate limited, wait 15+ minutes</li>
+                  <li>• If 500 error: Check Supabase status page or database triggers</li>
                 </ul>
               </div>
             </div>
