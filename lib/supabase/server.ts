@@ -1,5 +1,6 @@
 import { createServerClient as createSupabaseClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies"
 
 /**
  * Especially important if using Fluid compute: Don't put this client in a
@@ -16,7 +17,7 @@ export async function createServerClient() {
     )
   }
 
-  let cookieStore
+  let cookieStore: ReadonlyRequestCookies | null = null
   try {
     cookieStore = await cookies()
   } catch (error) {
@@ -37,11 +38,11 @@ export async function createServerClient() {
   return createSupabaseClient(url, key, {
     cookies: {
       getAll() {
-        return cookieStore.getAll()
+        return cookieStore!.getAll()
       },
       setAll(cookiesToSet) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore!.set(name, value, options))
         } catch {
           // The "setAll" method was called from a Server Component.
           // This can be ignored if you have middleware refreshing
