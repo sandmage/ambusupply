@@ -2,14 +2,14 @@ import { createServerClient } from "@/lib/supabase/server"
 import { InviteAcceptClient } from "./invite-accept-client"
 
 interface InvitePageProps {
-  params: {
+  params: Promise<{
     token: string
-  }
+  }>
 }
 
 export default async function InvitePage({ params }: InvitePageProps) {
   const supabase = createServerClient()
-  const { token } = params
+  const { token } = await params
 
   // Check if user is already authenticated
   const {
