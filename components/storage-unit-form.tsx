@@ -46,13 +46,13 @@ const getStorageTypes = (storageUnitTypes?: StorageUnitType[]) => {
 
   // Fallback to default types if no custom types available
   return [
-    { value: "rack", label: "Rack" },
-    { value: "shelf", label: "Shelf" },
-    { value: "cabinet", label: "Cabinet" },
-    { value: "drawer", label: "Drawer" },
-    { value: "container", label: "Container/Tote" },
-    { value: "bin", label: "Bin" },
-    { value: "compartment", label: "Compartment" },
+    { value: "rack", label: "Rack", description: undefined },
+    { value: "shelf", label: "Shelf", description: undefined },
+    { value: "cabinet", label: "Cabinet", description: undefined },
+    { value: "drawer", label: "Drawer", description: undefined },
+    { value: "container", label: "Container/Tote", description: undefined },
+    { value: "bin", label: "Bin", description: undefined },
+    { value: "compartment", label: "Compartment", description: undefined },
   ]
 }
 
