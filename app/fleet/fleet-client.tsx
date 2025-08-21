@@ -17,18 +17,36 @@ import { MaintenanceCalendar } from "@/components/maintenance-calendar"
 import { FleetAnalytics } from "@/components/fleet-analytics"
 
 interface Vehicle {
-  id: string
+  id?: string
   vehicle_number: string
   make: string
   model: string
   year: number
+  vin: string
+  license_plate: string
+  vehicle_type: string
   status: string
   mileage: number
+  fuel_capacity: number
   current_location?: any
-  vin?: string
-  license_plate?: string
-  vehicle_type?: string
-  fuel_capacity?: number
+  registration_expiration?: string
+  insurance_expiration?: string
+  insurance_provider?: string
+  insurance_policy_number?: string
+  dot_inspection_date?: string
+  dot_inspection_expiration?: string
+  dot_number?: string
+  oems_inspection_date?: string
+  oems_inspection_expiration?: string
+  oems_certification_number?: string
+  annual_inspection_date?: string
+  annual_inspection_expiration?: string
+  emissions_test_date?: string
+  emissions_test_expiration?: string
+  medical_equipment_certification?: string
+  medical_equipment_cert_expiration?: string
+  radio_license_expiration?: string
+  narcotics_license_expiration?: string
 }
 
 interface MaintenanceRecord {
