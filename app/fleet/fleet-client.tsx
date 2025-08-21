@@ -464,9 +464,9 @@ export function FleetClient() {
       {/* Vehicle Detail Dialog */}
       <Dialog open={showVehicleDetail} onOpenChange={setShowVehicleDetail}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          {selectedVehicle && (
+          {selectedVehicle && selectedVehicle.id && (
             <VehicleDetail
-              vehicleId={selectedVehicle.id!}
+              vehicleId={selectedVehicle.id}
               onEdit={() => {
                 setShowVehicleDetail(false)
                 setShowVehicleForm(true)

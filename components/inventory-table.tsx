@@ -25,6 +25,8 @@ interface InventoryItem {
   created_at: string
   location_id: string
   storage_unit_id: string
+  ordering_url?: string
+  notes?: string // Added for consistency
 }
 
 interface InventoryTableProps {

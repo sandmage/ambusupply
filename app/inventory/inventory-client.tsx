@@ -41,6 +41,7 @@ interface InventoryItem {
   ordering_url?: string
   location_id: string
   storage_unit_id: string
+  notes?: string // Added to match InventoryForm expectations
 }
 
 interface Location {
@@ -52,7 +53,7 @@ interface Location {
 interface StorageUnit {
   id: string
   name: string
-  type: string // Changed unit_type to type to match InventoryForm component expectations
+  type: string // Standardized to 'type' across all components
 }
 
 interface InventoryClientProps {
@@ -165,8 +166,9 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
 
       setEditingItem({
         ...item,
-        location_id: location?.id || "",
-        storage_unit_id: storageUnit?.id || "",
+        location_id: location?.id || item.location_id || "",
+        storage_unit_id: storageUnit?.id || item.storage_unit_id || "",
+        notes: item.notes || "", // Ensure notes field exists
       })
       setIsFormOpen(true)
     },
