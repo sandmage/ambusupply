@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
@@ -39,6 +38,7 @@ export function SessionProvider({ children, initialUser = null }: SessionProvide
 
       async function getInitialSession() {
         try {
+          console.log("[v0] Session provider: Getting initial session...")
           const {
             data: { session },
             error,
@@ -49,6 +49,7 @@ export function SessionProvider({ children, initialUser = null }: SessionProvide
               console.error("[v0] Session provider error:", error)
               setError(error.message)
             } else {
+              console.log("[v0] Session provider: Got session", session?.user?.id || "no user")
               setUser(session?.user ?? null)
             }
             setLoading(false)
@@ -68,6 +69,7 @@ export function SessionProvider({ children, initialUser = null }: SessionProvide
         mounted = false
       }
     } else {
+      console.log("[v0] Session provider: Using initial user data", initialUser.id)
       setLoading(false)
     }
 
@@ -76,12 +78,17 @@ export function SessionProvider({ children, initialUser = null }: SessionProvide
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("[v0] Auth state changed:", event)
 
-      if (event === "SIGNED_OUT") {
-        setUser(null)
-        setError(null)
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        setUser(session?.user ?? null)
-        setError(null)
+      try {
+        if (event === "SIGNED_OUT") {
+          setUser(null)
+          setError(null)
+        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          setUser(session?.user ?? null)
+          setError(null)
+        }
+      } catch (err) {
+        console.error("[v0] Auth state change error:", err)
+        // Don't set error state for background auth operations
       }
     })
 
