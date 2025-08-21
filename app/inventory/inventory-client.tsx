@@ -39,6 +39,8 @@ interface InventoryItem {
   storage_unit_name?: string
   created_at: string
   ordering_url?: string
+  location_id?: string
+  storage_unit_id?: string
 }
 
 interface Location {
@@ -165,7 +167,7 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
         ...item,
         location_id: location?.id || "",
         storage_unit_id: storageUnit?.id || "",
-      } as any)
+      })
       setIsFormOpen(true)
     },
     [locations],
