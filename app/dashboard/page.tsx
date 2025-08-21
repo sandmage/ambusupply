@@ -30,7 +30,18 @@ export default async function DashboardPage() {
 
     console.log("[v0] Dashboard: User authenticated successfully:", user.id)
 
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+    console.log("[v0] Dashboard: Fetching user profile...")
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    if (profileError) {
+      console.log("[v0] Dashboard: Profile query error:", profileError.message)
+    } else {
+      console.log("[v0] Dashboard: Profile query successful")
+    }
 
     const userProfile = profile || {
       id: user.id,
@@ -39,19 +50,75 @@ export default async function DashboardPage() {
       role: user.user_metadata?.role || "staff",
     }
 
+    console.log("[v0] Dashboard: Starting parallel database queries...")
+
     const [inventoryResult, locationsResult, activityResult] = await Promise.allSettled([
-      supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date, name"),
-      supabase.from("locations").select("id"),
-      supabase
-        .from("transactions")
-        .select("id, transaction_type, quantity_change, reason, created_at, performed_by")
-        .order("created_at", { ascending: false })
-        .limit(5),
+      (async () => {
+        console.log("[v0] Dashboard: Fetching inventory items...")
+        try {
+          const result = await supabase
+            .from("inventory_items")
+            .select("id, current_quantity, par_level, expiration_date, name")
+          console.log("[v0] Dashboard: Inventory query successful, items:", result.data?.length || 0)
+          return result
+        } catch (error) {
+          console.log("[v0] Dashboard: Inventory query failed:", error)
+          throw error
+        }
+      })(),
+      (async () => {
+        console.log("[v0] Dashboard: Fetching locations...")
+        try {
+          const result = await supabase.from("locations").select("id")
+          console.log("[v0] Dashboard: Locations query successful, count:", result.data?.length || 0)
+          return result
+        } catch (error) {
+          console.log("[v0] Dashboard: Locations query failed:", error)
+          throw error
+        }
+      })(),
+      (async () => {
+        console.log("[v0] Dashboard: Fetching recent activity...")
+        try {
+          const result = await supabase
+            .from("transactions")
+            .select("id, transaction_type, quantity_change, reason, created_at, performed_by")
+            .order("created_at", { ascending: false })
+            .limit(5)
+          console.log("[v0] Dashboard: Activity query successful, items:", result.data?.length || 0)
+          return result
+        } catch (error) {
+          console.log("[v0] Dashboard: Activity query failed:", error)
+          throw error
+        }
+      })(),
     ])
+
+    console.log("[v0] Dashboard: Query results:", {
+      inventory: inventoryResult.status,
+      locations: locationsResult.status,
+      activity: activityResult.status,
+    })
+
+    if (inventoryResult.status === "rejected") {
+      console.log("[v0] Dashboard: Inventory query rejection reason:", inventoryResult.reason)
+    }
+    if (locationsResult.status === "rejected") {
+      console.log("[v0] Dashboard: Locations query rejection reason:", locationsResult.reason)
+    }
+    if (activityResult.status === "rejected") {
+      console.log("[v0] Dashboard: Activity query rejection reason:", activityResult.reason)
+    }
 
     const inventoryItems = inventoryResult.status === "fulfilled" ? inventoryResult.value.data || [] : []
     const locations = locationsResult.status === "fulfilled" ? locationsResult.value.data || [] : []
     const recentActivity = activityResult.status === "fulfilled" ? activityResult.value.data || [] : []
+
+    console.log("[v0] Dashboard: Final data counts:", {
+      inventoryItems: inventoryItems.length,
+      locations: locations.length,
+      recentActivity: recentActivity.length,
+    })
 
     const totalItems = inventoryItems.length
     const lowStockItems = inventoryItems.filter((item) => item.current_quantity < item.par_level && item.par_level > 0)
@@ -117,9 +184,9 @@ export default async function DashboardPage() {
             </Card>
 
             <Card className="apple-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Locations</CardTitle>
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="font-serif">Locations</CardTitle>
+                <MapPin className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{locations.length}</div>
