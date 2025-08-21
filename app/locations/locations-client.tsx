@@ -185,7 +185,7 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
     setIsStorageFormOpen(true)
   }
 
-  const handleSaveStorageUnit = async (unitData: Omit<StorageUnit, "id" | "children">) => {
+  const handleSaveStorageUnit = async (unitData: Omit<StorageUnit, "id">) => {
     if (!editingStorageUnit) return
 
     const { locationId, parentUnitId, unit } = editingStorageUnit
