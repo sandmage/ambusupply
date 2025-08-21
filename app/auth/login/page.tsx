@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
-import { createClient } from "@/lib/supabase/client"
+import { createAuthClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false) // Set to false to skip auth check
   const [invitation, setInvitation] = useState<any>(null)
 
   const router = useRouter()
@@ -26,25 +26,10 @@ export default function LoginPage() {
   const inviteId = searchParams.get("invite")
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const supabase = createClient()
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (user) {
-          // If user is logged in and has an invitation, redirect to accept invitation
-          if (inviteId) {
-            router.push(`/invite/${inviteId}`)
-            return
-          }
-          router.push("/dashboard")
-          return
-        }
-
-        // If there's an invitation ID, fetch invitation details
-        if (inviteId) {
+    const fetchInvitation = async () => {
+      if (inviteId) {
+        try {
+          const supabase = createAuthClient()
           const { data, error } = await supabase
             .from("invitations")
             .select(`
@@ -62,16 +47,14 @@ export default function LoginPage() {
             setInvitation(data)
             setEmail(data.email)
           }
+        } catch (error) {
+          console.error("Invitation fetch error:", error)
         }
-      } catch (error) {
-        console.error("Auth check error:", error)
-      } finally {
-        setIsCheckingAuth(false)
       }
     }
 
-    checkAuth()
-  }, [router, inviteId])
+    fetchInvitation()
+  }, [inviteId])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,8 +68,8 @@ export default function LoginPage() {
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "present" : "missing",
       })
 
-      const supabase = createClient()
-      console.log("[v0] Supabase client created successfully")
+      const supabase = createAuthClient()
+      console.log("[v0] Supabase auth client created successfully")
 
       console.log("[v0] Attempting signInWithPassword...")
       const { error } = await supabase.auth.signInWithPassword({
@@ -119,17 +102,6 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  if (isCheckingAuth) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10 bg-gradient-to-br from-background to-muted/30">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-6"></div>
-          <p className="text-lg text-muted-foreground font-medium">Checking authentication...</p>
-        </div>
-      </div>
-    )
   }
 
   return (
