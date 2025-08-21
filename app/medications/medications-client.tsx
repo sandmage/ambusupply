@@ -221,7 +221,9 @@ export function MedicationsClient({ medications: initialMedications, locations, 
       })
       setShowAddForm(false)
 
-      router.refresh()
+      setTimeout(() => {
+        router.refresh()
+      }, 500)
     } catch (error) {
       console.error("[v0] Error submitting medication:", error)
       alert(`Error adding medication: ${error instanceof Error ? error.message : "Please try again."}`)
