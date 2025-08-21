@@ -28,6 +28,9 @@ export interface StorageUnit {
   name: string
   type: string // Standardized to 'type' across all components
   location_id: string
+  position_order: number
+  description?: string
+  children?: StorageUnit[]
 }
 
 export interface Transaction {

@@ -10,22 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Plus, Package, Search, Building, AlertCircle } from "lucide-react"
-
-interface StorageUnit {
-  id: string
-  name: string
-  type: string
-  position_order: number
-  description?: string
-  children?: StorageUnit[]
-}
-
-interface Location {
-  id: string
-  name: string
-  description?: string
-  storage_units: StorageUnit[]
-}
+import type { StorageUnit, Location } from "@/lib/types"
 
 interface StorageUnitType {
   id: string
