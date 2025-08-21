@@ -281,11 +281,7 @@ export function ReportsClient({
           </TabsList>
 
           <TabsContent value="alerts">
-            <AlertsSummary
-              belowParItems={belowParItems}
-              expiringItems={expiringItems}
-              outOfStockItems={outOfStockItems}
-            />
+            <AlertsSummary belowParItems={belowParItems} expiringItems={expiringItems} />
           </TabsContent>
 
           <TabsContent value="analytics">
