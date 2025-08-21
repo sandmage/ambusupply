@@ -28,49 +28,15 @@ interface SessionProviderProps {
 
 export function SessionProvider({ children, initialUser = null }: SessionProviderProps) {
   const [user, setUser] = useState<User | null>(initialUser)
-  const [loading, setLoading] = useState(!initialUser)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [supabase] = useState(() => createClient())
 
   useEffect(() => {
-    if (!initialUser) {
-      let mounted = true
+    console.log("[v0] Session provider: Setting up passive auth listener")
 
-      async function getInitialSession() {
-        try {
-          console.log("[v0] Session provider: Getting initial session...")
-          const {
-            data: { session },
-            error,
-          } = await supabase.auth.getSession()
-
-          if (mounted) {
-            if (error) {
-              console.error("[v0] Session provider error:", error)
-              setError(error.message)
-            } else {
-              console.log("[v0] Session provider: Got session", session?.user?.id || "no user")
-              setUser(session?.user ?? null)
-            }
-            setLoading(false)
-          }
-        } catch (err) {
-          console.error("[v0] Session provider failed to get session:", err)
-          if (mounted) {
-            setError("Failed to load session")
-            setLoading(false)
-          }
-        }
-      }
-
-      getInitialSession()
-
-      return () => {
-        mounted = false
-      }
-    } else {
+    if (initialUser) {
       console.log("[v0] Session provider: Using initial user data", initialUser.id)
-      setLoading(false)
     }
 
     const {
@@ -78,18 +44,17 @@ export function SessionProvider({ children, initialUser = null }: SessionProvide
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("[v0] Auth state changed:", event)
 
-      try {
-        if (event === "SIGNED_OUT") {
-          setUser(null)
-          setError(null)
-        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          setUser(session?.user ?? null)
-          setError(null)
-        }
-      } catch (err) {
-        console.error("[v0] Auth state change error:", err)
-        // Don't set error state for background auth operations
+      if (event === "SIGNED_OUT") {
+        setUser(null)
+        setError(null)
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        setUser(session?.user ?? null)
+        setError(null)
+      } else if (event === "INITIAL_SESSION") {
+        setUser(session?.user ?? null)
       }
+
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()

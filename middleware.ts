@@ -42,22 +42,38 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // IMPORTANT: You *must* call getUser() to refresh the auth session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  try {
+    // IMPORTANT: You *must* call getUser() to refresh the auth session
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  // Optional: Add route protection logic here if needed
-  if (
-    (!user && request.nextUrl.pathname.startsWith("/dashboard")) ||
-    request.nextUrl.pathname.startsWith("/inventory") ||
-    request.nextUrl.pathname.startsWith("/fleet") ||
-    request.nextUrl.pathname.startsWith("/users") ||
-    request.nextUrl.pathname.startsWith("/settings")
-  ) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
-    return NextResponse.redirect(url)
+    // Optional: Add route protection logic here if needed
+    if (
+      (!user && request.nextUrl.pathname.startsWith("/dashboard")) ||
+      request.nextUrl.pathname.startsWith("/inventory") ||
+      request.nextUrl.pathname.startsWith("/fleet") ||
+      request.nextUrl.pathname.startsWith("/users") ||
+      request.nextUrl.pathname.startsWith("/settings")
+    ) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/auth/login"
+      return NextResponse.redirect(url)
+    }
+  } catch (error) {
+    console.error("[v0] Middleware auth error:", error)
+    // If auth fails in middleware, redirect to login for protected routes
+    if (
+      request.nextUrl.pathname.startsWith("/dashboard") ||
+      request.nextUrl.pathname.startsWith("/inventory") ||
+      request.nextUrl.pathname.startsWith("/fleet") ||
+      request.nextUrl.pathname.startsWith("/users") ||
+      request.nextUrl.pathname.startsWith("/settings")
+    ) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/auth/login"
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse
