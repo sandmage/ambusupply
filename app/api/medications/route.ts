@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       lot_number,
       location_id,
       storage_unit_id,
-      par_level,
+      min_par_level,
+      max_par_level,
       notes,
     } = body
 
@@ -42,9 +43,9 @@ export async function POST(request: NextRequest) {
       .from("inventory_items")
       .insert({
         name,
-        description,
-        current_quantity: quantity,
-        par_level: par_level || 0,
+        description: description || null,
+        quantity: Number.parseInt(quantity) || 0,
+        min_par_level: Number.parseInt(min_par_level) || 0,
         unit_of_measure: unit_of_measure || "each",
         expiration_date: expiration_date || null,
         lot_number: lot_number || null,
@@ -65,13 +66,13 @@ export async function POST(request: NextRequest) {
     console.log("[v0] [API] Medication created successfully:", medication.id)
 
     // Create initial transaction record
-    const { error: transactionError } = await supabase.from("transactions").insert({
+    const { error: transactionError } = await supabase.from("inventory_transactions").insert({
       item_id: medication.id,
       transaction_type: "restock",
-      quantity_change: quantity,
-      reason: "Initial stock",
-      performed_by: user.email || user.id,
-      created_at: new Date().toISOString(),
+      quantity_change: Number.parseInt(quantity) || 0,
+      quantity_after: Number.parseInt(quantity) || 0,
+      notes: "Initial medication stock",
+      created_by: user.id,
     })
 
     if (transactionError) {
