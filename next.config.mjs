@@ -3,7 +3,6 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    nodeMiddleware: true,
   },
   eslint: {
     ignoreDuringBuilds: false, // Enable ESLint checking in production
