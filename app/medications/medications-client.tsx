@@ -24,6 +24,7 @@ export function MedicationsClient({ medications: initialMedications, locations, 
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<"all" | "expired" | "expiring" | "low_stock" | "good">("all")
   const [sortBy, setSortBy] = useState<"expiration" | "name" | "quantity">("expiration")
+  const [showAddForm, setShowAddForm] = useState(false)
   const router = useRouter()
 
   const supabase = createClient()
@@ -155,7 +156,7 @@ export function MedicationsClient({ medications: initialMedications, locations, 
             </p>
           </div>
           {isAdmin && (
-            <Button onClick={() => router.push("/inventory")} className="apple-button-secondary">
+            <Button onClick={() => router.push("/inventory?category=medication")} className="apple-button-secondary">
               <Plus className="h-5 w-5 mr-2" />
               Add Medication
             </Button>
