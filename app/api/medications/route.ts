@@ -44,16 +44,14 @@ export async function POST(request: NextRequest) {
       .insert({
         name,
         description: description || null,
-        quantity: Number.parseInt(quantity) || 0,
-        min_par_level: Number.parseInt(min_par_level) || 0,
+        current_quantity: Number.parseInt(quantity) || 0,
+        par_level: Number.parseInt(min_par_level) || 0,
         unit_of_measure: unit_of_measure || "each",
         expiration_date: expiration_date || null,
         lot_number: lot_number || null,
         location_id,
         storage_unit_id: storage_unit_id || null,
         category: "medication", // Mark as medication category
-        notes: notes || null,
-        created_by: user.id,
       })
       .select()
       .single()
@@ -72,7 +70,6 @@ export async function POST(request: NextRequest) {
       quantity_change: Number.parseInt(quantity) || 0,
       quantity_after: Number.parseInt(quantity) || 0,
       notes: "Initial medication stock",
-      created_by: user.id,
     })
 
     if (transactionError) {
