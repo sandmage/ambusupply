@@ -85,6 +85,7 @@ export default async function MedicationsPage() {
       unit_of_measure: item.unit_of_measure,
       expiration_date: item.expiration_date,
       lot_number: item.lot_number,
+      location_id: item.locations.id,
       location_name: item.locations.name,
       storage_unit_name: item.storage_units?.name,
       storage_unit_type: item.storage_units?.unit_type,
