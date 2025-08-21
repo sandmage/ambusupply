@@ -50,7 +50,7 @@ export default async function MedicationsPage() {
     .or(
       "category.ilike.%medication%,category.ilike.%drug%,category.ilike.%pharmaceutical%,name.ilike.%mg%,name.ilike.%ml%,unit_of_measure.in.(mg,ml,dose,vial,ampule)",
     )
-    .order("expiration_date", { ascending: true, nullsLast: true })
+    .order("expiration_date", { ascending: true, nullsFirst: false })
 
   if (medicationError) {
     return <div>Error loading medications. Please refresh the page.</div>
