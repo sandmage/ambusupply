@@ -114,9 +114,7 @@ export default async function MedicationsPage() {
         storage_units (
           id,
           name,
-          unit_type,
-          location_id,
-          position_order
+          unit_type
         )
       `)
       .order("name")
