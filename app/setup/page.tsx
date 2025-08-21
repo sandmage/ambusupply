@@ -7,7 +7,7 @@ export default async function SetupPage({
 }: {
   searchParams: Promise<{ rerun?: string }>
 }) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const {
     data: { user },
