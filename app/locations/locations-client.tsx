@@ -52,6 +52,16 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
   }, [])
 
   const fetchStorageUnitTypes = async () => {
+    console.log("[v0] Locations: fetchStorageUnitTypes disabled to prevent network errors")
+    setStorageUnitTypes([
+      { id: "default-1", name: "Shelf", capacity_type: "count", description: "Default shelf type" },
+      { id: "default-2", name: "Cabinet", capacity_type: "count", description: "Default cabinet type" },
+      { id: "default-3", name: "Drawer", capacity_type: "count", description: "Default drawer type" },
+    ])
+    return
+
+    // Original code disabled to prevent network requests
+    /*
     try {
       const { data, error } = await supabase.from("storage_unit_types").select("*").order("name")
 
@@ -74,6 +84,7 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
         { id: "default-3", name: "Drawer", capacity_type: "count", description: "Default drawer type" },
       ])
     }
+    */
   }
 
   // Filter locations based on search

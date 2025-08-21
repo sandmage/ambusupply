@@ -171,22 +171,8 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         return
       }
 
-      setSaving(true)
-      try {
-        const { error } = await supabase
-          .from("storage_unit_types")
-          .delete()
-          .eq("id", id)
-          .eq("organization_id", currentProfile.organization_id)
-
-        if (error) throw error
-        showMessage("Storage unit type deleted successfully")
-        fetchStorageUnitTypes()
-      } catch (error: any) {
-        showMessage(error.message, "error")
-      } finally {
-        setSaving(false)
-      }
+      showMessage("Storage type operations are temporarily disabled", "error")
+      return
     },
     [isAdmin, currentProfile?.organization_id, supabase, showMessage],
   )
@@ -232,18 +218,13 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   const fetchStorageUnitTypes = useCallback(async () => {
     if (!hasOrganization) return
 
-    try {
-      const { data, error } = await supabase
-        .from("storage_unit_types")
-        .select("*")
-        .eq("organization_id", currentProfile.organization_id)
-        .order("name")
-
-      if (error) throw error
-      setStorageUnitTypes(data || [])
-    } catch (error: any) {
-      showMessage(`Error fetching storage unit types: ${error.message}`, "error")
-    }
+    console.log("[v0] Settings: fetchStorageUnitTypes disabled to prevent network errors")
+    setStorageUnitTypes([
+      { id: "default-1", name: "Shelf", capacity_type: "count", description: "Default shelf type" },
+      { id: "default-2", name: "Cabinet", capacity_type: "count", description: "Default cabinet type" },
+      { id: "default-3", name: "Drawer", capacity_type: "count", description: "Default drawer type" },
+    ])
+    return
   }, [hasOrganization, currentProfile?.organization_id, supabase, showMessage])
 
   const convertToCSV = (data: any[]) => {
@@ -289,37 +270,8 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
         return
       }
 
-      setSaving(true)
-      try {
-        const storageTypeData = {
-          ...storageTypeForm,
-          organization_id: currentProfile.organization_id,
-        }
-
-        if (editingStorageType) {
-          const { error } = await supabase
-            .from("storage_unit_types")
-            .update(storageTypeData)
-            .eq("id", editingStorageType.id)
-            .eq("organization_id", currentProfile.organization_id)
-
-          if (error) throw error
-          showMessage("Storage unit type updated successfully")
-        } else {
-          const { error } = await supabase.from("storage_unit_types").insert([storageTypeData])
-
-          if (error) throw error
-          showMessage("Storage unit type created successfully")
-        }
-
-        setStorageTypeForm({ name: "", description: "", capacity_type: "count", default_capacity: 0 })
-        setEditingStorageType(null)
-        fetchStorageUnitTypes()
-      } catch (error: any) {
-        showMessage(error.message, "error")
-      } finally {
-        setSaving(false)
-      }
+      showMessage("Storage type operations are temporarily disabled", "error")
+      return
     },
     [
       isAdmin,
