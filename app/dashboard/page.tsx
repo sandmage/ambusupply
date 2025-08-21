@@ -7,15 +7,31 @@ import { Package, AlertTriangle, Calendar, MapPin, Activity } from "lucide-react
 
 export default async function DashboardPage() {
   try {
+    console.log("[v0] Dashboard: Starting server-side rendering")
     const supabase = await createServerClient()
+    console.log("[v0] Dashboard: Server client created successfully")
+
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser()
+    console.log("[v0] Dashboard: Auth check result:", { user: user?.id, error })
 
-    if (error || !user) redirect("/auth/login")
+    if (error || !user) {
+      console.log("[v0] Dashboard: Redirecting to login due to auth failure")
+      redirect("/auth/login")
+    }
 
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+    console.log("[v0] Dashboard: User authenticated successfully:", user.id)
+
+    let profile = null
+    try {
+      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+      profile = profileData
+      console.log("[v0] Dashboard: Profile query successful")
+    } catch (profileError) {
+      console.error("[v0] Dashboard: Profile query failed:", profileError)
+    }
 
     const userProfile = profile || {
       id: user.id,
@@ -24,19 +40,54 @@ export default async function DashboardPage() {
       role: user.user_metadata?.role || "staff",
     }
 
-    const [inventoryResult, locationsResult, activityResult] = await Promise.allSettled([
-      supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date, name"),
-      supabase.from("locations").select("id"),
-      supabase
-        .from("transactions")
-        .select("id, transaction_type, quantity_change, reason, created_at, performed_by")
-        .order("created_at", { ascending: false })
-        .limit(5),
-    ])
+    let inventoryItems = []
+    let locations = []
+    let recentActivity = []
 
-    const inventoryItems = inventoryResult.status === "fulfilled" ? inventoryResult.value.data || [] : []
-    const locations = locationsResult.status === "fulfilled" ? locationsResult.value.data || [] : []
-    const recentActivity = activityResult.status === "fulfilled" ? activityResult.value.data || [] : []
+    try {
+      console.log("[v0] Dashboard: Starting database queries")
+      const [inventoryResult, locationsResult, activityResult] = await Promise.allSettled([
+        supabase.from("inventory_items").select("id, current_quantity, par_level, expiration_date, name"),
+        supabase.from("locations").select("id"),
+        supabase
+          .from("transactions")
+          .select("id, transaction_type, quantity_change, reason, created_at, performed_by")
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ])
+
+      if (inventoryResult.status === "fulfilled" && inventoryResult.value.data) {
+        inventoryItems = inventoryResult.value.data
+        console.log("[v0] Dashboard: Inventory query successful:", inventoryItems.length, "items")
+      } else {
+        console.error(
+          "[v0] Dashboard: Inventory query failed:",
+          inventoryResult.status === "rejected" ? inventoryResult.reason : "No data",
+        )
+      }
+
+      if (locationsResult.status === "fulfilled" && locationsResult.value.data) {
+        locations = locationsResult.value.data
+        console.log("[v0] Dashboard: Locations query successful:", locations.length, "locations")
+      } else {
+        console.error(
+          "[v0] Dashboard: Locations query failed:",
+          locationsResult.status === "rejected" ? locationsResult.reason : "No data",
+        )
+      }
+
+      if (activityResult.status === "fulfilled" && activityResult.value.data) {
+        recentActivity = activityResult.value.data
+        console.log("[v0] Dashboard: Activity query successful:", recentActivity.length, "activities")
+      } else {
+        console.error(
+          "[v0] Dashboard: Activity query failed:",
+          activityResult.status === "rejected" ? activityResult.reason : "No data",
+        )
+      }
+    } catch (dbError) {
+      console.error("[v0] Dashboard: Database queries failed:", dbError)
+    }
 
     const totalItems = inventoryItems.length
     const lowStockItems = inventoryItems.filter((item) => item.current_quantity < item.par_level && item.par_level > 0)
@@ -156,6 +207,7 @@ export default async function DashboardPage() {
       </AppLayout>
     )
   } catch (serverError) {
+    console.error("[v0] Dashboard: Server error:", serverError)
     redirect("/auth/login")
   }
 }

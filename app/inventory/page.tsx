@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { InventoryClient } from "./inventory-client"
 import { AppLayout } from "@/components/app-layout"
 
@@ -8,7 +8,7 @@ export default async function InventoryPage() {
 
   try {
     console.log("[v0] [SERVER] Creating Supabase server client...")
-    const supabase = await createClient()
+    const supabase = await createServerClient()
     console.log("[v0] [SERVER] Supabase server client created successfully")
 
     console.log("[v0] [SERVER] Attempting to get user...")
@@ -29,17 +29,23 @@ export default async function InventoryPage() {
 
     console.log("[v0] [SERVER] User authenticated successfully:", user.id)
 
-    console.log("[v0] [SERVER] Fetching user profile...")
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle()
+    let profile = null
+    try {
+      console.log("[v0] [SERVER] Fetching user profile...")
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle()
 
-    if (profileError) {
-      console.error("[v0] [SERVER] Profile query error:", profileError)
-    } else {
-      console.log("[v0] [SERVER] Profile query successful")
+      if (profileError) {
+        console.error("[v0] [SERVER] Profile query error:", profileError)
+      } else {
+        profile = profileData
+        console.log("[v0] [SERVER] Profile query successful")
+      }
+    } catch (profileError) {
+      console.error("[v0] [SERVER] Profile query failed:", profileError)
     }
 
     const userProfile = profile || {
@@ -49,58 +55,69 @@ export default async function InventoryPage() {
       role: user.user_metadata?.role || "staff",
     }
 
-    console.log("[v0] [SERVER] Fetching inventory items...")
-    const { data: inventoryItems, error: inventoryError } = await supabase
-      .from("inventory_items")
-      .select(`
-        id,
-        name,
-        description,
-        current_quantity,
-        par_level,
-        unit_of_measure,
-        expiration_date,
-        lot_number,
-        created_at,
-        locations!inner (
-          id,
-          name
-        ),
-        storage_units (
+    let inventoryItems = []
+    let locations = []
+
+    try {
+      console.log("[v0] [SERVER] Fetching inventory items...")
+      const { data: inventoryData, error: inventoryError } = await supabase
+        .from("inventory_items")
+        .select(`
           id,
           name,
-          unit_type
-        )
-      `)
-      .order("name")
+          description,
+          current_quantity,
+          par_level,
+          unit_of_measure,
+          expiration_date,
+          lot_number,
+          created_at,
+          locations!inner (
+            id,
+            name
+          ),
+          storage_units (
+            id,
+            name,
+            unit_type
+          )
+        `)
+        .order("name")
 
-    if (inventoryError) {
-      console.error("[v0] [SERVER] Inventory query error:", inventoryError)
-      return <div>Error loading inventory. Please refresh the page.</div>
+      if (inventoryError) {
+        console.error("[v0] [SERVER] Inventory query error:", inventoryError)
+      } else {
+        inventoryItems = inventoryData || []
+        console.log("[v0] [SERVER] Inventory query successful, items count:", inventoryItems.length)
+      }
+    } catch (inventoryError) {
+      console.error("[v0] [SERVER] Inventory query failed:", inventoryError)
     }
 
-    console.log("[v0] [SERVER] Inventory query successful, items count:", inventoryItems?.length || 0)
-
-    console.log("[v0] [SERVER] Fetching locations...")
-    const { data: locations, error: locationsError } = await supabase
-      .from("locations")
-      .select(`
-        id,
-        name,
-        storage_units (
+    try {
+      console.log("[v0] [SERVER] Fetching locations...")
+      const { data: locationsData, error: locationsError } = await supabase
+        .from("locations")
+        .select(`
           id,
           name,
-          unit_type
-        )
-      `)
-      .order("name")
+          storage_units (
+            id,
+            name,
+            unit_type
+          )
+        `)
+        .order("name")
 
-    if (locationsError) {
-      console.error("[v0] [SERVER] Locations query error:", locationsError)
-      return <div>Error loading locations. Please refresh the page.</div>
+      if (locationsError) {
+        console.error("[v0] [SERVER] Locations query error:", locationsError)
+      } else {
+        locations = locationsData || []
+        console.log("[v0] [SERVER] Locations query successful, locations count:", locations.length)
+      }
+    } catch (locationsError) {
+      console.error("[v0] [SERVER] Locations query failed:", locationsError)
     }
-
-    console.log("[v0] [SERVER] Locations query successful, locations count:", locations?.length || 0)
 
     // Transform inventory data
     const transformedInventory =
@@ -153,6 +170,6 @@ export default async function InventoryPage() {
     )
   } catch (error) {
     console.error("[v0] [SERVER] Unexpected error in inventory page:", error)
-    return <div>An unexpected error occurred. Please refresh the page.</div>
+    redirect("/auth/login")
   }
 }
