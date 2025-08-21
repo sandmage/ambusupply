@@ -2,19 +2,72 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback, memo } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { User, Building2, Shield, Bell, Database, Download, Clock, AlertTriangle, Settings } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Separator } from "@/components/ui/separator"
+import { User, Building2, Shield, Bell, Database, Download, Save, AlertTriangle, Clock } from "lucide-react"
+
+const ProfileForm = memo<{ profileData: any; onUpdate: (data: any) => void; onSave: () => void; loading: boolean }>(
+  ({ profileData, onUpdate, onSave, loading }) => (
+    <Card className="apple-card">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-3">
+          <User className="h-5 w-5 text-primary" />
+          Personal Information
+        </CardTitle>
+        <CardDescription>Update your personal details and contact information</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="full_name">Full Name</Label>
+            <Input
+              id="full_name"
+              value={profileData.full_name}
+              onChange={(e) => onUpdate({ ...profileData, full_name: e.target.value })}
+              className="apple-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={profileData.email}
+              onChange={(e) => onUpdate({ ...profileData, email: e.target.value })}
+              className="apple-input"
+              disabled
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              value={profileData.phone}
+              onChange={(e) => onUpdate({ ...profileData, phone: e.target.value })}
+              className="apple-input"
+            />
+          </div>
+        </div>
+        <Button onClick={onSave} disabled={loading} className="apple-button">
+          <Save className="h-4 w-4 mr-2" />
+          {loading ? "Saving..." : "Save Changes"}
+        </Button>
+      </CardContent>
+    </Card>
+  ),
+)
+
+ProfileForm.displayName = "ProfileForm"
 
 interface SettingsClientProps {
   user: any
@@ -73,143 +126,125 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
   const [currentProfile, setCurrentProfile] = useState(profile)
   const [profileLoading, setProfileLoading] = useState(!profile)
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!profile && user?.id) {
-        console.log("[v0] Profile not provided, fetching from database...")
-        setProfileLoading(true)
-        try {
-          const { data: profileData, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  const isAdmin = useMemo(() => currentProfile?.role === "admin", [currentProfile?.role])
+  const hasOrganization = useMemo(() => Boolean(currentProfile?.organization_id), [currentProfile?.organization_id])
 
-          if (error) {
-            console.log("[v0] Profile fetch error:", error)
-            if (error.code === "PGRST116") {
-              // Profile doesn't exist, create one
-              console.log("[v0] Creating new profile for user...")
-              const { data: newProfile, error: createError } = await supabase
-                .from("profiles")
-                .insert([
-                  {
-                    id: user.id,
-                    email: user.email,
-                    role: "admin", // Default to admin for now
-                    organization_id: organization?.id || null,
-                  },
-                ])
-                .select()
-                .single()
+  const showMessage = useCallback((msg: string, type: "success" | "error" = "success") => {
+    setMessage(type === "error" ? `Error: ${msg}` : msg)
+    setTimeout(() => setMessage(""), 5000)
+  }, [])
 
-              if (createError) {
-                console.error("[v0] Error creating profile:", createError)
-                showMessage("Error creating user profile. Please contact support.", "error")
-              } else {
-                console.log("[v0] New profile created:", newProfile)
-                setCurrentProfile(newProfile)
-              }
-            }
-          } else {
-            console.log("[v0] Profile fetched successfully:", profileData)
-            setCurrentProfile(profileData)
-          }
-        } catch (error) {
-          console.error("[v0] Error in profile fetch:", error)
-          showMessage("Error loading user profile", "error")
-        } finally {
-          setProfileLoading(false)
-        }
-      } else {
-        setCurrentProfile(profile)
-        setProfileLoading(false)
-      }
-    }
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value)
+  }, [])
 
-    fetchUserProfile()
-  }, [user, profile, organization, supabase])
+  const handleOrganizationUpdate = useCallback(async () => {
+    if (!currentProfile?.id) return
 
-  const showMessage = (msg: string, type: "success" | "error" = "success") => {
-    setMessage(msg)
-    setTimeout(() => setMessage(""), 3000)
-  }
-
-  const handleProfileUpdate = async () => {
     setSaving(true)
     try {
-      // Update profile
-      const { error: profileError } = await supabase
-        .from("profiles")
+      const { error } = await supabase
+        .from("organizations")
         .update({
-          full_name: profileData.full_name,
-          phone: profileData.phone,
+          name: organizationData.name,
+          organization_type: organizationData.organization_type,
+          address: organizationData.address,
+          phone: organizationData.phone,
+          email: organizationData.email,
+          license_number: organizationData.license_number,
         })
-        .eq("id", user.id)
+        .eq("id", currentProfile.organization_id)
 
-      if (profileError) throw profileError
+      if (error) throw error
+      showMessage("Organization updated successfully")
+    } catch (error: any) {
+      showMessage(error.message, "error")
+    } finally {
+      setSaving(false)
+    }
+  }, [currentProfile?.id, organizationData, supabase, showMessage])
 
-      // Update password if provided
-      if (profileData.new_password && profileData.new_password === profileData.confirm_password) {
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password: profileData.new_password,
-        })
-        if (passwordError) throw passwordError
+  const handleDeleteStorageType = useCallback(
+    async (id: string) => {
+      if (!isAdmin) {
+        showMessage("Only administrators can delete storage unit types", "error")
+        return
       }
 
-      showMessage("Profile updated successfully")
-      setProfileData((prev) => ({ ...prev, current_password: "", new_password: "", confirm_password: "" }))
-      router.refresh()
-    } catch (error: any) {
-      showMessage(error.message, "error")
-    } finally {
-      setSaving(false)
-    }
-  }
+      setSaving(true)
+      try {
+        const { error } = await supabase
+          .from("storage_unit_types")
+          .delete()
+          .eq("id", id)
+          .eq("organization_id", currentProfile.organization_id)
 
-  const handleOrganizationUpdate = async () => {
-    if (!organization || currentProfile?.role !== "admin") return
+        if (error) throw error
+        showMessage("Storage unit type deleted successfully")
+        fetchStorageUnitTypes()
+      } catch (error: any) {
+        showMessage(error.message, "error")
+      } finally {
+        setSaving(false)
+      }
+    },
+    [isAdmin, currentProfile?.organization_id, supabase, showMessage],
+  )
 
-    setSaving(true)
+  const handleDataExport = useCallback(
+    async (format: string) => {
+      setLoading(true)
+      try {
+        const { data, error } = await supabase.from("inventory").select("*")
+
+        if (error) throw error
+
+        if (format === "csv") {
+          const csvData = convertToCSV(data)
+          const blob = new Blob([csvData], { type: "text/csv" })
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = "inventory_data.csv"
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+        } else if (format === "json") {
+          const jsonData = JSON.stringify(data, null, 2)
+          const blob = new Blob([jsonData], { type: "application/json" })
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = "inventory_data.json"
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+        }
+      } catch (error: any) {
+        showMessage(error.message, "error")
+      } finally {
+        setLoading(false)
+      }
+    },
+    [supabase, showMessage],
+  )
+
+  const fetchStorageUnitTypes = useCallback(async () => {
+    if (!hasOrganization) return
+
     try {
-      const { error } = await supabase.from("organizations").update(organizationData).eq("id", organization.id)
+      const { data, error } = await supabase
+        .from("storage_unit_types")
+        .select("*")
+        .eq("organization_id", currentProfile.organization_id)
+        .order("name")
 
       if (error) throw error
-
-      showMessage("Organization settings updated successfully")
-      router.refresh()
+      setStorageUnitTypes(data || [])
     } catch (error: any) {
-      showMessage(error.message, "error")
-    } finally {
-      setSaving(false)
+      showMessage(`Error fetching storage unit types: ${error.message}`, "error")
     }
-  }
-
-  const handleDataExport = async (format: "csv" | "json") => {
-    setLoading(true)
-    try {
-      // Export inventory data
-      const { data: inventoryData, error } = await supabase.from("inventory_items").select(`
-          *,
-          locations(name),
-          storage_units(name)
-        `)
-
-      if (error) throw error
-
-      const dataStr = format === "json" ? JSON.stringify(inventoryData, null, 2) : convertToCSV(inventoryData)
-
-      const blob = new Blob([dataStr], { type: format === "json" ? "application/json" : "text/csv" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `inventory_export_${new Date().toISOString().split("T")[0]}.${format}`
-      link.click()
-      URL.revokeObjectURL(url)
-
-      showMessage(`Data exported as ${format.toUpperCase()}`)
-    } catch (error: any) {
-      showMessage(error.message, "error")
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [hasOrganization, currentProfile?.organization_id, supabase, showMessage])
 
   const convertToCSV = (data: any[]) => {
     if (!data.length) return ""
@@ -218,144 +253,136 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
     return [headers, ...rows].join("\n")
   }
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push("/auth/login")
-  }
-
-  const handleRerunSetup = async () => {
-    setLoading(true)
-    try {
-      router.push(`/setup?rerun=true`)
-    } catch (error: any) {
-      showMessage(error.message, "error")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchStorageUnitTypes = async () => {
-    try {
-      if (!currentProfile?.organization_id) {
-        console.log("No organization_id available")
-        setStorageUnitTypes([])
-        return
-      }
-
-      const { data, error } = await supabase
-        .from("storage_unit_types")
-        .select("*")
-        .eq("organization_id", currentProfile.organization_id)
-        .order("name")
-
-      if (error) {
-        throw error
-      }
-
-      setStorageUnitTypes(data || [])
-    } catch (error: any) {
-      console.error("Error fetching storage unit types:", error)
-      if (error.message.includes("schema cache")) {
-        showMessage("Database table not found. Please run the required database migration.", "error")
-      } else {
-        showMessage(`Error loading storage unit types: ${error.message}`, "error")
-      }
-      setStorageUnitTypes([])
-    }
-  }
-
-  const handleStorageTypeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    console.log("[v0] User profile data:", currentProfile)
-    console.log("[v0] User role:", currentProfile?.role)
-    console.log("[v0] User organization_id:", currentProfile?.organization_id)
-    console.log("[v0] Is admin check:", currentProfile?.role === "admin")
-
-    if (currentProfile?.role !== "admin") {
-      console.log("[v0] Permission denied - user role is not admin")
-      showMessage("Only administrators can manage storage unit types", "error")
-      return
-    }
-
-    if (!currentProfile?.organization_id) {
-      console.log("[v0] No organization_id available")
-      showMessage("No organization associated with your account", "error")
-      return
-    }
-
-    setSaving(true)
-    try {
-      console.log("[v0] Proceeding with storage type operation...")
-
-      const storageTypeData = {
-        ...storageTypeForm,
-        organization_id: currentProfile.organization_id,
-      }
-
-      console.log("[v0] Storage type data to submit:", storageTypeData)
-
-      if (editingStorageType) {
-        const { error } = await supabase
-          .from("storage_unit_types")
-          .update(storageTypeData)
-          .eq("id", editingStorageType.id)
-          .eq("organization_id", currentProfile.organization_id)
-
-        if (error) throw error
-        showMessage("Storage unit type updated successfully")
-      } else {
-        const { error } = await supabase.from("storage_unit_types").insert([storageTypeData])
-
-        if (error) throw error
-        showMessage("Storage unit type created successfully")
-      }
-
-      setStorageTypeForm({ name: "", description: "", capacity_type: "count", default_capacity: 0 })
-      setEditingStorageType(null)
-      fetchStorageUnitTypes()
-    } catch (error: any) {
-      console.error("[v0] Storage unit type operation error:", error.message)
-      console.log("[v0] Error details:", error.message, error.code, error.details)
-      showMessage(`Error: ${error.message}`, "error")
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleDeleteStorageType = async (id: string) => {
-    if (currentProfile?.role !== "admin") {
-      showMessage("Only administrators can delete storage unit types", "error")
-      return
-    }
-
-    if (!confirm("Are you sure you want to delete this storage unit type?")) return
+  const handleProfileSave = useCallback(async () => {
+    if (!currentProfile?.id) return
 
     setSaving(true)
     try {
       const { error } = await supabase
-        .from("storage_unit_types")
-        .delete()
-        .eq("id", id)
-        .eq("organization_id", currentProfile.organization_id)
+        .from("profiles")
+        .update({
+          full_name: profileData.full_name,
+          phone: profileData.phone,
+        })
+        .eq("id", currentProfile.id)
 
       if (error) throw error
-      showMessage("Storage unit type deleted successfully")
-      fetchStorageUnitTypes()
+      showMessage("Profile updated successfully")
     } catch (error: any) {
-      console.error("Delete storage unit type error:", error)
-      showMessage(`Error: ${error.message}`, "error")
+      showMessage(error.message, "error")
     } finally {
       setSaving(false)
     }
-  }
+  }, [currentProfile?.id, profileData, supabase, showMessage])
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value)
-    if (value === "inventory") {
+  const handleStorageTypeSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+
+      if (!isAdmin) {
+        showMessage("Only administrators can manage storage unit types", "error")
+        return
+      }
+
+      if (!hasOrganization) {
+        showMessage("No organization associated with your account", "error")
+        return
+      }
+
+      setSaving(true)
+      try {
+        const storageTypeData = {
+          ...storageTypeForm,
+          organization_id: currentProfile.organization_id,
+        }
+
+        if (editingStorageType) {
+          const { error } = await supabase
+            .from("storage_unit_types")
+            .update(storageTypeData)
+            .eq("id", editingStorageType.id)
+            .eq("organization_id", currentProfile.organization_id)
+
+          if (error) throw error
+          showMessage("Storage unit type updated successfully")
+        } else {
+          const { error } = await supabase.from("storage_unit_types").insert([storageTypeData])
+
+          if (error) throw error
+          showMessage("Storage unit type created successfully")
+        }
+
+        setStorageTypeForm({ name: "", description: "", capacity_type: "count", default_capacity: 0 })
+        setEditingStorageType(null)
+        fetchStorageUnitTypes()
+      } catch (error: any) {
+        showMessage(error.message, "error")
+      } finally {
+        setSaving(false)
+      }
+    },
+    [
+      isAdmin,
+      hasOrganization,
+      storageTypeForm,
+      editingStorageType,
+      currentProfile?.organization_id,
+      supabase,
+      showMessage,
+    ],
+  )
+
+  const fetchUserProfile = useCallback(async () => {
+    if (!profile && user?.id) {
+      setProfileLoading(true)
+      try {
+        const { data: profileData, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+        if (error) {
+          if (error.code === "PGRST116") {
+            // Profile doesn't exist, create one
+            const { data: newProfile, error: createError } = await supabase
+              .from("profiles")
+              .insert([
+                {
+                  id: user.id,
+                  email: user.email,
+                  role: "admin", // Default to admin for now
+                  organization_id: organization?.id || null,
+                },
+              ])
+              .select()
+              .single()
+
+            if (createError) {
+              showMessage("Error creating user profile. Please contact support.", "error")
+            } else {
+              setCurrentProfile(newProfile)
+            }
+          }
+        } else {
+          setCurrentProfile(profileData)
+        }
+      } catch (error) {
+        showMessage("Error loading user profile", "error")
+      } finally {
+        setProfileLoading(false)
+      }
+    } else {
+      setCurrentProfile(profile)
+      setProfileLoading(false)
+    }
+  }, [user?.id, profile, organization?.id, supabase, showMessage])
+
+  useEffect(() => {
+    fetchUserProfile()
+  }, [user?.id, profile, organization?.id, fetchUserProfile])
+
+  useEffect(() => {
+    if (activeTab === "inventory" && hasOrganization) {
       fetchStorageUnitTypes()
     }
-  }
+  }, [activeTab, hasOrganization])
 
   return (
     <div className="h-full">
@@ -387,7 +414,7 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
           <TabsTrigger
             value="organization"
             className="flex items-center gap-2 rounded-xl font-medium"
-            disabled={currentProfile?.role !== "admin"}
+            disabled={!isAdmin}
           >
             <Building2 className="h-4 w-4" />
             Organization
@@ -410,155 +437,13 @@ export function SettingsClient({ user, profile, organization }: SettingsClientPr
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile" className="space-y-8">
-          <Card className="apple-card">
-            <CardHeader>
-              <CardTitle className="text-2xl font-serif font-bold text-primary">Profile Information</CardTitle>
-              <CardDescription className="text-base font-medium">
-                Update your personal information and account details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="full_name" className="text-base font-medium">
-                    Full Name
-                  </Label>
-                  <Input
-                    id="full_name"
-                    value={profileData.full_name}
-                    onChange={(e) => setProfileData((prev) => ({ ...prev, full_name: e.target.value }))}
-                    className="h-12 rounded-2xl border-border/50 bg-card text-base"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="email" className="text-base font-medium">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    disabled
-                    className="h-12 rounded-2xl border-border/50 bg-muted text-base"
-                  />
-                  <p className="text-sm text-muted-foreground font-medium">Email cannot be changed</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label htmlFor="phone" className="text-base font-medium">
-                  Phone Number
-                </Label>
-                <Input
-                  id="phone"
-                  value={profileData.phone}
-                  onChange={(e) => setProfileData((prev) => ({ ...prev, phone: e.target.value }))}
-                  placeholder="+1 (555) 123-4567"
-                  className="h-12 rounded-2xl border-border/50 bg-card text-base"
-                />
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Badge
-                  variant={currentProfile?.role === "admin" ? "default" : "secondary"}
-                  className="text-sm font-medium px-3 py-1 rounded-xl"
-                >
-                  {currentProfile?.role || "staff"}
-                </Badge>
-                <span className="text-base text-muted-foreground font-medium">Current Role</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="apple-card">
-            <CardHeader>
-              <CardTitle className="text-2xl font-serif font-bold text-primary">Change Password</CardTitle>
-              <CardDescription className="text-base font-medium">Update your account password</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="current_password" className="text-base font-medium">
-                  Current Password
-                </Label>
-                <Input
-                  id="current_password"
-                  type="password"
-                  value={profileData.current_password}
-                  onChange={(e) => setProfileData((prev) => ({ ...prev, current_password: e.target.value }))}
-                  className="h-12 rounded-2xl border-border/50 bg-card text-base"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="new_password" className="text-base font-medium">
-                    New Password
-                  </Label>
-                  <Input
-                    id="new_password"
-                    type="password"
-                    value={profileData.new_password}
-                    onChange={(e) => setProfileData((prev) => ({ ...prev, new_password: e.target.value }))}
-                    className="h-12 rounded-2xl border-border/50 bg-card text-base"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="confirm_password" className="text-base font-medium">
-                    Confirm Password
-                  </Label>
-                  <Input
-                    id="confirm_password"
-                    type="password"
-                    value={profileData.confirm_password}
-                    onChange={(e) => setProfileData((prev) => ({ ...prev, confirm_password: e.target.value }))}
-                    className="h-12 rounded-2xl border-border/50 bg-card text-base"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="apple-card">
-            <CardHeader>
-              <CardTitle className="text-2xl font-serif font-bold text-primary">Organization Setup</CardTitle>
-              <CardDescription className="text-base font-medium">
-                Re-run the initial organization setup wizard
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <Label className="text-base font-medium">Setup Wizard</Label>
-                  <p className="text-base text-muted-foreground font-medium">
-                    Re-configure your organization settings and preferences
-                  </p>
-                </div>
-                <Button
-                  onClick={handleRerunSetup}
-                  disabled={loading}
-                  variant="outline"
-                  className="apple-button-secondary bg-transparent"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  {loading ? "Resetting..." : "Re-run Setup"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end gap-4">
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              className="h-12 px-6 rounded-2xl border-border/50 bg-transparent"
-            >
-              Sign Out
-            </Button>
-            <Button onClick={handleProfileUpdate} disabled={saving} className="apple-button h-12 px-6">
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
+        <TabsContent value="profile">
+          <ProfileForm
+            profileData={profileData}
+            onUpdate={setProfileData}
+            onSave={handleProfileSave}
+            loading={saving}
+          />
         </TabsContent>
 
         {/* Organization Settings */}
