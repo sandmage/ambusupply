@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS public.allocation_transactions (
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT allocation_transactions_pkey PRIMARY KEY (id),
   CONSTRAINT allocation_transactions_allocation_id_fkey FOREIGN KEY (allocation_id) REFERENCES public.inventory_allocations(id),
-  CONSTRAINT allocation_transactions_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+  CONSTRAINT allocation_transactions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id)
 );
 
 -- Create invitations table
@@ -355,14 +355,26 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 
 -- Create basic RLS policies (can be customized later)
-CREATE POLICY IF NOT EXISTS "Users can view inventory items" ON public.inventory_items
-  FOR SELECT USING (true);
+DO $$ BEGIN
+    CREATE POLICY "Users can view inventory items" ON public.inventory_items
+      FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users can insert inventory items" ON public.inventory_items
-  FOR INSERT WITH CHECK (true);
+DO $$ BEGIN
+    CREATE POLICY "Users can insert inventory items" ON public.inventory_items
+      FOR INSERT WITH CHECK (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY IF NOT EXISTS "Users can update inventory items" ON public.inventory_items
-  FOR UPDATE USING (true);
+DO $$ BEGIN
+    CREATE POLICY "Users can update inventory items" ON public.inventory_items
+      FOR UPDATE USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Success message
 SELECT 'Master database schema created successfully!' as result;
