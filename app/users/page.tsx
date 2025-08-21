@@ -4,7 +4,7 @@ import { UsersClient } from "./users-client"
 import { AppLayout } from "@/components/app-layout"
 
 export default async function UsersPage() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   // Check authentication
   const {
