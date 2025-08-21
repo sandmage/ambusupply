@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { useSession } from "./session-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,7 +22,6 @@ export function InvitationDialog({ organizationId, onInvitationSent }: Invitatio
   const [role, setRole] = useState("staff")
 
   const { user } = useSession()
-  const supabase = createClient()
 
   const handleSendInvitation = async () => {
     if (!email.trim()) {
@@ -38,52 +36,30 @@ export function InvitationDialog({ organizationId, onInvitationSent }: Invitatio
 
     setIsLoading(true)
     try {
-      const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single()
-
-      if (!profile) throw new Error("Profile not found")
-
-      // Create invitation
-      const { data: invitation, error } = await supabase
-        .from("invitations")
-        .insert({
-          organization_id: organizationId,
-          invited_by: profile.id,
+      const response = await fetch("/api/send-invitation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          organizationId,
           email: email.trim().toLowerCase(),
           role: role,
-        })
-        .select()
-        .single()
+        }),
+      })
 
-      if (error) throw error
+      const result = await response.json()
 
-      // Send invitation email
-      try {
-        const response = await fetch("/api/send-invitation", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            invitationId: invitation.id,
-          }),
-        })
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to send invitation")
+      }
 
-        const result = await response.json()
+      toast.success("Invitation sent successfully!")
 
-        if (!response.ok) {
-          throw new Error(result.error || "Failed to send invitation email")
-        }
-
-        toast.success("Invitation sent successfully!")
-
-        // Show the invitation URL for testing purposes
-        if (result.inviteUrl) {
-          console.log("Invitation URL:", result.inviteUrl)
-          toast.info("Check console for invitation link (for testing)")
-        }
-      } catch (emailError) {
-        console.error("Email sending failed:", emailError)
-        toast.warning("Invitation created but email failed to send. Please share the invitation link manually.")
+      // Show the invitation URL for testing purposes
+      if (result.inviteUrl) {
+        console.log("Invitation URL:", result.inviteUrl)
+        toast.info("Check console for invitation link (for testing)")
       }
 
       setEmail("")
@@ -92,7 +68,7 @@ export function InvitationDialog({ organizationId, onInvitationSent }: Invitatio
       onInvitationSent()
     } catch (error: any) {
       console.error("Error sending invitation:", error)
-      if (error.code === "23505") {
+      if (error.message.includes("already been sent")) {
         toast.error("An invitation has already been sent to this email address")
       } else {
         toast.error("Failed to send invitation. Please try again.")
