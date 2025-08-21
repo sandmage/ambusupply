@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/app-layout"
 import { FleetClient } from "./fleet-client"
 
 export default async function FleetPage() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const {
     data: { user },
