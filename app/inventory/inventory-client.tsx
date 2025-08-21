@@ -39,8 +39,8 @@ interface InventoryItem {
   storage_unit_name?: string
   created_at: string
   ordering_url?: string
-  location_id?: string
-  storage_unit_id?: string
+  location_id: string
+  storage_unit_id: string
 }
 
 interface Location {
@@ -188,7 +188,7 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
               unit_of_measure: itemData.unit_of_measure,
               expiration_date: itemData.expiration_date || null,
               location_id: itemData.location_id,
-              storage_unit_id: itemData.storage_unit_id || null,
+              storage_unit_id: itemData.storage_unit_id,
               ordering_url: itemData.ordering_url || null,
               updated_at: new Date().toISOString(),
             })
@@ -205,7 +205,7 @@ export function InventoryClient({ items: initialItems, locations, userRole }: In
             unit_of_measure: itemData.unit_of_measure,
             expiration_date: itemData.expiration_date || null,
             location_id: itemData.location_id,
-            storage_unit_id: itemData.storage_unit_id || null,
+            storage_unit_id: itemData.storage_unit_id,
             ordering_url: itemData.ordering_url || null,
           })
 
