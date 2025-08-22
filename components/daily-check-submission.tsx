@@ -61,7 +61,7 @@ interface DailyCheckSubmission {
   id?: string
   form_id: string
   vehicle_id: string
-  submission_date: string
+  submitted_at: string
   shift_start_time?: string
   shift_end_time?: string
   pre_trip_mileage?: number
@@ -71,7 +71,6 @@ interface DailyCheckSubmission {
   overall_status: "pass" | "fail" | "conditional"
   notes?: string
   submitted_by?: string
-  submitted_at?: string
 }
 
 interface DailyCheckSubmissionProps {
@@ -145,7 +144,7 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
     const newSubmission: DailyCheckSubmission = {
       form_id: form.id,
       vehicle_id: vehicleId,
-      submission_date: new Date().toISOString().split("T")[0],
+      submitted_at: new Date().toISOString().split("T")[0],
       checklist_responses: {},
       issues_found: [],
       overall_status: "pass",
@@ -377,7 +376,10 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
             <DialogHeader>
               <DialogTitle>Submit Daily Vehicle Check</DialogTitle>
             </DialogHeader>
-            <DailyCheckForm />
+            <div className="space-y-4">
+              <p className="text-muted-foreground">Select a vehicle and complete the daily inspection checklist.</p>
+              {/* This would contain the same form logic as above but in a dialog */}
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -637,14 +639,4 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
       </Tabs>
     </div>
   )
-
-  // Inline Daily Check Form Component
-  function DailyCheckForm() {
-    return (
-      <div className="space-y-4">
-        <p className="text-muted-foreground">Select a vehicle and complete the daily inspection checklist.</p>
-        {/* This would contain the same form logic as above but in a dialog */}
-      </div>
-    )
-  }
 }

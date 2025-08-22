@@ -31,6 +31,9 @@ import { VehicleInventoryManager } from "@/components/vehicle-inventory-manager"
 import { VehicleParLevelManager } from "@/components/vehicle-par-level-manager"
 import { VehicleInventoryTracker } from "@/components/vehicle-inventory-tracker"
 import { ComplianceMonitoringDashboard } from "@/components/compliance-monitoring-dashboard"
+import { DailyCheckSubmission } from "@/components/daily-check-submission"
+import { DailyCheckFormBuilder } from "@/components/daily-check-form-builder"
+import { DailyCheckAdminDashboard } from "@/components/daily-check-admin-dashboard"
 
 interface Vehicle {
   id: string
@@ -421,9 +424,18 @@ export function FleetClient() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2 rounded-2xl">
+            <TabsList className="grid w-full grid-cols-5 rounded-2xl">
               <TabsTrigger value="overview" className="rounded-xl">
                 Overview
+              </TabsTrigger>
+              <TabsTrigger value="daily-checks" className="rounded-xl">
+                Daily Checks
+              </TabsTrigger>
+              <TabsTrigger value="form-builder" className="rounded-xl">
+                Form Builder
+              </TabsTrigger>
+              <TabsTrigger value="admin-review" className="rounded-xl">
+                Admin Review
               </TabsTrigger>
               <TabsTrigger value="calendar" className="rounded-xl">
                 Calendar
@@ -532,7 +544,6 @@ export function FleetClient() {
               </div>
             </TabsContent>
 
-            {/*
             <TabsContent value="daily-checks">
               <DailyCheckSubmission vehicles={vehicles} />
             </TabsContent>
@@ -544,7 +555,6 @@ export function FleetClient() {
             <TabsContent value="admin-review">
               <DailyCheckAdminDashboard />
             </TabsContent>
-            */}
 
             <TabsContent value="calendar">
               <MaintenanceCalendar onSelectMaintenance={handleSelectMaintenance} />

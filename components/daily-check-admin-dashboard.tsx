@@ -37,7 +37,7 @@ interface DailyCheckSubmission {
   id: string
   form_id: string
   vehicle_id: string
-  submission_date: string
+  submitted_at: string
   shift_start_time?: string
   shift_end_time?: string
   pre_trip_mileage?: number
@@ -47,7 +47,6 @@ interface DailyCheckSubmission {
   overall_status: "pass" | "fail" | "conditional"
   notes?: string
   submitted_by?: string
-  submitted_at: string
   reviewed_by?: string
   reviewed_at?: string
   review_notes?: string
@@ -125,11 +124,11 @@ export function DailyCheckAdminDashboard() {
       }
 
       if (filters.dateFrom) {
-        query = query.gte("submission_date", filters.dateFrom)
+        query = query.gte("submitted_at", filters.dateFrom)
       }
 
       if (filters.dateTo) {
-        query = query.lte("submission_date", filters.dateTo)
+        query = query.lte("submitted_at", filters.dateTo)
       }
 
       if (filters.vehicle) {
