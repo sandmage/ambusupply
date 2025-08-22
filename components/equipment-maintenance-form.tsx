@@ -94,7 +94,7 @@ export function EquipmentMaintenanceForm({
           ? JSON.parse(
               `["${formData.parts_replaced
                 .split(",")
-                .map((p) => p.trim())
+                .map((p: string) => p.trim())
                 .join('","')}"]`,
             )
           : null,
