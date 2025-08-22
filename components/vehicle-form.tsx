@@ -192,7 +192,7 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="basic" className="space-y-6 mt-6">
+            <TabsContent value="basic" className="space-y-6 mt-6 min-h-[400px]">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
                   <Label
@@ -371,7 +371,7 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
               </div>
             </TabsContent>
 
-            <TabsContent value="registration" className="space-y-6 mt-6">
+            <TabsContent value="registration" className="space-y-6 mt-6 min-h-[400px]">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
                   <Label
@@ -439,7 +439,7 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
               </div>
             </TabsContent>
 
-            <TabsContent value="inspections" className="space-y-6 mt-6">
+            <TabsContent value="inspections" className="space-y-6 mt-6 min-h-[400px]">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
                   <Label
@@ -603,7 +603,7 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
               </div>
             </TabsContent>
 
-            <TabsContent value="certifications" className="space-y-6 mt-6">
+            <TabsContent value="certifications" className="space-y-6 mt-6 min-h-[400px]">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="medical_equipment_certification" className="text-sm font-medium leading-none">
