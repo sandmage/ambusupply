@@ -105,10 +105,7 @@ export function EquipmentForm({
         location_id: formData.location_id || null,
         assigned_vehicle_id: formData.assigned_vehicle_id || null,
         notes: formData.notes || null,
-      }
-
-      if (editingEquipment) {
-        equipmentData.id = editingEquipment.id
+        ...(editingEquipment && { id: editingEquipment.id }),
       }
 
       await onSave(equipmentData)
