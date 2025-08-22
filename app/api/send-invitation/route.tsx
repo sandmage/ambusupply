@@ -102,8 +102,26 @@ export async function POST(request: NextRequest) {
       invitation = newInvitation
     }
 
-    // Create invitation link
-    const inviteUrl = `${process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin}/invite/${invitation.invitation_token}`
+    // Create invitation link with proper domain detection
+    const getBaseUrl = () => {
+      // Check for explicit site URL first
+      if (process.env.NEXT_PUBLIC_SITE_URL) {
+        return process.env.NEXT_PUBLIC_SITE_URL
+      }
+
+      // Use request origin but ensure it's the production domain
+      const origin = request.nextUrl.origin
+
+      // If we're in production and the origin looks like a Vercel deployment URL, use it
+      if (origin.includes("vercel.app") || origin.includes("ambusupply")) {
+        return origin
+      }
+
+      // Fallback to the known production domain
+      return "https://v0-ambu-sup-v2-git-ambusupply-v2-labs-vercel.app"
+    }
+
+    const inviteUrl = `${getBaseUrl()}/invite/${invitation.invitation_token}`
 
     // Email content
     const emailSubject = `You're invited to join ${invitation.organizations.name}`
