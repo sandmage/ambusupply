@@ -132,8 +132,15 @@ export function DailyCheckFormBuilder() {
 
       setIsEditing(false)
       fetchData()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving form:", error)
+      if (error?.message?.includes("Could not find") && error?.message?.includes("daily_check_forms")) {
+        alert(
+          "Database tables are not set up yet. Please run the master schema script to create the required tables for the daily check system.",
+        )
+      } else {
+        alert(`Error saving form: ${error?.message || "Unknown error occurred"}`)
+      }
     }
   }
 
@@ -596,7 +603,12 @@ function ChecklistItemForm({
           <Textarea
             id="item-description"
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                description: e.target.value,
+              })
+            }
             placeholder="Additional instructions or details"
             className="apple-input"
           />
