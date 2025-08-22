@@ -33,7 +33,7 @@ export default function HomePage() {
               <Link href="/auth/login">Sign In</Link>
             </Button>
             <Button asChild>
-              <Link href="/invite">Join Organization</Link>
+              <Link href="/auth/sign-up">Create Organization</Link>
             </Button>
           </div>
         </div>
@@ -209,7 +209,7 @@ export default function HomePage() {
               className="text-lg px-8 py-3 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent"
               asChild
             >
-              <Link href="/invite">Join Existing Team</Link>
+              <Link href="/invite">Join Organization</Link>
             </Button>
           </div>
         </div>
