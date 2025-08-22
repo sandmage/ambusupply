@@ -438,7 +438,6 @@ export function LocationsClient({ locations: initialLocations, userRole, stats }
                             )}
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span>{location.storage_units.length} storage units</span>
-                              {location.address && <span>{location.address}</span>}
                             </div>
                           </div>
                           {isAdmin && (
