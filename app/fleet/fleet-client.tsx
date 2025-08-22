@@ -443,23 +443,6 @@ export function FleetClient() {
             </TabsList>
 
             <TabsContent value="overview">
-              <div className="mb-6">
-                <Card className="apple-card border-amber-200 bg-amber-50">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center space-x-3">
-                      <AlertTriangle className="h-5 w-5 text-amber-600" />
-                      <div>
-                        <p className="font-medium text-amber-800">Daily Check Forms Temporarily Unavailable</p>
-                        <p className="text-sm text-amber-700">
-                          The daily check form system requires database setup. Please contact your administrator to
-                          configure the required database tables.
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="apple-card">
                   <CardHeader>
