@@ -43,10 +43,8 @@ export default async function UsersPage() {
   let userProfile: UserProfile
   try {
     console.log("[v0] Users page: Checking for existing user record")
-    // Check if user record exists in users_sync table
     const { data: userRecord, error: userRecordError } = await supabase
-      .schema("neon_auth")
-      .from("users_sync")
+      .from("users")
       .select("*")
       .eq("id", user.id)
       .maybeSingle()
@@ -61,11 +59,11 @@ export default async function UsersPage() {
     userProfile = {
       id: user.id,
       email: user.email || "",
-      full_name: userRecord?.name || user.user_metadata?.full_name || "Unknown User",
-      role: user.user_metadata?.role || "admin", // Default to admin for now
+      full_name: userRecord?.full_name || user.user_metadata?.full_name || "Unknown User",
+      role: userRecord?.role || user.user_metadata?.role || "admin", // Use role from database
       created_at: userRecord?.created_at || new Date().toISOString(),
       updated_at: userRecord?.updated_at || new Date().toISOString(),
-      organization_id: user.user_metadata?.organization_id,
+      organization_id: userRecord?.organization_id || user.user_metadata?.organization_id,
     }
 
     console.log("[v0] Users page: User profile created:", userProfile)
@@ -73,17 +71,15 @@ export default async function UsersPage() {
     // Create user record if it doesn't exist
     if (!userRecord) {
       console.log("[v0] Users page: Creating new user record")
-      const { error: insertError } = await supabase
-        .schema("neon_auth")
-        .from("users_sync")
-        .insert([
-          {
-            id: user.id,
-            email: user.email,
-            name: userProfile.full_name,
-            raw_json: user.user_metadata || {},
-          },
-        ])
+      const { error: insertError } = await supabase.from("users").insert([
+        {
+          id: user.id,
+          email: user.email,
+          full_name: userProfile.full_name,
+          role: userProfile.role,
+          organization_id: userProfile.organization_id,
+        },
+      ])
 
       console.log("[v0] Users page: User record creation result:", { error: insertError })
     }
@@ -114,10 +110,8 @@ export default async function UsersPage() {
   try {
     console.log("[v0] Users page: Fetching all users from database")
     const { data: usersData, error } = await supabase
-      .schema("neon_auth")
-      .from("users_sync")
+      .from("users")
       .select("*")
-      .is("deleted_at", null)
       .order("created_at", { ascending: false })
 
     console.log("[v0] Users page: Users query result:", {
@@ -130,11 +124,11 @@ export default async function UsersPage() {
       users = usersData.map((userRecord) => ({
         id: userRecord.id,
         email: userRecord.email || "",
-        full_name: userRecord.name || "Unknown User",
-        role: "admin", // Default role - can be enhanced with proper role management
+        full_name: userRecord.full_name || "Unknown User",
+        role: userRecord.role || "staff",
         created_at: userRecord.created_at,
         updated_at: userRecord.updated_at,
-        organization_id: userRecord.raw_json?.organization_id,
+        organization_id: userRecord.organization_id,
       }))
 
       console.log("[v0] Users page: Mapped users:", users)
