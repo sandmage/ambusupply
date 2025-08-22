@@ -18,7 +18,7 @@ import {
 interface StorageUnitType {
   id?: string
   name: string
-  description: string
+  description?: string // Made description optional to match locations-client interface
   capacity_type: string
   default_capacity: number
 }
@@ -49,7 +49,7 @@ export function StorageUnitTypeForm({ storageType, isOpen, onClose, onSave }: St
     try {
       const storageTypeData = {
         name: name.trim(),
-        description: description.trim(),
+        description: description.trim() || undefined, // Handle optional description
         capacity_type: capacityType,
         default_capacity: Number.parseInt(defaultCapacity) || 0,
       }
