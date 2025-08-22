@@ -181,8 +181,8 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                   <span className="hidden md:block">Basic Info</span>
                 </span>
               </TabsTrigger>
-              <TabsTrigger value="registration" className="rounded-xl text-xs md:text-sm px-1 md:px-3 py-2">
-                <Shield className="h-3 w-3 md:h-4 md:w-4 mr-1 flex-shrink-0" />
+              <TabsTrigger value="registration" className="rounded-xl text-xs md:text-sm px-2 md:px-3 py-2">
+                <Shield className="h-3 w-3 md:h-4 md:w-4 mr-2 flex-shrink-0" />
                 <span className="text-center leading-tight">
                   <span className="block md:hidden">Reg</span>
                   <span className="hidden md:block">Registration</span>
