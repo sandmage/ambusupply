@@ -158,7 +158,9 @@ export function ComplianceMonitoringDashboard() {
           return {
             id: item.id,
             vehicle_id: item.vehicle_id,
-            vehicle_number: item.vehicles.vehicle_number,
+            vehicle_number: Array.isArray(item.vehicles)
+              ? item.vehicles[0]?.vehicle_number
+              : item.vehicles?.vehicle_number,
             inventory_item_id: item.inventory_item.id,
             inventory_item_name: item.inventory_item.name,
             inventory_item_category: item.inventory_item.category || "Uncategorized",
