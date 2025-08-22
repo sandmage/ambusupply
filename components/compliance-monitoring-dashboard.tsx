@@ -545,9 +545,9 @@ export function ComplianceMonitoringDashboard() {
                 <div className="flex items-center gap-3">
                   <Package className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">{request.inventory_item?.name}</p>
+                    <p className="font-medium">{(request as any).inventory_item?.name || "Unknown Item"}</p>
                     <p className="text-sm text-muted-foreground">
-                      {request.vehicle?.vehicle_number} • {request.requested_quantity} units • {request.reason}
+                      {(request as any).vehicle?.vehicle_number} • {request.requested_quantity} units • {request.reason}
                     </p>
                   </div>
                 </div>
