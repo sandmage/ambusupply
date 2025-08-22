@@ -70,8 +70,9 @@ ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
 
+-- Removed IF NOT EXISTS from CREATE POLICY statements for PostgreSQL compatibility
 -- Create basic RLS policies for organizations
-CREATE POLICY IF NOT EXISTS "Users can view their own organization" ON public.organizations
+CREATE POLICY "Users can view their own organization" ON public.organizations
   FOR SELECT USING (
     id IN (
       SELECT organization_id FROM public.profiles WHERE id = auth.uid()
@@ -79,25 +80,25 @@ CREATE POLICY IF NOT EXISTS "Users can view their own organization" ON public.or
   );
 
 -- Create basic RLS policies for profiles
-CREATE POLICY IF NOT EXISTS "Users can view profiles in their organization" ON public.profiles
+CREATE POLICY "Users can view profiles in their organization" ON public.profiles
   FOR SELECT USING (
     organization_id IN (
       SELECT organization_id FROM public.profiles WHERE id = auth.uid()
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Users can update their own profile" ON public.profiles
+CREATE POLICY "Users can update their own profile" ON public.profiles
   FOR UPDATE USING (id = auth.uid());
 
 -- Create basic RLS policies for invitations
-CREATE POLICY IF NOT EXISTS "Users can view invitations for their organization" ON public.invitations
+CREATE POLICY "Users can view invitations for their organization" ON public.invitations
   FOR SELECT USING (
     organization_id IN (
       SELECT organization_id FROM public.profiles WHERE id = auth.uid()
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Admins can create invitations" ON public.invitations
+CREATE POLICY "Admins can create invitations" ON public.invitations
   FOR INSERT WITH CHECK (
     invited_by = auth.uid() AND
     organization_id IN (
@@ -106,7 +107,7 @@ CREATE POLICY IF NOT EXISTS "Admins can create invitations" ON public.invitation
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Users can update invitations they created" ON public.invitations
+CREATE POLICY "Users can update invitations they created" ON public.invitations
   FOR UPDATE USING (invited_by = auth.uid());
 
 -- Insert a default organization if none exists
