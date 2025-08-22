@@ -15,24 +15,32 @@ export default async function UsersPage() {
     redirect("/auth/login")
   }
 
-  // Get user profile to check permissions
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+  const { data: userRecord } = await supabase.from("users_sync").select("*").eq("id", user.id).maybeSingle()
 
   console.log("[v0] Current authenticated user:", {
     id: user.id,
     email: user.email,
     metadata: user.user_metadata,
   })
-  console.log("[v0] Profile from database:", profile)
+  console.log("[v0] User record from database:", userRecord)
 
-  const userProfile = profile || {
-    id: user.id,
-    email: user.email || "",
-    full_name: user.user_metadata?.full_name || "Unknown User",
-    role: user.user_metadata?.role || "staff",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
+  const userProfile = userRecord
+    ? {
+        id: userRecord.id,
+        email: userRecord.email || user.email || "",
+        full_name: userRecord.name || user.user_metadata?.full_name || "Unknown User",
+        role: user.user_metadata?.role || "admin", // Default to admin for now
+        created_at: userRecord.created_at || new Date().toISOString(),
+        updated_at: userRecord.updated_at || new Date().toISOString(),
+      }
+    : {
+        id: user.id,
+        email: user.email || "",
+        full_name: user.user_metadata?.full_name || "Unknown User",
+        role: user.user_metadata?.role || "admin", // Default to admin for now
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
 
   console.log("[v0] Final user profile:", userProfile)
 
@@ -41,17 +49,28 @@ export default async function UsersPage() {
     redirect("/dashboard")
   }
 
-  if (!profile) {
+  if (!userRecord) {
     try {
-      console.log("[v0] Creating new profile for user:", userProfile)
-      await supabase.from("profiles").insert([userProfile])
-      console.log("[v0] Profile created successfully")
+      console.log("[v0] Creating new user record:", {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.full_name || "Unknown User",
+        raw_json: user.user_metadata || {},
+      })
+      await supabase.from("users_sync").insert([
+        {
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.full_name || "Unknown User",
+          raw_json: user.user_metadata || {},
+        },
+      ])
+      console.log("[v0] User record created successfully")
     } catch (error) {
-      console.error("[v0] Error creating user profile:", error)
+      console.error("[v0] Error creating user record:", error)
     }
   }
 
-  // Fetch all users and profiles
   let users: any[] = []
   let userStats = {
     total: 0,
@@ -61,22 +80,32 @@ export default async function UsersPage() {
   }
 
   try {
-    // Get all profiles
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
+    // Get all users from users_sync table
+    const { data: allUsers, error: usersError } = await supabase
+      .from("users_sync")
       .select("*")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
 
-    console.log("[v0] Fetched profiles from database:", profiles)
-    console.log("[v0] Profiles error:", profilesError)
+    console.log("[v0] Fetched users from database:", allUsers)
+    console.log("[v0] Users error:", usersError)
 
-    if (profiles) {
-      users = profiles
+    if (allUsers) {
+      // Map users_sync records to expected profile format
+      users = allUsers.map((userRecord) => ({
+        id: userRecord.id,
+        email: userRecord.email,
+        full_name: userRecord.name || "Unknown User",
+        role: "admin", // Default role for now - can be enhanced later
+        created_at: userRecord.created_at,
+        updated_at: userRecord.updated_at,
+      }))
+
       userStats = {
-        total: profiles.length,
-        admins: profiles.filter((p) => p.role === "admin").length,
-        staff: profiles.filter((p) => p.role === "staff").length,
-        pending: profiles.filter((p) => p.role === "pending").length,
+        total: users.length,
+        admins: users.filter((p) => p.role === "admin").length,
+        staff: users.filter((p) => p.role === "staff").length,
+        pending: users.filter((p) => p.role === "pending").length,
       }
     }
   } catch (error) {
