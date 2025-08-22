@@ -735,6 +735,7 @@ CREATE TABLE IF NOT EXISTS public.daily_check_forms (
   vehicle_id uuid, -- if null, applies to all vehicles
   form_name text NOT NULL,
   description text,
+  vehicle_types text[], -- Added vehicle_types array column to support multiple vehicle types
   checklist_items jsonb NOT NULL, -- array of form fields with types and validation
   is_active boolean DEFAULT true,
   created_by uuid NOT NULL,
