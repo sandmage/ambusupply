@@ -173,29 +173,34 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
           )}
 
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-muted/50">
-              <TabsTrigger value="basic" className="rounded-xl">
-                <FileText className="h-4 w-4 mr-2" />
-                Basic Info
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 rounded-2xl bg-muted/50">
+              <TabsTrigger value="basic" className="rounded-xl text-xs md:text-sm">
+                <FileText className="h-4 w-4 mr-1 md:mr-2 flex-shrink-0" />
+                <span className="truncate">Basic Info</span>
               </TabsTrigger>
-              <TabsTrigger value="registration" className="rounded-xl">
-                <Shield className="h-4 w-4 mr-2" />
-                Registration
+              <TabsTrigger value="registration" className="rounded-xl text-xs md:text-sm">
+                <Shield className="h-4 w-4 mr-1 md:mr-2 flex-shrink-0" />
+                <span className="truncate">Registration</span>
               </TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-xl">
-                <Wrench className="h-4 w-4 mr-2" />
-                Inspections
+              <TabsTrigger value="inspections" className="rounded-xl text-xs md:text-sm">
+                <Wrench className="h-4 w-4 mr-1 md:mr-2 flex-shrink-0" />
+                <span className="truncate">Inspections</span>
               </TabsTrigger>
-              <TabsTrigger value="certifications" className="rounded-xl">
-                <Calendar className="h-4 w-4 mr-2" />
-                Certifications
+              <TabsTrigger value="certifications" className="rounded-xl text-xs md:text-sm">
+                <Calendar className="h-4 w-4 mr-1 md:mr-2 flex-shrink-0" />
+                <span className="truncate">Certifications</span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="vehicle_number">Vehicle Number *</Label>
+                  <Label
+                    htmlFor="vehicle_number"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Vehicle Number *
+                  </Label>
                   <Input
                     id="vehicle_number"
                     value={formData.vehicle_number}
@@ -225,7 +230,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="make">Make *</Label>
+                  <Label
+                    htmlFor="make"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Make *
+                  </Label>
                   <Input
                     id="make"
                     value={formData.make}
@@ -237,7 +247,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="model">Model *</Label>
+                  <Label
+                    htmlFor="model"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Model *
+                  </Label>
                   <Input
                     id="model"
                     value={formData.model}
@@ -249,7 +264,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="year">Year *</Label>
+                  <Label
+                    htmlFor="year"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Year *
+                  </Label>
                   <Input
                     id="year"
                     type="number"
@@ -278,7 +298,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="vin">VIN *</Label>
+                  <Label
+                    htmlFor="vin"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    VIN *
+                  </Label>
                   <Input
                     id="vin"
                     value={formData.vin}
@@ -291,7 +316,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="license_plate">License Plate *</Label>
+                  <Label
+                    htmlFor="license_plate"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    License Plate *
+                  </Label>
                   <Input
                     id="license_plate"
                     value={formData.license_plate}
@@ -303,7 +333,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mileage">Current Mileage</Label>
+                  <Label
+                    htmlFor="mileage"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Current Mileage
+                  </Label>
                   <Input
                     id="mileage"
                     type="number"
@@ -316,7 +351,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="fuel_capacity">Fuel Capacity (gallons)</Label>
+                  <Label
+                    htmlFor="fuel_capacity"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Fuel Capacity (gallons)
+                  </Label>
                   <Input
                     id="fuel_capacity"
                     type="number"
@@ -332,9 +372,14 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
             </TabsContent>
 
             <TabsContent value="registration" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="registration_expiration">Registration Expiration</Label>
+                  <Label
+                    htmlFor="registration_expiration"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Registration Expiration
+                  </Label>
                   <Input
                     id="registration_expiration"
                     type="date"
@@ -345,7 +390,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="insurance_expiration">Insurance Expiration</Label>
+                  <Label
+                    htmlFor="insurance_expiration"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Insurance Expiration
+                  </Label>
                   <Input
                     id="insurance_expiration"
                     type="date"
@@ -356,7 +406,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="insurance_provider">Insurance Provider</Label>
+                  <Label
+                    htmlFor="insurance_provider"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Insurance Provider
+                  </Label>
                   <Input
                     id="insurance_provider"
                     value={formData.insurance_provider}
@@ -367,7 +422,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="insurance_policy_number">Policy Number</Label>
+                  <Label
+                    htmlFor="insurance_policy_number"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Policy Number
+                  </Label>
                   <Input
                     id="insurance_policy_number"
                     value={formData.insurance_policy_number}
@@ -380,9 +440,14 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
             </TabsContent>
 
             <TabsContent value="inspections" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="dot_inspection_date">DOT Inspection Date</Label>
+                  <Label
+                    htmlFor="dot_inspection_date"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    DOT Inspection Date
+                  </Label>
                   <Input
                     id="dot_inspection_date"
                     type="date"
@@ -393,7 +458,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dot_inspection_expiration">DOT Inspection Expiration</Label>
+                  <Label
+                    htmlFor="dot_inspection_expiration"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    DOT Inspection Expiration
+                  </Label>
                   <Input
                     id="dot_inspection_expiration"
                     type="date"
@@ -404,7 +474,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dot_number">DOT Number</Label>
+                  <Label
+                    htmlFor="dot_number"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    DOT Number
+                  </Label>
                   <Input
                     id="dot_number"
                     value={formData.dot_number}
@@ -415,7 +490,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="oems_inspection_date">OEMS Inspection Date</Label>
+                  <Label
+                    htmlFor="oems_inspection_date"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    OEMS Inspection Date
+                  </Label>
                   <Input
                     id="oems_inspection_date"
                     type="date"
@@ -426,7 +506,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="oems_inspection_expiration">OEMS Inspection Expiration</Label>
+                  <Label
+                    htmlFor="oems_inspection_expiration"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    OEMS Inspection Expiration
+                  </Label>
                   <Input
                     id="oems_inspection_expiration"
                     type="date"
@@ -437,7 +522,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="oems_certification_number">OEMS Certification Number</Label>
+                  <Label
+                    htmlFor="oems_certification_number"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    OEMS Certification Number
+                  </Label>
                   <Input
                     id="oems_certification_number"
                     value={formData.oems_certification_number}
@@ -448,7 +538,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="annual_inspection_date">Annual Inspection Date</Label>
+                  <Label
+                    htmlFor="annual_inspection_date"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Annual Inspection Date
+                  </Label>
                   <Input
                     id="annual_inspection_date"
                     type="date"
@@ -459,7 +554,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="annual_inspection_expiration">Annual Inspection Expiration</Label>
+                  <Label
+                    htmlFor="annual_inspection_expiration"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Annual Inspection Expiration
+                  </Label>
                   <Input
                     id="annual_inspection_expiration"
                     type="date"
@@ -470,7 +570,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="emissions_test_date">Emissions Test Date</Label>
+                  <Label
+                    htmlFor="emissions_test_date"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Emissions Test Date
+                  </Label>
                   <Input
                     id="emissions_test_date"
                     type="date"
@@ -481,7 +586,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="emissions_test_expiration">Emissions Test Expiration</Label>
+                  <Label
+                    htmlFor="emissions_test_expiration"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Emissions Test Expiration
+                  </Label>
                   <Input
                     id="emissions_test_expiration"
                     type="date"
@@ -494,9 +604,11 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
             </TabsContent>
 
             <TabsContent value="certifications" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="medical_equipment_certification">Medical Equipment Certification Date</Label>
+                  <Label htmlFor="medical_equipment_certification" className="text-sm font-medium leading-none">
+                    Medical Equipment Cert Date
+                  </Label>
                   <Input
                     id="medical_equipment_certification"
                     type="date"
@@ -507,7 +619,9 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="medical_equipment_cert_expiration">Medical Equipment Cert Expiration</Label>
+                  <Label htmlFor="medical_equipment_cert_expiration" className="text-sm font-medium leading-none">
+                    Medical Equipment Expiration
+                  </Label>
                   <Input
                     id="medical_equipment_cert_expiration"
                     type="date"
@@ -518,7 +632,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="radio_license_expiration">Radio License Expiration</Label>
+                  <Label
+                    htmlFor="radio_license_expiration"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Radio License Expiration
+                  </Label>
                   <Input
                     id="radio_license_expiration"
                     type="date"
@@ -529,7 +648,12 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="narcotics_license_expiration">Narcotics License Expiration</Label>
+                  <Label
+                    htmlFor="narcotics_license_expiration"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Narcotics License Expiration
+                  </Label>
                   <Input
                     id="narcotics_license_expiration"
                     type="date"
@@ -542,18 +666,23 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
             </TabsContent>
           </Tabs>
 
-          <div className="flex gap-4 pt-6">
-            <Button type="submit" disabled={loading} className="apple-button flex-1">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6">
+            <Button type="submit" disabled={loading} className="apple-button flex-1 min-h-[44px]">
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               ) : (
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-4 w-4 mr-2 flex-shrink-0" />
               )}
-              {vehicle ? "Update Vehicle" : "Add Vehicle"}
+              <span className="truncate">{vehicle ? "Update Vehicle" : "Add Vehicle"}</span>
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-2xl bg-transparent">
-              <X className="h-4 w-4 mr-2" />
-              Cancel
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="flex-1 rounded-2xl bg-transparent min-h-[44px]"
+            >
+              <X className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="truncate">Cancel</span>
             </Button>
           </div>
         </form>
