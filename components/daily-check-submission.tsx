@@ -129,14 +129,14 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
     const vehicle = vehicles.find((v) => v.id === vehicleId)
     if (vehicle) {
       // Find applicable forms for this vehicle type
-      const applicableForms = forms.filter((form): form is DailyCheckForm => {
-        return Boolean(
+      const applicableForms = forms.filter((form) => {
+        return (
           form &&
-            form.id &&
-            form.name &&
-            form.vehicle_types &&
-            Array.isArray(form.vehicle_types) &&
-            form.vehicle_types.includes(vehicle.vehicle_type),
+          form.id &&
+          form.name &&
+          form.vehicle_types &&
+          Array.isArray(form.vehicle_types) &&
+          form.vehicle_types.includes(vehicle.vehicle_type)
         )
       })
       if (applicableForms.length === 1) {
@@ -441,18 +441,18 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                       const vehicle = vehicles.find((v) => v.id === selectedVehicle)
                       if (!vehicle) return null
 
-                      const applicableForms: DailyCheckForm[] = forms.filter((form): form is DailyCheckForm => {
-                        return Boolean(
+                      const applicableForms = forms.filter((form) => {
+                        return (
                           form &&
-                            form.id &&
-                            form.name &&
-                            form.vehicle_types &&
-                            Array.isArray(form.vehicle_types) &&
-                            form.vehicle_types.includes(vehicle.vehicle_type),
+                          form.id &&
+                          form.name &&
+                          form.vehicle_types &&
+                          Array.isArray(form.vehicle_types) &&
+                          form.vehicle_types.includes(vehicle.vehicle_type)
                         )
                       })
 
-                      return applicableForms.map((form) => (
+                      return applicableForms.map((form: DailyCheckForm) => (
                         <Card
                           key={form.id}
                           className={`cursor-pointer transition-all ${
