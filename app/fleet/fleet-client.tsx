@@ -33,7 +33,7 @@ import { VehicleInventoryTracker } from "@/components/vehicle-inventory-tracker"
 import { ComplianceMonitoringDashboard } from "@/components/compliance-monitoring-dashboard"
 
 interface Vehicle {
-  id?: string
+  id: string
   vehicle_number: string
   make: string
   model: string
@@ -530,7 +530,7 @@ export function FleetClient() {
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedVehicle && (
             <VehicleDetail
-              vehicleId={selectedVehicle.id!}
+              vehicleId={selectedVehicle.id}
               onEdit={() => {
                 setShowVehicleDetail(false)
                 setShowVehicleForm(true)
