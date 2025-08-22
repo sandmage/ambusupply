@@ -129,10 +129,16 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
     const vehicle = vehicles.find((v) => v.id === vehicleId)
     if (vehicle) {
       // Find applicable forms for this vehicle type
-      const applicableForms = forms.filter(
-        (form) =>
-          form.vehicle_types && Array.isArray(form.vehicle_types) && form.vehicle_types.includes(vehicle.vehicle_type),
-      )
+      const applicableForms = forms.filter((form): form is DailyCheckForm => {
+        return Boolean(
+          form &&
+            form.id &&
+            form.name &&
+            form.vehicle_types &&
+            Array.isArray(form.vehicle_types) &&
+            form.vehicle_types.includes(vehicle.vehicle_type),
+        )
+      })
       if (applicableForms.length === 1) {
         setSelectedForm(applicableForms[0])
         initializeSubmission(applicableForms[0], vehicleId)
@@ -435,19 +441,15 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                       const vehicle = vehicles.find((v) => v.id === selectedVehicle)
                       if (!vehicle) return null
 
-                      const applicableForms: DailyCheckForm[] = []
-
-                      forms.forEach((form) => {
-                        if (
+                      const applicableForms: DailyCheckForm[] = forms.filter((form): form is DailyCheckForm => {
+                        return Boolean(
                           form &&
-                          form.id &&
-                          form.name &&
-                          form.vehicle_types &&
-                          Array.isArray(form.vehicle_types) &&
-                          form.vehicle_types.includes(vehicle.vehicle_type)
-                        ) {
-                          applicableForms.push(form)
-                        }
+                            form.id &&
+                            form.name &&
+                            form.vehicle_types &&
+                            Array.isArray(form.vehicle_types) &&
+                            form.vehicle_types.includes(vehicle.vehicle_type),
+                        )
                       })
 
                       return applicableForms.map((form) => (
