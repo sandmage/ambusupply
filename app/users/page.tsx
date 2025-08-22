@@ -28,7 +28,7 @@ export default async function UsersPage() {
   let userRecordError = null
 
   try {
-    const result = await supabase.from("neon_auth.users_sync").select("*").eq("id", user.id).maybeSingle()
+    const result = await supabase.schema("neon_auth").from("users_sync").select("*").eq("id", user.id).maybeSingle()
     userRecord = result.data
     userRecordError = result.error
     console.log("[v0] Users page: User record query result:", { data: userRecord, error: userRecordError })
@@ -79,14 +79,17 @@ export default async function UsersPage() {
         raw_json: user.user_metadata || {},
       })
 
-      const insertResult = await supabase.from("neon_auth.users_sync").insert([
-        {
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.full_name || "Unknown User",
-          raw_json: user.user_metadata || {},
-        },
-      ])
+      const insertResult = await supabase
+        .schema("neon_auth")
+        .from("users_sync")
+        .insert([
+          {
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.full_name || "Unknown User",
+            raw_json: user.user_metadata || {},
+          },
+        ])
 
       console.log("[v0] User record insert result:", insertResult)
 
@@ -114,7 +117,8 @@ export default async function UsersPage() {
     console.log("[v0] Users page: Attempting to query users_sync table")
 
     const usersResult = await supabase
-      .from("neon_auth.users_sync")
+      .schema("neon_auth")
+      .from("users_sync")
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
