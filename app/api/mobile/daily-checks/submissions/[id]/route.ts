@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 // GET /api/mobile/daily-checks/submissions/[id] - Get specific submission details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { id } = await params
 
     // Verify authentication
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 // PUT /api/mobile/daily-checks/submissions/[id] - Update submission (for offline sync)
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { id } = await params
 
     // Verify authentication
