@@ -138,35 +138,88 @@
     letter-spacing: -0.025em;
   }
 
-  /* Enhanced Apple-style button system with proper variants */
+  /* Rewritten apple-button classes to avoid CSS parsing issues by separating complex transforms and focus states */
   .apple-button {
-    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium;
+    @apply transition-all duration-200;
+    @apply focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+  }
+
+  .apple-button:hover {
+    @apply shadow-lg;
+    transform: scale(1.02);
+  }
+
+  .apple-button:active {
+    transform: scale(0.98);
   }
 
   .apple-button-primary {
-    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium;
+    @apply transition-all duration-200;
+    @apply focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+  }
+
+  .apple-button-primary:hover {
+    @apply shadow-lg;
+    transform: scale(1.02);
+  }
+
+  .apple-button-primary:active {
+    transform: scale(0.98);
   }
 
   .apple-button-secondary {
-    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2.5 font-medium;
+    @apply transition-all duration-200;
+    @apply focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+  }
+
+  .apple-button-secondary:hover {
+    @apply shadow-lg;
+    transform: scale(1.02);
+  }
+
+  .apple-button-secondary:active {
+    transform: scale(0.98);
   }
 
   .apple-button-outline {
-    @apply border border-border bg-background text-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:bg-accent hover:text-accent-foreground hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    @apply border border-border bg-background text-foreground rounded-lg px-4 py-2.5 font-medium;
+    @apply transition-all duration-200;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+  }
+
+  .apple-button-outline:hover {
+    @apply shadow-lg;
+    transform: scale(1.02);
+  }
+
+  .apple-button-outline:active {
+    transform: scale(0.98);
   }
 
   /* Added missing apple-input class */
   .apple-input {
-    @apply bg-input text-foreground border border-border rounded-lg px-3 py-2.5 transition-all duration-200 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary focus:outline-none placeholder:text-muted-foreground;
+    @apply bg-input text-foreground border border-border rounded-lg px-3 py-2.5;
+    @apply transition-all duration-200;
+    @apply focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary focus:outline-none;
+    @apply placeholder:text-muted-foreground;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   .apple-card {
-    @apply bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 ease-out;
+    @apply bg-card text-card-foreground rounded-xl border border-border shadow-sm;
+    @apply hover:shadow-md transition-all duration-200 ease-out;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
@@ -177,22 +230,48 @@
     -webkit-backdrop-filter: blur(20px);
   }
 
-  /* Updated utility classes to match Apple design system */
+  /* Updated utility classes with separated hover/active states */
   .hierarchy-heading {
     @apply text-primary font-sans font-semibold tracking-tight;
     letter-spacing: -0.025em;
   }
   .hierarchy-card {
-    @apply bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ease-out;
+    @apply bg-card border border-border rounded-lg shadow-sm;
+    @apply hover:shadow-md transition-all duration-200 ease-out;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
   .hierarchy-button {
-    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium;
+    @apply transition-all duration-200;
+    @apply focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
   }
+
+  .hierarchy-button:hover {
+    @apply shadow-lg;
+    transform: scale(1.02);
+  }
+
+  .hierarchy-button:active {
+    transform: scale(0.98);
+  }
+
   .hierarchy-button-secondary {
-    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2.5 font-medium;
+    @apply transition-all duration-200;
+    @apply focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+  }
+
+  .hierarchy-button-secondary:hover {
+    @apply shadow-lg;
+    transform: scale(1.02);
+  }
+
+  .hierarchy-button-secondary:active {
+    transform: scale(0.98);
   }
 
   /* Enhanced allocation indicators with Apple-style design */
