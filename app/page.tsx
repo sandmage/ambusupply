@@ -1,9 +1,44 @@
+"use client"
+
+import { useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Package, MapPin, Truck, Users, Shield, Clock, BarChart3, CheckCircle } from "lucide-react"
 
 export default function HomePage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Check for authentication parameters from Supabase callbacks
+    const code = searchParams.get("code")
+    const accessToken = searchParams.get("access_token")
+    const refreshToken = searchParams.get("refresh_token")
+    const error = searchParams.get("error")
+    const errorCode = searchParams.get("error_code")
+
+    // If we have auth parameters, redirect to the appropriate auth page
+    if (code || accessToken || refreshToken || error || errorCode) {
+      const params = new URLSearchParams()
+
+      // Preserve all auth-related parameters
+      if (code) params.set("code", code)
+      if (accessToken) params.set("access_token", accessToken)
+      if (refreshToken) params.set("refresh_token", refreshToken)
+      if (error) params.set("error", error)
+      if (errorCode) params.set("error_code", errorCode)
+
+      // Add any other parameters that might be present
+      const errorDescription = searchParams.get("error_description")
+      if (errorDescription) params.set("error_description", errorDescription)
+
+      // Redirect to reset password page with all parameters
+      router.replace(`/auth/reset-password?${params.toString()}`)
+    }
+  }, [router, searchParams])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-muted">
       {/* Header */}
