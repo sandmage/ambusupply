@@ -20,7 +20,7 @@ interface StorageUnitType {
   name: string
   description?: string // Made description optional to match locations-client interface
   capacity_type: string
-  default_capacity: number
+  default_capacity?: number // Made default_capacity optional to match locations-client interface
 }
 
 interface StorageUnitTypeFormProps {
@@ -34,7 +34,7 @@ export function StorageUnitTypeForm({ storageType, isOpen, onClose, onSave }: St
   const [name, setName] = useState(storageType?.name || "")
   const [description, setDescription] = useState(storageType?.description || "")
   const [capacityType, setCapacityType] = useState(storageType?.capacity_type || "count")
-  const [defaultCapacity, setDefaultCapacity] = useState(storageType?.default_capacity?.toString() || "0")
+  const [defaultCapacity, setDefaultCapacity] = useState(storageType?.default_capacity?.toString() || "")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,7 +51,7 @@ export function StorageUnitTypeForm({ storageType, isOpen, onClose, onSave }: St
         name: name.trim(),
         description: description.trim() || undefined, // Handle optional description
         capacity_type: capacityType,
-        default_capacity: Number.parseInt(defaultCapacity) || 0,
+        default_capacity: defaultCapacity ? Number.parseInt(defaultCapacity) : undefined,
       }
       console.log("[v0] Prepared storage type data for save:", storageTypeData)
 
@@ -71,7 +71,7 @@ export function StorageUnitTypeForm({ storageType, isOpen, onClose, onSave }: St
     setName(storageType?.name || "")
     setDescription(storageType?.description || "")
     setCapacityType(storageType?.capacity_type || "count")
-    setDefaultCapacity(storageType?.default_capacity?.toString() || "0")
+    setDefaultCapacity(storageType?.default_capacity?.toString() || "")
     setError(null)
   }
 
@@ -128,7 +128,6 @@ export function StorageUnitTypeForm({ storageType, isOpen, onClose, onSave }: St
                 value={defaultCapacity}
                 onChange={(e) => setDefaultCapacity(e.target.value)}
                 min="0"
-                required
               />
               <p className="text-xs text-muted-foreground">Default capacity for new storage units of this type</p>
             </div>
