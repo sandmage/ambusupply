@@ -222,10 +222,6 @@ export function FleetClient() {
           <h1 className="text-3xl font-serif font-bold text-primary">Fleet Management</h1>
           <p className="text-muted-foreground mt-1">Manage vehicles and maintenance schedules</p>
         </div>
-        <Button onClick={() => setShowVehicleForm(true)} className="apple-button">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Vehicle
-        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -283,6 +279,17 @@ export function FleetClient() {
 
         <TabsContent value="vehicles" className="space-y-6">
           {/* Filters */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-serif font-bold">Vehicle Fleet</h2>
+              <p className="text-muted-foreground">Manage your vehicle inventory</p>
+            </div>
+            <Button onClick={() => setShowVehicleForm(true)} className="apple-button">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Vehicle
+            </Button>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
