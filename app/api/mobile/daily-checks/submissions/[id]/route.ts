@@ -2,9 +2,10 @@ import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 
 // GET /api/mobile/daily-checks/submissions/[id] - Get specific submission details
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = createClient()
+    const { id } = await params
 
     // Verify authentication
     const {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         vehicle:vehicles(vehicle_number, make, model, vehicle_type),
         issues:daily_check_issues(*)
       `)
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("submitted_by", session.user.id) // Ensure user can only access their own submissions
       .single()
 
@@ -42,9 +43,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/mobile/daily-checks/submissions/[id] - Update submission (for offline sync)
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = createClient()
+    const { id } = await params
 
     // Verify authentication
     const {
@@ -77,7 +79,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         ...filteredData,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("submitted_by", session.user.id)
       .select()
       .single()
