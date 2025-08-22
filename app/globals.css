@@ -1,9 +1,10 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to healthcare-focused design tokens from design brief */
+  /* Updated to Apple-inspired design tokens from design brief */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -40,7 +41,7 @@
 }
 
 .dark {
-  /* Updated dark mode colors for healthcare theme */
+  /* Updated dark mode colors for Apple-inspired theme */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
@@ -121,6 +122,10 @@
   body {
     @apply bg-background text-foreground font-sans;
     transition: background-color 0.2s ease, color 0.2s ease;
+    /* Added Apple-style smooth scrolling and font smoothing */
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1,
   h2,
@@ -128,46 +133,72 @@
   h4,
   h5,
   h6 {
-    /* Reverted headings to use Manrope for Apple aesthetic */
-    @apply font-serif font-semibold tracking-tight;
+    /* Updated to use system font stack for Apple aesthetic */
+    @apply font-sans font-semibold tracking-tight;
+    letter-spacing: -0.025em;
   }
 
-  /* Added missing apple-button and apple-card classes that were referenced throughout the app */
+  /* Enhanced Apple-style button system with proper variants */
   .apple-button {
-    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2 font-medium transition-all duration-200 hover:shadow-md hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
+    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .apple-button-primary {
+    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   .apple-button-secondary {
-    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2 font-medium transition-all duration-200 hover:shadow-md hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
+    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   .apple-button-outline {
-    @apply border border-border bg-background text-foreground rounded-lg px-4 py-2 font-medium transition-all duration-200 hover:bg-accent hover:text-accent-foreground hover:shadow-md hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
+    @apply border border-border bg-background text-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:bg-accent hover:text-accent-foreground hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  /* Added missing apple-input class */
+  .apple-input {
+    @apply bg-input text-foreground border border-border rounded-lg px-3 py-2.5 transition-all duration-200 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary focus:outline-none placeholder:text-muted-foreground;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   .apple-card {
     @apply bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 ease-out;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 
   .apple-glass {
-    @apply bg-card/80 backdrop-blur-sm text-card-foreground rounded-xl border border-border/50 shadow-lg;
+    @apply bg-card/80 backdrop-blur-xl text-card-foreground rounded-xl border border-border/50 shadow-lg;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
 
-  /* Kept useful utility classes but updated colors to match Apple theme */
+  /* Updated utility classes to match Apple design system */
   .hierarchy-heading {
-    @apply text-primary font-serif font-semibold tracking-tight;
+    @apply text-primary font-sans font-semibold tracking-tight;
+    letter-spacing: -0.025em;
   }
   .hierarchy-card {
     @apply bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ease-out;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
   .hierarchy-button {
-    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2 font-medium transition-all duration-200 hover:shadow-md hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
+    @apply bg-primary text-primary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
   .hierarchy-button-secondary {
-    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2 font-medium transition-all duration-200 hover:shadow-md hover:scale-105 active:scale-95 focus:ring-2 focus:ring-ring;
+    @apply bg-secondary text-secondary-foreground rounded-lg px-4 py-2.5 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
+
+  /* Enhanced allocation indicators with Apple-style design */
   .allocation-indicator {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
   .allocation-full {
     @apply bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
