@@ -15,6 +15,8 @@ interface Invitation {
   role: string
   created_at: string
   expires_at: string
+  invitation_token: string
+  organization_id: string
   organizations: {
     id: string
     name: string
@@ -35,32 +37,70 @@ export function InviteAcceptClient({ invitation, user }: InviteAcceptClientProps
 
   const handleAcceptInvitation = async () => {
     if (!user) {
-      // Redirect to signup with invitation token
-      router.push(`/auth/sign-up?invite=${invitation.id}`)
+      router.push(`/auth/sign-up?invite=${invitation.invitation_token}`)
       return
     }
 
     setIsAccepting(true)
     try {
-      // Call the accept_invitation function
-      const { data, error } = await supabase.rpc("accept_invitation", {
-        p_invitation_token: invitation.id,
-        p_user_id: user.id,
-      })
+      // First, update the invitation as accepted
+      const { error: invitationError } = await supabase
+        .from("invitations")
+        .update({
+          accepted_at: new Date().toISOString(),
+          accepted_by: user.id,
+        })
+        .eq("invitation_token", invitation.invitation_token)
 
-      if (error) throw error
+      if (invitationError) throw invitationError
 
-      if (data) {
-        setIsAccepted(true)
-        toast.success("Welcome to the organization!")
+      // Check if user profile exists
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single()
 
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          router.push("/dashboard")
-        }, 2000)
-      } else {
-        throw new Error("Failed to accept invitation")
+      if (profileCheckError && profileCheckError.code !== "PGRST116") {
+        throw profileCheckError
       }
+
+      if (existingProfile) {
+        // Update existing profile with organization
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({
+            organization_id: invitation.organization_id,
+            role: invitation.role,
+            invitation_accepted_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id)
+
+        if (updateError) throw updateError
+      } else {
+        // Create new profile
+        const { error: createError } = await supabase.from("profiles").insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email,
+          organization_id: invitation.organization_id,
+          role: invitation.role,
+          setup_completed: true,
+          invited_at: invitation.created_at,
+          invitation_accepted_at: new Date().toISOString(),
+        })
+
+        if (createError) throw createError
+      }
+
+      setIsAccepted(true)
+      toast.success("Welcome to the organization!")
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 2000)
     } catch (error: any) {
       console.error("Error accepting invitation:", error)
       toast.error("Failed to accept invitation. Please try again.")
@@ -161,7 +201,7 @@ export function InviteAcceptClient({ invitation, user }: InviteAcceptClientProps
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{" "}
                   <a
-                    href={`/auth/login?invite=${invitation.id}`}
+                    href={`/auth/login?invite=${invitation.invitation_token}`}
                     className="text-primary hover:text-primary/80 font-medium"
                   >
                     Sign in instead
