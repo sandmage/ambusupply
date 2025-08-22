@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
 import { InventoryClient } from "./inventory-client"
 import { AppLayout } from "@/components/app-layout"
+import type { UserProfile } from "@/types/user-profile" // Assuming UserProfile type is defined here
 
 export default async function InventoryPage() {
   console.log("[v0] [SERVER] Starting inventory page render...")
@@ -48,15 +49,8 @@ export default async function InventoryPage() {
       console.error("[v0] [SERVER] Profile query failed:", profileError)
     }
 
-    const userProfile = profile || {
-      id: user.id,
-      email: user.email,
-      full_name: user.user_metadata?.full_name || user.email,
-      role: user.user_metadata?.role || "staff",
-    }
-
-    let inventoryItems = []
-    let locations = []
+    let inventoryItems: any[] = []
+    let locations: any[] = []
 
     try {
       console.log("[v0] [SERVER] Fetching inventory items...")
@@ -162,6 +156,13 @@ export default async function InventoryPage() {
       })) || []
 
     console.log("[v0] [SERVER] All queries completed successfully, rendering page...")
+
+    const userProfile: UserProfile = profile || {
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name || user.email,
+      role: user.user_metadata?.role || "staff",
+    }
 
     return (
       <AppLayout user={userProfile} stats={{ belowParCount, expiringCount }}>
