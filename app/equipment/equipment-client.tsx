@@ -374,10 +374,12 @@ export function EquipmentClient({
                 Create Assignment
               </Button>
             )}
-            <Button onClick={() => setIsEquipmentFormOpen(true)} className="apple-button">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Equipment
-            </Button>
+            {activeTab === "equipment" && (
+              <Button onClick={() => setIsEquipmentFormOpen(true)} className="apple-button">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Equipment
+              </Button>
+            )}
           </div>
         )}
       </div>
