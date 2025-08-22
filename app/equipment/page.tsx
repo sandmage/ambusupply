@@ -121,8 +121,8 @@ export default async function EquipmentPage() {
       <AppLayout
         user={userProfile}
         stats={{
-          alertCount: maintenanceCount + outOfServiceCount,
-          totalCount: totalEquipment,
+          belowParCount: maintenanceCount,
+          expiringCount: outOfServiceCount,
         }}
       >
         <EquipmentClient
