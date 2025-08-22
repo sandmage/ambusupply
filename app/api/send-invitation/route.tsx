@@ -112,13 +112,13 @@ export async function POST(request: NextRequest) {
       // Use request origin but ensure it's the production domain
       const origin = request.nextUrl.origin
 
-      // If we're in production and the origin looks like a Vercel deployment URL, use it
-      if (origin.includes("vercel.app") || origin.includes("ambusupply")) {
+      // If we're in production and the origin looks like a production domain, use it
+      if (origin.includes("ambusupply.com")) {
         return origin
       }
 
       // Fallback to the known production domain
-      return "https://v0-ambu-sup-v2-git-ambusupply-v2-labs-vercel.app"
+      return "https://ambusupply.com"
     }
 
     const inviteUrl = `${getBaseUrl()}/invite/${invitation.invitation_token}`
