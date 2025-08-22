@@ -41,10 +41,11 @@ export default function ResetPasswordPage() {
       return
     }
 
+    const code = searchParams.get("code")
     const accessToken = searchParams.get("access_token")
     const refreshToken = searchParams.get("refresh_token")
 
-    if (!accessToken || !refreshToken) {
+    if (!code && (!accessToken || !refreshToken)) {
       setIsExpired(true)
       setError("Invalid or expired reset link. Please request a new password reset.")
     }
@@ -69,6 +70,16 @@ export default function ResetPasswordPage() {
 
     try {
       const supabase = createClient()
+
+      const code = searchParams.get("code")
+
+      if (code) {
+        const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
+
+        if (sessionError) {
+          throw new Error("Invalid or expired reset link. Please request a new one.")
+        }
+      }
 
       const { error } = await supabase.auth.updateUser({
         password: password,
