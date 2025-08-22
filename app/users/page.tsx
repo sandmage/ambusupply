@@ -2,6 +2,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { UsersClient } from "./users-client"
 import { AppLayout } from "@/components/app-layout"
+import { crypto } from "crypto"
 
 interface UserProfile {
   id: string
@@ -55,7 +56,7 @@ export default async function UsersPage() {
       record: userRecord,
     })
 
-    const organizationId = userRecord?.organization_id || "default-org-001"
+    const organizationId = userRecord?.organization_id || crypto.randomUUID()
 
     // Create user profile object
     userProfile = {
@@ -95,7 +96,6 @@ export default async function UsersPage() {
     }
   } catch (error) {
     console.error("[v0] Users page: Error managing user record:", error)
-    // Fallback user profile
     userProfile = {
       id: user.id,
       email: user.email || "",
@@ -103,7 +103,7 @@ export default async function UsersPage() {
       role: "admin",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      organization_id: "default-org-001", // Ensure fallback has organization_id
+      organization_id: crypto.randomUUID(), // Generate proper UUID
     }
     console.log("[v0] Users page: Using fallback user profile:", userProfile)
   }
