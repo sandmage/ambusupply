@@ -129,7 +129,10 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
     const vehicle = vehicles.find((v) => v.id === vehicleId)
     if (vehicle) {
       // Find applicable forms for this vehicle type
-      const applicableForms = forms.filter((form) => form.vehicle_types.includes(vehicle.vehicle_type))
+      const applicableForms = forms.filter(
+        (form) =>
+          form.vehicle_types && Array.isArray(form.vehicle_types) && form.vehicle_types.includes(vehicle.vehicle_type),
+      )
       if (applicableForms.length === 1) {
         setSelectedForm(applicableForms[0])
         initializeSubmission(applicableForms[0], vehicleId)
@@ -431,7 +434,12 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                     {forms
                       .filter((form) => {
                         const vehicle = vehicles.find((v) => v.id === selectedVehicle)
-                        return vehicle && form.vehicle_types.includes(vehicle.vehicle_type)
+                        return (
+                          vehicle &&
+                          form.vehicle_types &&
+                          Array.isArray(form.vehicle_types) &&
+                          form.vehicle_types.includes(vehicle.vehicle_type)
+                        )
                       })
                       .map((form) => (
                         <Card
@@ -446,7 +454,7 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                         >
                           <CardContent className="p-4">
                             <h4 className="font-medium">{form.name}</h4>
-                            <p className="text-sm text-muted-foreground">{form.checklist_items.length} items</p>
+                            <p className="text-sm text-muted-foreground">{form.checklist_items?.length || 0} items</p>
                           </CardContent>
                         </Card>
                       ))}
