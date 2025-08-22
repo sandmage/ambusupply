@@ -116,3 +116,85 @@ export interface UserProfile {
   created_at: string
   updated_at?: string
 }
+
+// Equipment-related type definitions
+export interface EquipmentType {
+  id: string
+  name: string
+  manufacturer?: string
+  model?: string
+  description?: string
+  category?: string
+  created_at: string
+}
+
+export interface Equipment {
+  id: string
+  equipment_type_id: string
+  serial_number: string
+  asset_tag?: string
+  status: "in_service" | "out_of_service" | "maintenance" | "retired"
+  purchase_date?: string
+  purchase_cost?: number
+  warranty_expiration?: string
+  location_id?: string
+  assigned_vehicle_id?: string
+  notes?: string
+  last_maintenance?: string
+  next_maintenance?: string
+  created_at: string
+  updated_at?: string
+  equipment_types?: EquipmentType
+}
+
+export interface EquipmentMaintenance {
+  id: string
+  equipment_id: string
+  maintenance_type: "routine" | "repair" | "inspection" | "calibration" | "emergency"
+  description: string
+  scheduled_date?: string
+  completed_date?: string
+  cost?: number
+  service_provider?: string
+  parts_replaced?: string[]
+  next_service_due?: string
+  maintenance_notes?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface VehicleStorageUnit {
+  id: string
+  vehicle_id: string
+  name: string
+  unit_type: "cabinet" | "bag" | "kit" | "compartment" | "equipment"
+  description?: string
+  position_info?: any
+  created_at: string
+}
+
+export interface VehicleStorageLocation {
+  id: string
+  storage_unit_id: string
+  name: string
+  location_type: "pocket" | "shelf" | "module" | "compartment" | "section"
+  position_order?: number
+  description?: string
+  created_at: string
+}
+
+export interface VehicleInventoryItem {
+  id: string
+  vehicle_id: string
+  inventory_item_id: string
+  storage_unit_id?: string
+  storage_location_id?: string
+  current_quantity: number
+  par_level_min: number
+  par_level_max?: number
+  expiration_date?: string
+  lot_number?: string
+  notes?: string
+  created_at: string
+  updated_at?: string
+}

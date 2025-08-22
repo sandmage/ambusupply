@@ -100,10 +100,7 @@ export function EquipmentMaintenanceForm({
           : null,
         next_service_due: formData.next_service_due || null,
         maintenance_notes: formData.maintenance_notes || null,
-      }
-
-      if (editingMaintenance) {
-        maintenanceData.id = editingMaintenance.id
+        ...(editingMaintenance && { id: editingMaintenance.id }),
       }
 
       await onSave(maintenanceData)
