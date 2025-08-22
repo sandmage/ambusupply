@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
   --background: oklch(1 0 0);
@@ -117,4 +118,77 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Added Apple-inspired component styles with professional cyan-amber color scheme */
+.apple-card {
+  @apply bg-card border border-border rounded-xl shadow-sm;
+  transition: all 0.2s ease-in-out;
+}
+
+.apple-card:hover {
+  @apply shadow-md;
+  transform: translateY(-1px);
+}
+
+.apple-button {
+  @apply bg-primary text-primary-foreground rounded-xl px-4 py-2 font-medium;
+  transition: all 0.2s ease-in-out;
+}
+
+.apple-button:hover {
+  transform: scale(1.02);
+}
+
+.apple-button:active {
+  transform: scale(0.98);
+}
+
+.apple-button:focus {
+  @apply ring-2 ring-ring ring-offset-2;
+}
+
+.apple-button-secondary {
+  @apply bg-secondary text-secondary-foreground rounded-xl px-4 py-2 font-medium;
+  transition: all 0.2s ease-in-out;
+}
+
+.apple-button-secondary:hover {
+  transform: scale(1.02);
+}
+
+.apple-button-secondary:active {
+  transform: scale(0.98);
+}
+
+.apple-input {
+  @apply bg-input border border-border rounded-xl px-3 py-2;
+  transition: all 0.2s ease-in-out;
+}
+
+.apple-input:focus {
+  @apply ring-2 ring-ring ring-offset-1 border-primary;
+}
+
+.form-builder-item {
+  @apply bg-card border border-border rounded-lg p-4 cursor-move;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-builder-item:hover {
+  @apply shadow-md border-primary/50;
+  transform: translateY(-1px);
+}
+
+.form-builder-item.dragging {
+  @apply opacity-50 rotate-2;
+}
+
+.drop-zone {
+  @apply border-2 border-dashed border-muted-foreground/30 rounded-lg p-4;
+  transition: all 0.2s ease-in-out;
+}
+
+.drop-zone.active {
+  @apply border-primary bg-primary/5;
 }

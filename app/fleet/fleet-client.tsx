@@ -31,6 +31,9 @@ import { VehicleInventoryManager } from "@/components/vehicle-inventory-manager"
 import { VehicleParLevelManager } from "@/components/vehicle-par-level-manager"
 import { VehicleInventoryTracker } from "@/components/vehicle-inventory-tracker"
 import { ComplianceMonitoringDashboard } from "@/components/compliance-monitoring-dashboard"
+import { DailyCheckFormBuilder } from "@/components/daily-check-form-builder"
+import { DailyCheckSubmission } from "@/components/daily-check-submission"
+import { DailyCheckAdminDashboard } from "@/components/daily-check-admin-dashboard"
 
 interface Vehicle {
   id: string
@@ -420,90 +423,126 @@ export function FleetClient() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="apple-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Upcoming Maintenance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {maintenanceRecords
-                    .filter((record) => !record.completed_date)
-                    .slice(0, 5)
-                    .map((record) => (
-                      <div key={record.id} className="flex items-center justify-between p-3 border rounded-xl">
-                        <div className="flex items-center space-x-3">
-                          <Wrench className="h-4 w-4 text-accent" />
-                          <div>
-                            <p className="text-sm font-medium">{record.vehicle?.vehicle_number}</p>
-                            <p className="text-xs text-muted-foreground">{record.description}</p>
-                          </div>
-                        </div>
-                        <Badge variant="default" className="text-xs rounded-lg">
-                          {new Date(record.scheduled_date).toLocaleDateString()}
-                        </Badge>
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
+          <Tabs defaultValue="overview" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-5 rounded-2xl">
+              <TabsTrigger value="overview" className="rounded-xl">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="daily-checks" className="rounded-xl">
+                Daily Checks
+              </TabsTrigger>
+              <TabsTrigger value="form-builder" className="rounded-xl">
+                Form Builder
+              </TabsTrigger>
+              <TabsTrigger value="admin-review" className="rounded-xl">
+                Admin Review
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="rounded-xl">
+                Calendar
+              </TabsTrigger>
+            </TabsList>
 
-            <Card className="apple-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Overdue Maintenance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {maintenanceRecords
-                    .filter((record) => !record.completed_date && new Date(record.scheduled_date) < new Date())
-                    .slice(0, 5)
-                    .map((record) => (
-                      <div key={record.id} className="flex items-center justify-between p-3 border rounded-xl">
-                        <div className="flex items-center space-x-3">
-                          <AlertTriangle className="h-4 w-4 text-destructive" />
-                          <div>
-                            <p className="text-sm font-medium">{record.vehicle?.vehicle_number}</p>
-                            <p className="text-xs text-muted-foreground">{record.description}</p>
+            <TabsContent value="overview">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="apple-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Upcoming Maintenance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {maintenanceRecords
+                        .filter((record) => !record.completed_date)
+                        .slice(0, 5)
+                        .map((record) => (
+                          <div key={record.id} className="flex items-center justify-between p-3 border rounded-xl">
+                            <div className="flex items-center space-x-3">
+                              <Wrench className="h-4 w-4 text-accent" />
+                              <div>
+                                <p className="text-sm font-medium">{record.vehicle?.vehicle_number}</p>
+                                <p className="text-xs text-muted-foreground">{record.description}</p>
+                              </div>
+                            </div>
+                            <Badge variant="default" className="text-xs rounded-lg">
+                              {new Date(record.scheduled_date).toLocaleDateString()}
+                            </Badge>
                           </div>
-                        </div>
-                        <Badge variant="destructive" className="text-xs rounded-lg">
-                          Overdue
-                        </Badge>
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="apple-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Recent Completions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {maintenanceRecords
-                    .filter((record) => record.completed_date)
-                    .slice(0, 5)
-                    .map((record) => (
-                      <div key={record.id} className="flex items-center justify-between p-3 border rounded-xl">
-                        <div className="flex items-center space-x-3">
-                          <CheckCircle className="h-4 w-4 text-secondary" />
-                          <div>
-                            <p className="text-sm font-medium">{record.vehicle?.vehicle_number}</p>
-                            <p className="text-xs text-muted-foreground">{record.description}</p>
+                <Card className="apple-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Overdue Maintenance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {maintenanceRecords
+                        .filter((record) => !record.completed_date && new Date(record.scheduled_date) < new Date())
+                        .slice(0, 5)
+                        .map((record) => (
+                          <div key={record.id} className="flex items-center justify-between p-3 border rounded-xl">
+                            <div className="flex items-center space-x-3">
+                              <AlertTriangle className="h-4 w-4 text-destructive" />
+                              <div>
+                                <p className="text-sm font-medium">{record.vehicle?.vehicle_number}</p>
+                                <p className="text-xs text-muted-foreground">{record.description}</p>
+                              </div>
+                            </div>
+                            <Badge variant="destructive" className="text-xs rounded-lg">
+                              Overdue
+                            </Badge>
                           </div>
-                        </div>
-                        <Badge variant="secondary" className="text-xs rounded-lg">
-                          {record.completed_date ? new Date(record.completed_date).toLocaleDateString() : "N/A"}
-                        </Badge>
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-          <MaintenanceCalendar onSelectMaintenance={handleSelectMaintenance} />
+                <Card className="apple-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Recent Completions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {maintenanceRecords
+                        .filter((record) => record.completed_date)
+                        .slice(0, 5)
+                        .map((record) => (
+                          <div key={record.id} className="flex items-center justify-between p-3 border rounded-xl">
+                            <div className="flex items-center space-x-3">
+                              <CheckCircle className="h-4 w-4 text-secondary" />
+                              <div>
+                                <p className="text-sm font-medium">{record.vehicle?.vehicle_number}</p>
+                                <p className="text-xs text-muted-foreground">{record.description}</p>
+                              </div>
+                            </div>
+                            <Badge variant="secondary" className="text-xs rounded-lg">
+                              {record.completed_date ? new Date(record.completed_date).toLocaleDateString() : "N/A"}
+                            </Badge>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="daily-checks">
+              <DailyCheckSubmission vehicles={vehicles} />
+            </TabsContent>
+
+            <TabsContent value="form-builder">
+              <DailyCheckFormBuilder />
+            </TabsContent>
+
+            <TabsContent value="admin-review">
+              <DailyCheckAdminDashboard />
+            </TabsContent>
+
+            <TabsContent value="calendar">
+              <MaintenanceCalendar onSelectMaintenance={handleSelectMaintenance} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
