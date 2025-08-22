@@ -17,14 +17,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user profile to check permissions
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
+    const { data: userProfile, error: profileError } = await supabase
+      .from("users")
       .select("*")
       .eq("id", user.id)
       .single()
 
-    if (profileError || !profile || profile.role !== "admin") {
+    if (profileError || !userProfile || userProfile.role !== "admin") {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
     }
 
