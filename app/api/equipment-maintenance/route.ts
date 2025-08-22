@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log("[v0] [API] Fetching equipment maintenance records...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] [API] Creating maintenance record...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {
@@ -141,7 +141,7 @@ export async function PUT(request: NextRequest) {
   try {
     console.log("[v0] [API] Updating maintenance record...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {

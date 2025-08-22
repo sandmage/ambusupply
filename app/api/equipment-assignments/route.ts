@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log("[v0] [API] Fetching equipment assignments...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] [API] Creating equipment assignment...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {
@@ -159,7 +159,7 @@ export async function PUT(request: NextRequest) {
   try {
     console.log("[v0] [API] Updating equipment assignment...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {
@@ -239,7 +239,7 @@ export async function DELETE(request: NextRequest) {
   try {
     console.log("[v0] [API] Unassigning equipment...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {
