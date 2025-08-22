@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 import { AppLayout } from "@/components/app-layout"
 import { FleetClient } from "./fleet-client"
 
+export const dynamic = "force-dynamic"
+
 export default async function FleetPage() {
   try {
     console.log("[v0] Fleet: Starting server-side rendering")

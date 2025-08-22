@@ -3,6 +3,8 @@ import { createServerClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
 import { EquipmentClient } from "./equipment-client"
 
+export const dynamic = "force-dynamic"
+
 export default async function EquipmentPage() {
   console.log("[v0] [SERVER] Starting equipment page render...")
 

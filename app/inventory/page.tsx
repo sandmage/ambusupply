@@ -4,6 +4,8 @@ import { InventoryClient } from "./inventory-client"
 import { AppLayout } from "@/components/app-layout"
 import type { UserProfile } from "@/types/user-profile" // Assuming UserProfile type is defined here
 
+export const dynamic = "force-dynamic"
+
 export default async function InventoryPage() {
   console.log("[v0] [SERVER] Starting inventory page render...")
 

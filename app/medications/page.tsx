@@ -3,6 +3,8 @@ import { createServerClient } from "@/lib/supabase/server"
 import { MedicationsClient } from "./medications-client"
 import { AppLayout } from "@/components/app-layout"
 
+export const dynamic = "force-dynamic"
+
 export default async function MedicationsPage() {
   console.log("[v0] [SERVER] Starting medications page render...")
 
