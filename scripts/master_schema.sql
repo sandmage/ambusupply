@@ -703,10 +703,10 @@ END $$;
 INSERT INTO public.vehicle_storage_units (vehicle_id, name, unit_type, description, position_info) 
 SELECT 
   v.id,
-  storage_unit.name,
-  storage_unit.unit_type::text,
-  storage_unit.description,
-  storage_unit.position_info::jsonb
+  storage_data.name,
+  storage_data.unit_type::text,
+  storage_data.description,
+  storage_data.position_info::jsonb
 FROM public.vehicles v
 CROSS JOIN (VALUES
   ('ALS Bag', 'bag', 'Advanced Life Support medication and equipment bag', '{"location": "main_compartment", "side": "left"}'),
@@ -718,8 +718,8 @@ CROSS JOIN (VALUES
   ('Cabinet 4', 'cabinet', 'Lower right cabinet', '{"bay": "patient_compartment", "side": "right", "level": "lower"}'),
   ('Trauma Kit', 'kit', 'Trauma supplies and bandaging materials', '{"location": "main_compartment", "accessibility": "quick_access"}'),
   ('Drug Box', 'compartment', 'Secured medication compartment', '{"location": "main_compartment", "security": "locked"}'),
-  ('O2 Compartment', 'compartment', 'Oxygen tank and delivery equipment', '{"location": "main_compartment", "side": "rear"}'
-) AS storage_unit(name, unit_type, description, position_info)
+  ('O2 Compartment', 'compartment', 'Oxygen tank and delivery equipment', '{"location": "main_compartment", "side": "rear"}')
+) AS storage_data(name, unit_type, description, position_info)
 WHERE v.vehicle_type = 'ambulance'
 ON CONFLICT DO NOTHING;
 
