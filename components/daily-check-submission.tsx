@@ -437,27 +437,18 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                 <div className="space-y-2">
                   <Label>Select Check Form</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {(() => {
-                      const vehicle = vehicles.find((v) => v.id === selectedVehicle)
-                      if (!vehicle) return null
-
-                      const applicableForms = forms.filter((form) => {
-                        return (
-                          form &&
-                          form.id &&
-                          form.name &&
-                          form.vehicle_types &&
-                          Array.isArray(form.vehicle_types) &&
-                          form.vehicle_types.includes(vehicle.vehicle_type)
-                        )
+                    {forms
+                      .filter((form) => {
+                        const vehicle = vehicles.find((v) => v.id === selectedVehicle)
+                        if (!vehicle || !form?.vehicle_types || !Array.isArray(form.vehicle_types)) {
+                          return false
+                        }
+                        return form.vehicle_types.includes(vehicle.vehicle_type)
                       })
-
-                      return applicableForms.map((form: DailyCheckForm) => (
+                      .map((form) => (
                         <Card
                           key={form.id}
-                          className={`cursor-pointer transition-all ${
-                            selectedForm?.id === form.id ? "border-primary bg-primary/5" : "hover:border-primary/50"
-                          }`}
+                          className={`cursor-pointer transition-all hover:border-primary/50`}
                           onClick={() => {
                             setSelectedForm(form)
                             initializeSubmission(form, selectedVehicle)
@@ -468,8 +459,7 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                             <p className="text-sm text-muted-foreground">{form.checklist_items?.length || 0} items</p>
                           </CardContent>
                         </Card>
-                      ))
-                    })()}
+                      ))}
                   </div>
                 </div>
               )}
