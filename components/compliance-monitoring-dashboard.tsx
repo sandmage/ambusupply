@@ -129,7 +129,7 @@ export function ComplianceMonitoringDashboard() {
 
       // Process compliance data
       const processedCompliance =
-        complianceData?.map((item) => {
+        complianceData?.map((item: any) => {
           let complianceStatus: ComplianceItem["compliance_status"] = "compliant"
           let daysUntilExpiration: number | undefined
 
@@ -158,9 +158,7 @@ export function ComplianceMonitoringDashboard() {
           return {
             id: item.id,
             vehicle_id: item.vehicle_id,
-            vehicle_number: Array.isArray(item.vehicles)
-              ? item.vehicles[0]?.vehicle_number
-              : item.vehicles?.vehicle_number,
+            vehicle_number: item.vehicles?.vehicle_number || "Unknown",
             inventory_item_id: item.inventory_item.id,
             inventory_item_name: item.inventory_item.name,
             inventory_item_category: item.inventory_item.category || "Uncategorized",
