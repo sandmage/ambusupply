@@ -55,6 +55,32 @@ export default async function UsersPage() {
       record: userRecord,
     })
 
+    let organizationId = userRecord?.organization_id
+
+    if (!organizationId) {
+      console.log("[v0] Users page: User has no organization, creating default organization")
+
+      // Create a default organization for the user
+      const { data: newOrganization, error: orgError } = await supabase
+        .from("organizations")
+        .insert([
+          {
+            name: "Default Organization",
+            description: "Default organization for ambulance supply management",
+            created_by: user.id,
+          },
+        ])
+        .select("id")
+        .single()
+
+      if (!orgError && newOrganization) {
+        organizationId = newOrganization.id
+        console.log("[v0] Users page: Created default organization:", organizationId)
+      } else {
+        console.error("[v0] Users page: Error creating organization:", orgError)
+      }
+    }
+
     // Create user profile object
     userProfile = {
       id: user.id,
@@ -63,12 +89,12 @@ export default async function UsersPage() {
       role: userRecord?.role || user.user_metadata?.role || "admin", // Use role from database
       created_at: userRecord?.created_at || new Date().toISOString(),
       updated_at: userRecord?.updated_at || new Date().toISOString(),
-      organization_id: userRecord?.organization_id || user.user_metadata?.organization_id,
+      organization_id: organizationId,
     }
 
     console.log("[v0] Users page: User profile created:", userProfile)
 
-    // Create user record if it doesn't exist
+    // Create or update user record
     if (!userRecord) {
       console.log("[v0] Users page: Creating new user record")
       const { error: insertError } = await supabase.from("users").insert([
@@ -77,11 +103,19 @@ export default async function UsersPage() {
           email: user.email,
           full_name: userProfile.full_name,
           role: userProfile.role,
-          organization_id: userProfile.organization_id,
+          organization_id: organizationId,
         },
       ])
 
       console.log("[v0] Users page: User record creation result:", { error: insertError })
+    } else if (!userRecord.organization_id && organizationId) {
+      console.log("[v0] Users page: Updating user record with organization_id")
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ organization_id: organizationId, updated_at: new Date().toISOString() })
+        .eq("id", user.id)
+
+      console.log("[v0] Users page: User record update result:", { error: updateError })
     }
   } catch (error) {
     console.error("[v0] Users page: Error managing user record:", error)
