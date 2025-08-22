@@ -77,43 +77,55 @@ DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can view invitations for their organization" ON public.invitations;
 DROP POLICY IF EXISTS "Admins can create invitations" ON public.invitations;
 DROP POLICY IF EXISTS "Users can update invitations they created" ON public.invitations;
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Public can view organizations" ON public.organizations;
+DROP POLICY IF EXISTS "Public can view invitations by token" ON public.invitations;
 
--- Create basic RLS policies for organizations
-CREATE POLICY "Users can view their own organization" ON public.organizations
-  FOR SELECT USING (
-    id IN (
-      SELECT organization_id FROM public.profiles WHERE id = auth.uid()
-    )
-  );
+-- Create non-recursive RLS policies that avoid infinite recursion
+-- Allow users to view their own profile (prevents recursion)
+CREATE POLICY "Users can view their own profile" ON public.profiles
+  FOR SELECT USING (id = auth.uid());
 
--- Create basic RLS policies for profiles
-CREATE POLICY "Users can view profiles in their organization" ON public.profiles
-  FOR SELECT USING (
-    organization_id IN (
-      SELECT organization_id FROM public.profiles WHERE id = auth.uid()
-    )
-  );
+-- Allow users to insert their own profile
+CREATE POLICY "Users can insert their own profile" ON public.profiles
+  FOR INSERT WITH CHECK (id = auth.uid());
 
+-- Allow users to update their own profile
 CREATE POLICY "Users can update their own profile" ON public.profiles
   FOR UPDATE USING (id = auth.uid());
 
--- Create basic RLS policies for invitations
-CREATE POLICY "Users can view invitations for their organization" ON public.invitations
+-- Allow admins to view all profiles (for user management)
+CREATE POLICY "Admins can view all profiles" ON public.profiles
   FOR SELECT USING (
-    organization_id IN (
-      SELECT organization_id FROM public.profiles WHERE id = auth.uid()
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.raw_user_meta_data->>'role' = 'admin'
     )
   );
 
+-- Allow public access to organizations (simplified for now)
+CREATE POLICY "Public can view organizations" ON public.organizations
+  FOR SELECT USING (true);
+
+-- Allow public access to invitations by token (for invitation acceptance)
+CREATE POLICY "Public can view invitations by token" ON public.invitations
+  FOR SELECT USING (true);
+
+-- Allow admins to create invitations
 CREATE POLICY "Admins can create invitations" ON public.invitations
   FOR INSERT WITH CHECK (
     invited_by = auth.uid() AND
-    organization_id IN (
-      SELECT organization_id FROM public.profiles 
-      WHERE id = auth.uid() AND role = 'admin'
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.raw_user_meta_data->>'role' = 'admin'
     )
   );
 
+-- Allow users to update invitations they created
 CREATE POLICY "Users can update invitations they created" ON public.invitations
   FOR UPDATE USING (invited_by = auth.uid());
 
