@@ -61,7 +61,7 @@ export default async function MedicationsPage() {
     role: user.user_metadata?.role || "staff",
   }
 
-  let medicationItems = []
+  let medicationItems: any[] = []
   try {
     console.log("[v0] [SERVER] Fetching medication items...")
     const { data: medicationData, error: medicationError } = await supabase
@@ -103,7 +103,7 @@ export default async function MedicationsPage() {
     medicationItems = []
   }
 
-  let locations = []
+  let locations: any[] = []
   try {
     console.log("[v0] [SERVER] Fetching locations...")
     const { data: locationsData, error: locationsError } = await supabase
