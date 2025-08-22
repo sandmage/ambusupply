@@ -74,9 +74,9 @@ export default async function UsersPage() {
   } catch (error) {
     console.log("[v0] Users page: User record query failed with exception:", error)
     console.log("[v0] Users page: Exception details:", {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
     })
     userRecordError = error
   }
@@ -151,9 +151,9 @@ export default async function UsersPage() {
     } catch (error) {
       console.error("[v0] Error creating user record:", error)
       console.log("[v0] Insert exception details:", {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
+        name: error instanceof Error ? error.name : "Unknown",
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
       })
     }
   }
@@ -229,10 +229,10 @@ export default async function UsersPage() {
   } catch (error) {
     console.error("[v0] Users page: Exception during user fetch:", error)
     console.log("[v0] Users page: Fetch exception details:", {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      cause: error.cause,
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      cause: error instanceof Error && "cause" in error ? error.cause : undefined,
     })
   }
 
