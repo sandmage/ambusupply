@@ -435,14 +435,20 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                       const vehicle = vehicles.find((v) => v.id === selectedVehicle)
                       if (!vehicle) return null
 
-                      const applicableForms = forms.filter((form) => {
-                        return (
+                      const applicableForms: DailyCheckForm[] = []
+
+                      forms.forEach((form) => {
+                        if (
                           form &&
+                          form.id &&
+                          form.name &&
                           form.vehicle_types &&
                           Array.isArray(form.vehicle_types) &&
                           form.vehicle_types.includes(vehicle.vehicle_type)
-                        )
-                      }) as DailyCheckForm[]
+                        ) {
+                          applicableForms.push(form)
+                        }
+                      })
 
                       return applicableForms.map((form) => (
                         <Card
