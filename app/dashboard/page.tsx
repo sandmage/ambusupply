@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Package, AlertTriangle, Calendar, MapPin, Activity } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 export default async function DashboardPage() {
   try {
     console.log("[v0] Dashboard: Starting server-side rendering")
