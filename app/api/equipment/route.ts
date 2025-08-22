@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] [API] Starting equipment creation...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {
@@ -84,7 +84,7 @@ export async function PUT(request: NextRequest) {
   try {
     console.log("[v0] [API] Starting equipment update...")
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {
