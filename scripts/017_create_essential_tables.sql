@@ -70,7 +70,14 @@ ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
 
--- Removed IF NOT EXISTS from CREATE POLICY statements for PostgreSQL compatibility
+-- Drop existing policies before creating new ones to avoid conflicts
+DROP POLICY IF EXISTS "Users can view their own organization" ON public.organizations;
+DROP POLICY IF EXISTS "Users can view profiles in their organization" ON public.profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view invitations for their organization" ON public.invitations;
+DROP POLICY IF EXISTS "Admins can create invitations" ON public.invitations;
+DROP POLICY IF EXISTS "Users can update invitations they created" ON public.invitations;
+
 -- Create basic RLS policies for organizations
 CREATE POLICY "Users can view their own organization" ON public.organizations
   FOR SELECT USING (
