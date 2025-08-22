@@ -338,6 +338,95 @@ CREATE TABLE IF NOT EXISTS public.maintenance_records (
   CONSTRAINT maintenance_records_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id)
 );
 
+-- Adding equipment management system tables
+-- Create equipment status enum
+DO $$ BEGIN
+    CREATE TYPE equipment_status AS ENUM ('in_service', 'out_of_service', 'maintenance', 'retired', 'assigned');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Create equipment types table
+CREATE TABLE IF NOT EXISTS public.equipment_types (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  description text,
+  category text NOT NULL CHECK (category = ANY (ARRAY['airway'::text, 'cardiac'::text, 'monitoring'::text, 'transport'::text, 'suction'::text, 'ventilation'::text, 'other'::text])),
+  manufacturer text,
+  model text,
+  specifications jsonb,
+  maintenance_interval_days integer DEFAULT 365,
+  organization_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT equipment_types_pkey PRIMARY KEY (id),
+  CONSTRAINT equipment_types_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
+
+-- Create equipment table
+CREATE TABLE IF NOT EXISTS public.equipment (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  equipment_type_id uuid NOT NULL,
+  serial_number text NOT NULL UNIQUE,
+  asset_tag text,
+  purchase_date date,
+  purchase_cost numeric,
+  warranty_expiration date,
+  status equipment_status DEFAULT 'in_service'::equipment_status,
+  location_id uuid,
+  assigned_vehicle_id uuid,
+  last_maintenance_date date,
+  next_maintenance_due date,
+  notes text,
+  organization_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT equipment_pkey PRIMARY KEY (id),
+  CONSTRAINT equipment_equipment_type_id_fkey FOREIGN KEY (equipment_type_id) REFERENCES public.equipment_types(id),
+  CONSTRAINT equipment_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id),
+  CONSTRAINT equipment_assigned_vehicle_id_fkey FOREIGN KEY (assigned_vehicle_id) REFERENCES public.vehicles(id),
+  CONSTRAINT equipment_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
+
+-- Create equipment maintenance records table
+CREATE TABLE IF NOT EXISTS public.equipment_maintenance (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  equipment_id uuid NOT NULL,
+  maintenance_type text NOT NULL CHECK (maintenance_type = ANY (ARRAY['routine'::text, 'repair'::text, 'inspection'::text, 'calibration'::text, 'emergency'::text])),
+  description text NOT NULL,
+  scheduled_date date,
+  completed_date date,
+  cost numeric,
+  service_provider text,
+  parts_replaced jsonb,
+  next_service_due date,
+  maintenance_notes text,
+  performed_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT equipment_maintenance_pkey PRIMARY KEY (id),
+  CONSTRAINT equipment_maintenance_equipment_id_fkey FOREIGN KEY (equipment_id) REFERENCES public.equipment(id),
+  CONSTRAINT equipment_maintenance_performed_by_fkey FOREIGN KEY (performed_by) REFERENCES public.profiles(id)
+);
+
+-- Create equipment assignments history table
+CREATE TABLE IF NOT EXISTS public.equipment_assignments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  equipment_id uuid NOT NULL,
+  vehicle_id uuid,
+  location_id uuid,
+  assigned_at timestamp with time zone DEFAULT now(),
+  unassigned_at timestamp with time zone,
+  assigned_by uuid,
+  assignment_notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT equipment_assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT equipment_assignments_equipment_id_fkey FOREIGN KEY (equipment_id) REFERENCES public.equipment(id),
+  CONSTRAINT equipment_assignments_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id),
+  CONSTRAINT equipment_assignments_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id),
+  CONSTRAINT equipment_assignments_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES public.profiles(id)
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON public.inventory_items(category);
 CREATE INDEX IF NOT EXISTS idx_inventory_items_location ON public.inventory_items(location_id);
@@ -348,11 +437,26 @@ CREATE INDEX IF NOT EXISTS idx_vehicles_status ON public.vehicles(status);
 CREATE INDEX IF NOT EXISTS idx_vehicles_organization ON public.vehicles(organization_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_organization ON public.profiles(organization_id);
 
+-- Create indexes for equipment tables
+CREATE INDEX IF NOT EXISTS idx_equipment_status ON public.equipment(status);
+CREATE INDEX IF NOT EXISTS idx_equipment_type ON public.equipment(equipment_type_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_vehicle ON public.equipment(assigned_vehicle_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_location ON public.equipment(location_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_maintenance_equipment ON public.equipment_maintenance(equipment_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_maintenance_date ON public.equipment_maintenance(completed_date);
+CREATE INDEX IF NOT EXISTS idx_equipment_assignments_equipment ON public.equipment_assignments(equipment_id);
+
 -- Enable Row Level Security on key tables
 ALTER TABLE public.inventory_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+
+-- Enable Row Level Security on equipment tables
+ALTER TABLE public.equipment ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.equipment_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.equipment_maintenance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.equipment_assignments ENABLE ROW LEVEL SECURITY;
 
 -- Create basic RLS policies (can be customized later)
 DO $$ BEGIN
@@ -375,6 +479,42 @@ DO $$ BEGIN
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
+
+-- Create RLS policies for equipment tables
+DO $$ BEGIN
+    CREATE POLICY "Users can view equipment" ON public.equipment
+      FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can insert equipment" ON public.equipment
+      FOR INSERT WITH CHECK (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can view equipment types" ON public.equipment_types
+      FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Insert default equipment types for common medical equipment
+INSERT INTO public.equipment_types (name, description, category, manufacturer, model, maintenance_interval_days) VALUES
+  ('Stretcher', 'Patient transport stretcher', 'transport', 'Stryker', 'Power-PRO XT', 365),
+  ('Lucas Device', 'Mechanical chest compression device', 'cardiac', 'Stryker', 'LUCAS 3', 180),
+  ('Suction Unit', 'Portable suction device', 'suction', 'Laerdal', 'LSU 4000', 90),
+  ('McGrath Laryngoscope', 'Video laryngoscope', 'airway', 'Medtronic', 'McGrath MAC', 180),
+  ('Z-Vent', 'Portable ventilator', 'ventilation', 'ZOLL', 'Z Vent', 90),
+  ('Monitor/Defibrillator', 'Cardiac monitor and defibrillator', 'cardiac', 'ZOLL', 'X Series', 365),
+  ('Pulse Oximeter', 'Oxygen saturation monitor', 'monitoring', 'Masimo', 'Rad-97', 365),
+  ('Blood Pressure Monitor', 'Automated blood pressure cuff', 'monitoring', 'Welch Allyn', 'Connex VSM', 365),
+  ('Backboard', 'Spinal immobilization board', 'transport', 'Ferno', 'Najo Lite', 365),
+  ('Stair Chair', 'Patient transport chair', 'transport', 'Ferno', 'Model 42', 365)
+ON CONFLICT DO NOTHING;
 
 -- Success message
 SELECT 'Master database schema created successfully!' as result;

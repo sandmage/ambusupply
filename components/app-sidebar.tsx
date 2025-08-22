@@ -18,6 +18,7 @@ import {
   X,
   Activity,
   Pill,
+  Wrench,
 } from "lucide-react"
 
 interface AppSidebarProps {
@@ -59,6 +60,12 @@ export function AppSidebar({ user, onSignOut, stats }: AppSidebarProps) {
       icon: Pill,
       current: pathname === "/medications",
       badge: stats?.expiringCount ? stats.expiringCount : undefined,
+    },
+    {
+      name: "Equipment",
+      href: "/equipment",
+      icon: Wrench,
+      current: pathname === "/equipment",
     },
     {
       name: "Locations",
