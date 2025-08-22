@@ -31,9 +31,6 @@ import { VehicleInventoryManager } from "@/components/vehicle-inventory-manager"
 import { VehicleParLevelManager } from "@/components/vehicle-par-level-manager"
 import { VehicleInventoryTracker } from "@/components/vehicle-inventory-tracker"
 import { ComplianceMonitoringDashboard } from "@/components/compliance-monitoring-dashboard"
-import { DailyCheckFormBuilder } from "@/components/daily-check-form-builder"
-import { DailyCheckSubmission } from "@/components/daily-check-submission"
-import { DailyCheckAdminDashboard } from "@/components/daily-check-admin-dashboard"
 
 interface Vehicle {
   id: string
@@ -424,18 +421,9 @@ export function FleetClient() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5 rounded-2xl">
+            <TabsList className="grid w-full grid-cols-2 rounded-2xl">
               <TabsTrigger value="overview" className="rounded-xl">
                 Overview
-              </TabsTrigger>
-              <TabsTrigger value="daily-checks" className="rounded-xl">
-                Daily Checks
-              </TabsTrigger>
-              <TabsTrigger value="form-builder" className="rounded-xl">
-                Form Builder
-              </TabsTrigger>
-              <TabsTrigger value="admin-review" className="rounded-xl">
-                Admin Review
               </TabsTrigger>
               <TabsTrigger value="calendar" className="rounded-xl">
                 Calendar
@@ -443,6 +431,23 @@ export function FleetClient() {
             </TabsList>
 
             <TabsContent value="overview">
+              <div className="mb-6">
+                <Card className="apple-card border-amber-200 bg-amber-50">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center space-x-3">
+                      <AlertTriangle className="h-5 w-5 text-amber-600" />
+                      <div>
+                        <p className="font-medium text-amber-800">Daily Check Forms Temporarily Unavailable</p>
+                        <p className="text-sm text-amber-700">
+                          The daily check form system requires database setup. Please contact your administrator to
+                          configure the required database tables.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="apple-card">
                   <CardHeader>
@@ -527,6 +532,7 @@ export function FleetClient() {
               </div>
             </TabsContent>
 
+            {/*
             <TabsContent value="daily-checks">
               <DailyCheckSubmission vehicles={vehicles} />
             </TabsContent>
@@ -538,6 +544,7 @@ export function FleetClient() {
             <TabsContent value="admin-review">
               <DailyCheckAdminDashboard />
             </TabsContent>
+            */}
 
             <TabsContent value="calendar">
               <MaintenanceCalendar onSelectMaintenance={handleSelectMaintenance} />
