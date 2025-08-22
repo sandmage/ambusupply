@@ -174,21 +174,33 @@ export function VehicleForm({ vehicle, onSave, onCancel }: VehicleFormProps) {
 
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 rounded-2xl bg-muted/50">
-              <TabsTrigger value="basic" className="rounded-xl text-xs md:text-sm px-2 md:px-3">
+              <TabsTrigger value="basic" className="rounded-xl text-xs md:text-sm px-1 md:px-3 py-2">
                 <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 flex-shrink-0" />
-                <span className="whitespace-nowrap">Basic Info</span>
+                <span className="text-center leading-tight">
+                  <span className="block md:hidden">Basic</span>
+                  <span className="hidden md:block">Basic Info</span>
+                </span>
               </TabsTrigger>
-              <TabsTrigger value="registration" className="rounded-xl text-xs md:text-sm px-2 md:px-3">
+              <TabsTrigger value="registration" className="rounded-xl text-xs md:text-sm px-1 md:px-3 py-2">
                 <Shield className="h-3 w-3 md:h-4 md:w-4 mr-1 flex-shrink-0" />
-                <span className="whitespace-nowrap">Registration</span>
+                <span className="text-center leading-tight">
+                  <span className="block md:hidden">Reg</span>
+                  <span className="hidden md:block">Registration</span>
+                </span>
               </TabsTrigger>
-              <TabsTrigger value="inspections" className="rounded-xl text-xs md:text-sm px-2 md:px-3">
+              <TabsTrigger value="inspections" className="rounded-xl text-xs md:text-sm px-1 md:px-3 py-2">
                 <Wrench className="h-3 w-3 md:h-4 md:w-4 mr-1 flex-shrink-0" />
-                <span className="whitespace-nowrap">Inspections</span>
+                <span className="text-center leading-tight">
+                  <span className="block md:hidden">Inspect</span>
+                  <span className="hidden md:block">Inspections</span>
+                </span>
               </TabsTrigger>
-              <TabsTrigger value="certifications" className="rounded-xl text-xs md:text-sm px-2 md:px-3">
+              <TabsTrigger value="certifications" className="rounded-xl text-xs md:text-sm px-1 md:px-3 py-2">
                 <Calendar className="h-3 w-3 md:h-4 md:w-4 mr-1 flex-shrink-0" />
-                <span className="whitespace-nowrap">Certifications</span>
+                <span className="text-center leading-tight">
+                  <span className="block md:hidden">Certs</span>
+                  <span className="hidden md:block">Certifications</span>
+                </span>
               </TabsTrigger>
             </TabsList>
 
