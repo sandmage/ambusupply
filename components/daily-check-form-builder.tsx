@@ -100,7 +100,7 @@ export function DailyCheckFormBuilder() {
     const newForm: DailyCheckForm = {
       name: "New Daily Check Form",
       description: "",
-      vehicle_types: [],
+      vehicle_types: [], // Ensure this is always an array
       checklist_items: [],
       is_active: true,
     }
@@ -367,11 +367,12 @@ export function DailyCheckFormBuilder() {
                               <input
                                 type="checkbox"
                                 id={type}
-                                checked={selectedForm.vehicle_types.includes(type)}
+                                checked={(selectedForm.vehicle_types || []).includes(type)}
                                 onChange={(e) => {
+                                  const currentTypes = selectedForm.vehicle_types || []
                                   const newTypes = e.target.checked
-                                    ? [...selectedForm.vehicle_types, type]
-                                    : selectedForm.vehicle_types.filter((t) => t !== type)
+                                    ? [...currentTypes, type]
+                                    : currentTypes.filter((t) => t !== type)
                                   setSelectedForm({
                                     ...selectedForm,
                                     vehicle_types: newTypes,
