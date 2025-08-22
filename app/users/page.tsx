@@ -55,31 +55,7 @@ export default async function UsersPage() {
       record: userRecord,
     })
 
-    let organizationId = userRecord?.organization_id
-
-    if (!organizationId) {
-      console.log("[v0] Users page: User has no organization, creating default organization")
-
-      // Create a default organization for the user
-      const { data: newOrganization, error: orgError } = await supabase
-        .from("organizations")
-        .insert([
-          {
-            name: "Default Organization",
-            description: "Default organization for ambulance supply management",
-            created_by: user.id,
-          },
-        ])
-        .select("id")
-        .single()
-
-      if (!orgError && newOrganization) {
-        organizationId = newOrganization.id
-        console.log("[v0] Users page: Created default organization:", organizationId)
-      } else {
-        console.error("[v0] Users page: Error creating organization:", orgError)
-      }
-    }
+    const organizationId = userRecord?.organization_id || "default-org-001"
 
     // Create user profile object
     userProfile = {
@@ -108,7 +84,7 @@ export default async function UsersPage() {
       ])
 
       console.log("[v0] Users page: User record creation result:", { error: insertError })
-    } else if (!userRecord.organization_id && organizationId) {
+    } else if (!userRecord.organization_id) {
       console.log("[v0] Users page: Updating user record with organization_id")
       const { error: updateError } = await supabase
         .from("users")
@@ -127,6 +103,7 @@ export default async function UsersPage() {
       role: "admin",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      organization_id: "default-org-001", // Ensure fallback has organization_id
     }
     console.log("[v0] Users page: Using fallback user profile:", userProfile)
   }
