@@ -40,9 +40,9 @@ export default async function DashboardPage() {
       role: user.user_metadata?.role || "staff",
     }
 
-    let inventoryItems = []
-    let locations = []
-    let recentActivity = []
+    let inventoryItems: any[] = []
+    let locations: any[] = []
+    let recentActivity: any[] = []
 
     try {
       console.log("[v0] Dashboard: Starting database queries")
