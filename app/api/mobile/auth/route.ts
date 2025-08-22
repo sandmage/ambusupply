@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     if (action === "signin") {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 // GET /api/mobile/auth - Verify session
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const {
       data: { session },
       error,
