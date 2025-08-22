@@ -1,12 +1,12 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Sankofa_Display as SF_Pro_Display, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 
-const inter = Inter({
+const sfProDisplay = SF_Pro_Display({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-sf-pro",
   weight: ["300", "400", "500", "600", "700", "800", "900"],
 })
 
@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
+    <html lang="en" className={`${sfProDisplay.variable} ${jetbrainsMono.variable} antialiased`}>
       <body className="min-h-screen bg-background font-sans antialiased">{children}</body>
     </html>
   )
