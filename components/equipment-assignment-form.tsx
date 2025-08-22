@@ -99,10 +99,7 @@ export function EquipmentAssignmentForm({
         vehicle_id: formData.assignment_type === "vehicle" ? formData.vehicle_id : null,
         location_id: formData.assignment_type === "location" ? formData.location_id : null,
         assignment_notes: formData.assignment_notes || null,
-      }
-
-      if (editingAssignment) {
-        assignmentData.id = editingAssignment.id
+        ...(editingAssignment && { id: editingAssignment.id }),
       }
 
       await onSave(assignmentData)
