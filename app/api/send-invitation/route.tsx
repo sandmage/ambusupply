@@ -1,5 +1,8 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { Resend } from "resend"
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,26 +28,78 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
     }
 
-    const { invitationId } = await request.json()
+    const body = await request.json()
+    const { invitationId, organizationId, email, role } = body
 
-    if (!invitationId) {
-      return NextResponse.json({ error: "Invitation ID is required" }, { status: 400 })
-    }
+    let invitation: any
 
-    // Get invitation details
-    const { data: invitation, error: invitationError } = await supabase
-      .from("invitations")
-      .select(`
-        *,
-        organizations (
-          name
+    if (invitationId) {
+      // Resending existing invitation
+      const { data: existingInvitation, error: invitationError } = await supabase
+        .from("invitations")
+        .select(`
+          *,
+          organizations (
+            name
+          )
+        `)
+        .eq("id", invitationId)
+        .single()
+
+      if (invitationError || !existingInvitation) {
+        return NextResponse.json({ error: "Invitation not found" }, { status: 404 })
+      }
+      invitation = existingInvitation
+    } else {
+      // Creating new invitation
+      if (!organizationId || !email || !role) {
+        return NextResponse.json({ error: "Organization ID, email, and role are required" }, { status: 400 })
+      }
+
+      // Check if invitation already exists
+      const { data: existingInvitation } = await supabase
+        .from("invitations")
+        .select("id")
+        .eq("email", email.toLowerCase())
+        .eq("organization_id", organizationId)
+        .is("accepted_at", null)
+        .single()
+
+      if (existingInvitation) {
+        return NextResponse.json(
+          { error: "An invitation has already been sent to this email address" },
+          { status: 400 },
         )
-      `)
-      .eq("id", invitationId)
-      .single()
+      }
 
-    if (invitationError || !invitation) {
-      return NextResponse.json({ error: "Invitation not found" }, { status: 404 })
+      // Create new invitation
+      const invitationToken = crypto.randomUUID()
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+
+      const { data: newInvitation, error: createError } = await supabase
+        .from("invitations")
+        .insert([
+          {
+            organization_id: organizationId,
+            email: email.toLowerCase(),
+            role: role,
+            invitation_token: invitationToken,
+            expires_at: expiresAt.toISOString(),
+            invited_by: user.id,
+          },
+        ])
+        .select(`
+          *,
+          organizations (
+            name
+          )
+        `)
+        .single()
+
+      if (createError || !newInvitation) {
+        return NextResponse.json({ error: "Failed to create invitation" }, { status: 500 })
+      }
+      invitation = newInvitation
     }
 
     // Create invitation link
@@ -130,42 +185,41 @@ This invitation was sent by ${invitation.organizations.name} using AmbuSupply.
 If you didn't expect this invitation, you can safely ignore this email.
     `
 
-    // In a real application, you would integrate with an email service here
-    // For now, we'll simulate sending the email and log the details
-    console.log("=== EMAIL INVITATION ===")
-    console.log("To:", invitation.email)
-    console.log("Subject:", emailSubject)
-    console.log("Invite URL:", inviteUrl)
-    console.log("========================")
+    try {
+      if (process.env.RESEND_API_KEY) {
+        await resend.emails.send({
+          from: "AmbuSupply <noreply@ambusupply.com>",
+          to: invitation.email,
+          subject: emailSubject,
+          html: emailHtml,
+          text: emailText,
+        })
+        console.log(`✅ Email sent successfully to ${invitation.email}`)
+      } else {
+        // Fallback to console logging for development
+        console.log("=== EMAIL INVITATION (Development Mode) ===")
+        console.log("To:", invitation.email)
+        console.log("Subject:", emailSubject)
+        console.log("Invite URL:", inviteUrl)
+        console.log("==========================================")
+      }
+    } catch (emailError) {
+      console.error("❌ Failed to send email:", emailError)
+      // Don't fail the entire request if email fails - invitation is still created
+      return NextResponse.json({
+        success: true,
+        message: "Invitation created but email delivery failed. Please check email configuration.",
+        inviteUrl: inviteUrl,
+      })
+    }
 
-    // Here you would integrate with your email service:
-    // - Resend: https://resend.com/docs
-    // - SendGrid: https://docs.sendgrid.com/
-    // - Nodemailer: https://nodemailer.com/
-    // - AWS SES: https://aws.amazon.com/ses/
-
-    // Example with Resend (uncomment and configure):
-    /*
-    const { Resend } = require('resend')
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    
-    await resend.emails.send({
-      from: 'noreply@yourdomain.com',
-      to: invitation.email,
-      subject: emailSubject,
-      html: emailHtml,
-      text: emailText,
-    })
-    */
-
-    // For demo purposes, we'll return success
     return NextResponse.json({
       success: true,
-      message: "Invitation email sent successfully",
-      inviteUrl: inviteUrl, // Include for testing purposes
+      message: "Invitation sent successfully",
+      inviteUrl: process.env.NODE_ENV === "development" ? inviteUrl : undefined, // Only include URL in development
     })
   } catch (error: any) {
-    console.error("Error sending invitation email:", error)
-    return NextResponse.json({ error: "Failed to send invitation email" }, { status: 500 })
+    console.error("Error processing invitation:", error)
+    return NextResponse.json({ error: "Failed to process invitation" }, { status: 500 })
   }
 }
