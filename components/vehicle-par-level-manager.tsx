@@ -297,7 +297,9 @@ export function VehicleParLevelManager({ vehicles }: VehicleParLevelManagerProps
     abovePar: inventoryItems.filter((item) => getComplianceStatus(item).status === "above_par").length,
   }
 
-  const categories = Array.from(new Set(inventoryItems.map((item) => item.inventory_item?.category).filter(Boolean)))
+  const categories = Array.from(
+    new Set(inventoryItems.map((item) => item.inventory_item?.category).filter(Boolean)),
+  ) as string[]
 
   return (
     <div className="space-y-6">
@@ -315,7 +317,7 @@ export function VehicleParLevelManager({ vehicles }: VehicleParLevelManagerProps
         <CardContent>
           <div className="flex gap-4">
             <Select
-              value={selectedVehicle?.id || "default"}
+              value={selectedVehicle?.id || "none"} // Updated default value to "none"
               onValueChange={(value) => {
                 const vehicle = vehicles.find((v) => v.id === value)
                 setSelectedVehicle(vehicle || null)
@@ -560,13 +562,15 @@ export function VehicleParLevelManager({ vehicles }: VehicleParLevelManagerProps
               <Label htmlFor="category">Category Filter (Optional)</Label>
               <Select
                 value={bulkUpdateData.category}
-                onValueChange={(value) => setBulkUpdateData({ ...bulkUpdateData, category: value })}
+                onValueChange={(value) =>
+                  setBulkUpdateData({ ...bulkUpdateData, category: value === "all" ? "" : value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
