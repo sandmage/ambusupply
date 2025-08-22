@@ -9,12 +9,28 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Car, Wrench, AlertTriangle, CheckCircle, Clock, Plus, Search, Filter, Eye, BarChart3 } from "lucide-react"
+import {
+  Car,
+  Wrench,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  BarChart3,
+  Package,
+} from "lucide-react"
 import { VehicleForm } from "@/components/vehicle-form"
 import { VehicleDetail } from "@/components/vehicle-detail"
 import { MaintenanceForm } from "@/components/maintenance-form"
 import { MaintenanceCalendar } from "@/components/maintenance-calendar"
 import { FleetAnalytics } from "@/components/fleet-analytics"
+import { VehicleInventoryManager } from "@/components/vehicle-inventory-manager"
+import { VehicleParLevelManager } from "@/components/vehicle-par-level-manager"
+import { VehicleInventoryTracker } from "@/components/vehicle-inventory-tracker"
+import { ComplianceMonitoringDashboard } from "@/components/compliance-monitoring-dashboard"
 
 interface Vehicle {
   id?: string
@@ -250,9 +266,12 @@ export function FleetClient() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="vehicles" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl">
           <TabsTrigger value="vehicles" className="rounded-xl">
             Vehicles
+          </TabsTrigger>
+          <TabsTrigger value="inventory" className="rounded-xl">
+            Inventory
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="rounded-xl">
             Maintenance
@@ -335,6 +354,51 @@ export function FleetClient() {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="inventory" className="space-y-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <Package className="h-6 w-6 text-primary" />
+            <div>
+              <h2 className="text-2xl font-serif font-bold">Vehicle Inventory Management</h2>
+              <p className="text-muted-foreground">
+                Manage inventory assignments and storage locations within vehicles
+              </p>
+            </div>
+          </div>
+
+          <Tabs defaultValue="inventory" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-4 rounded-2xl">
+              <TabsTrigger value="inventory" className="rounded-xl">
+                Inventory Management
+              </TabsTrigger>
+              <TabsTrigger value="par-levels" className="rounded-xl">
+                Par Level Management
+              </TabsTrigger>
+              <TabsTrigger value="tracking" className="rounded-xl">
+                Tracking & Transactions
+              </TabsTrigger>
+              <TabsTrigger value="compliance" className="rounded-xl">
+                Compliance & Restocking
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="inventory">
+              <VehicleInventoryManager vehicles={vehicles} />
+            </TabsContent>
+
+            <TabsContent value="par-levels">
+              <VehicleParLevelManager vehicles={vehicles} />
+            </TabsContent>
+
+            <TabsContent value="tracking">
+              <VehicleInventoryTracker vehicles={vehicles} />
+            </TabsContent>
+
+            <TabsContent value="compliance">
+              <ComplianceMonitoringDashboard />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="maintenance" className="space-y-6">

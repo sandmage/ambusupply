@@ -518,3 +518,210 @@ ON CONFLICT DO NOTHING;
 
 -- Success message
 SELECT 'Master database schema created successfully!' as result;
+
+-- Vehicle Storage Hierarchy System
+-- This enables precise inventory tracking within vehicles down to specific pockets/shelves
+
+-- Create vehicle storage units table (cabinets, bags, equipment containers)
+CREATE TABLE IF NOT EXISTS public.vehicle_storage_units (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  vehicle_id uuid NOT NULL,
+  name text NOT NULL, -- e.g., "ALS Bag", "Cabinet 3", "Airway Kit"
+  unit_type text NOT NULL CHECK (unit_type = ANY (ARRAY['cabinet'::text, 'bag'::text, 'kit'::text, 'compartment'::text, 'drawer'::text, 'other'::text])),
+  description text,
+  position_info jsonb, -- {"side": "left", "level": "upper", "bay": "1"}
+  capacity_info jsonb, -- {"max_weight": 50, "max_volume": 100}
+  is_removable boolean DEFAULT false, -- can this unit be removed from vehicle?
+  organization_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vehicle_storage_units_pkey PRIMARY KEY (id),
+  CONSTRAINT vehicle_storage_units_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id) ON DELETE CASCADE,
+  CONSTRAINT vehicle_storage_units_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
+
+-- Create vehicle storage locations table (sub-locations within storage units)
+CREATE TABLE IF NOT EXISTS public.vehicle_storage_locations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  storage_unit_id uuid NOT NULL,
+  name text NOT NULL, -- e.g., "Front Flap Pocket", "Shelf B", "Module 2", "Left Pouch"
+  location_type text NOT NULL CHECK (location_type = ANY (ARRAY['pocket'::text, 'pouch'::text, 'shelf'::text, 'module'::text, 'compartment'::text, 'slot'::text, 'hook'::text, 'other'::text])),
+  description text,
+  position_info jsonb, -- {"row": 2, "column": 1, "depth": "front"}
+  capacity_info jsonb, -- {"max_items": 10, "max_weight": 5}
+  access_notes text, -- "Velcro closure", "Zipper pocket", "Magnetic latch"
+  organization_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vehicle_storage_locations_pkey PRIMARY KEY (id),
+  CONSTRAINT vehicle_storage_locations_storage_unit_id_fkey FOREIGN KEY (storage_unit_id) REFERENCES public.vehicle_storage_units(id) ON DELETE CASCADE,
+  CONSTRAINT vehicle_storage_locations_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
+
+-- Create vehicle inventory items table (inventory assigned to specific vehicle locations)
+CREATE TABLE IF NOT EXISTS public.vehicle_inventory_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  vehicle_id uuid NOT NULL,
+  inventory_item_id uuid NOT NULL, -- references main inventory_items table
+  storage_unit_id uuid, -- can be assigned to storage unit level
+  storage_location_id uuid, -- or to specific location within unit
+  current_quantity integer NOT NULL DEFAULT 0 CHECK (current_quantity >= 0),
+  par_level_min integer NOT NULL DEFAULT 0 CHECK (par_level_min >= 0),
+  par_level_max integer, -- optional maximum level
+  expiration_date date, -- specific expiration for this vehicle's stock
+  lot_number text, -- specific lot for this vehicle's stock
+  notes text, -- location-specific notes
+  last_checked_at timestamp with time zone,
+  last_checked_by uuid,
+  organization_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vehicle_inventory_items_pkey PRIMARY KEY (id),
+  CONSTRAINT vehicle_inventory_items_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id) ON DELETE CASCADE,
+  CONSTRAINT vehicle_inventory_items_inventory_item_id_fkey FOREIGN KEY (inventory_item_id) REFERENCES public.inventory_items(id),
+  CONSTRAINT vehicle_inventory_items_storage_unit_id_fkey FOREIGN KEY (storage_unit_id) REFERENCES public.vehicle_storage_units(id) ON DELETE SET NULL,
+  CONSTRAINT vehicle_inventory_items_storage_location_id_fkey FOREIGN KEY (storage_location_id) REFERENCES public.vehicle_storage_locations(id) ON DELETE SET NULL,
+  CONSTRAINT vehicle_inventory_items_last_checked_by_fkey FOREIGN KEY (last_checked_by) REFERENCES public.profiles(id),
+  CONSTRAINT vehicle_inventory_items_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
+  -- Ensure item is assigned to either storage unit or specific location, not both
+  CONSTRAINT vehicle_inventory_items_location_check CHECK (
+    (storage_unit_id IS NOT NULL AND storage_location_id IS NULL) OR
+    (storage_unit_id IS NULL AND storage_location_id IS NOT NULL)
+  )
+);
+
+-- Create vehicle inventory transactions table (track movements and usage)
+CREATE TABLE IF NOT EXISTS public.vehicle_inventory_transactions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  vehicle_inventory_item_id uuid NOT NULL,
+  transaction_type text NOT NULL CHECK (transaction_type = ANY (ARRAY['restock'::text, 'use'::text, 'transfer'::text, 'adjustment'::text, 'expired'::text, 'check'::text])),
+  quantity_change integer NOT NULL, -- positive for additions, negative for usage
+  quantity_before integer NOT NULL,
+  quantity_after integer NOT NULL,
+  reason text,
+  notes text,
+  performed_by uuid NOT NULL,
+  performed_at timestamp with time zone DEFAULT now(),
+  shift_id uuid, -- optional reference to shift/assignment
+  call_id uuid, -- optional reference to specific call/incident
+  organization_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vehicle_inventory_transactions_pkey PRIMARY KEY (id),
+  CONSTRAINT vehicle_inventory_transactions_vehicle_inventory_item_id_fkey FOREIGN KEY (vehicle_inventory_item_id) REFERENCES public.vehicle_inventory_items(id) ON DELETE CASCADE,
+  CONSTRAINT vehicle_inventory_transactions_performed_by_fkey FOREIGN KEY (performed_by) REFERENCES public.profiles(id),
+  CONSTRAINT vehicle_inventory_transactions_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
+
+-- Create vehicle inventory compliance table (track par level compliance)
+CREATE TABLE IF NOT EXISTS public.vehicle_inventory_compliance (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  vehicle_id uuid NOT NULL,
+  check_date date NOT NULL,
+  checked_by uuid NOT NULL,
+  total_items_checked integer NOT NULL DEFAULT 0,
+  items_below_par integer NOT NULL DEFAULT 0,
+  items_expired integer NOT NULL DEFAULT 0,
+  items_missing integer NOT NULL DEFAULT 0,
+  overall_compliance_score numeric(5,2), -- percentage 0-100
+  compliance_status text NOT NULL CHECK (compliance_status = ANY (ARRAY['compliant'::text, 'non_compliant'::text, 'needs_attention'::text])),
+  notes text,
+  next_check_due date,
+  organization_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vehicle_inventory_compliance_pkey PRIMARY KEY (id),
+  CONSTRAINT vehicle_inventory_compliance_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id) ON DELETE CASCADE,
+  CONSTRAINT vehicle_inventory_compliance_checked_by_fkey FOREIGN KEY (checked_by) REFERENCES public.profiles(id),
+  CONSTRAINT vehicle_inventory_compliance_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
+
+-- Create indexes for vehicle storage hierarchy tables
+CREATE INDEX IF NOT EXISTS idx_vehicle_storage_units_vehicle ON public.vehicle_storage_units(vehicle_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_storage_units_type ON public.vehicle_storage_units(unit_type);
+CREATE INDEX IF NOT EXISTS idx_vehicle_storage_locations_storage_unit ON public.vehicle_storage_locations(storage_unit_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_storage_locations_type ON public.vehicle_storage_locations(location_type);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_items_vehicle ON public.vehicle_inventory_items(vehicle_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_items_inventory_item ON public.vehicle_inventory_items(inventory_item_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_items_storage_unit ON public.vehicle_inventory_items(storage_unit_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_items_storage_location ON public.vehicle_inventory_items(storage_location_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_items_par_level ON public.vehicle_inventory_items(par_level_min);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_transactions_item ON public.vehicle_inventory_transactions(vehicle_inventory_item_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_transactions_date ON public.vehicle_inventory_transactions(performed_at);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_compliance_vehicle ON public.vehicle_inventory_compliance(vehicle_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_inventory_compliance_date ON public.vehicle_inventory_compliance(check_date);
+
+-- Enable Row Level Security on vehicle storage tables
+ALTER TABLE public.vehicle_storage_units ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vehicle_storage_locations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vehicle_inventory_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vehicle_inventory_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vehicle_inventory_compliance ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for vehicle storage tables
+DO $$ BEGIN
+    CREATE POLICY "Users can view vehicle storage units" ON public.vehicle_storage_units
+      FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can manage vehicle storage units" ON public.vehicle_storage_units
+      FOR ALL USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can view vehicle storage locations" ON public.vehicle_storage_locations
+      FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can manage vehicle storage locations" ON public.vehicle_storage_locations
+      FOR ALL USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can view vehicle inventory items" ON public.vehicle_inventory_items
+      FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can manage vehicle inventory items" ON public.vehicle_inventory_items
+      FOR ALL USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Insert sample vehicle storage units for common ambulance configurations
+INSERT INTO public.vehicle_storage_units (vehicle_id, name, unit_type, description, position_info) 
+SELECT 
+  v.id,
+  storage_unit.name,
+  storage_unit.unit_type::text,
+  storage_unit.description,
+  storage_unit.position_info::jsonb
+FROM public.vehicles v
+CROSS JOIN (VALUES
+  ('ALS Bag', 'bag', 'Advanced Life Support medication and equipment bag', '{"location": "main_compartment", "side": "left"}'),
+  ('BLS Bag', 'bag', 'Basic Life Support equipment bag', '{"location": "main_compartment", "side": "right"}'),
+  ('Airway Kit', 'kit', 'Intubation and airway management kit', '{"location": "main_compartment", "position": "center"}'),
+  ('Cabinet 1', 'cabinet', 'Upper left cabinet', '{"bay": "patient_compartment", "side": "left", "level": "upper"}'),
+  ('Cabinet 2', 'cabinet', 'Upper right cabinet', '{"bay": "patient_compartment", "side": "right", "level": "upper"}'),
+  ('Cabinet 3', 'cabinet', 'Lower left cabinet', '{"bay": "patient_compartment", "side": "left", "level": "lower"}'),
+  ('Cabinet 4', 'cabinet', 'Lower right cabinet', '{"bay": "patient_compartment", "side": "right", "level": "lower"}'),
+  ('Trauma Kit', 'kit', 'Trauma supplies and bandaging materials', '{"location": "main_compartment", "accessibility": "quick_access"}'),
+  ('Drug Box', 'compartment', 'Secured medication compartment', '{"location": "main_compartment", "security": "locked"}'),
+  ('O2 Compartment', 'compartment', 'Oxygen tank and delivery equipment', '{"location": "main_compartment", "side": "rear"}'
+) AS storage_unit(name, unit_type, description, position_info)
+WHERE v.vehicle_type = 'ambulance'
+ON CONFLICT DO NOTHING;
+
+-- Success message for vehicle storage hierarchy
+SELECT 'Vehicle storage hierarchy schema added successfully!' as result;
