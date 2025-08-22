@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { UsersClient } from "./users-client"
 import { AppLayout } from "@/components/app-layout"
-import { crypto } from "crypto"
+import { randomUUID } from "crypto"
 
 interface UserProfile {
   id: string
@@ -56,7 +56,7 @@ export default async function UsersPage() {
       record: userRecord,
     })
 
-    const organizationId = userRecord?.organization_id || crypto.randomUUID()
+    const organizationId = userRecord?.organization_id || randomUUID()
 
     // Create user profile object
     userProfile = {
@@ -103,7 +103,7 @@ export default async function UsersPage() {
       role: "admin",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      organization_id: crypto.randomUUID(), // Generate proper UUID
+      organization_id: randomUUID(), // Generate proper UUID
     }
     console.log("[v0] Users page: Using fallback user profile:", userProfile)
   }
