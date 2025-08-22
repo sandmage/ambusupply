@@ -431,17 +431,20 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                 <div className="space-y-2">
                   <Label>Select Check Form</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {forms
-                      .filter((form) => {
-                        const vehicle = vehicles.find((v) => v.id === selectedVehicle)
-                        return (
-                          vehicle &&
-                          form.vehicle_types &&
-                          Array.isArray(form.vehicle_types) &&
-                          form.vehicle_types.includes(vehicle.vehicle_type)
+                    {(() => {
+                      const vehicle = vehicles.find((v) => v.id === selectedVehicle)
+                      if (!vehicle) return null
+
+                      const applicableForms = forms.filter((form): form is DailyCheckForm => {
+                        return Boolean(
+                          form &&
+                            form.vehicle_types &&
+                            Array.isArray(form.vehicle_types) &&
+                            form.vehicle_types.includes(vehicle.vehicle_type),
                         )
                       })
-                      .map((form) => (
+
+                      return applicableForms.map((form) => (
                         <Card
                           key={form.id}
                           className={`cursor-pointer transition-all ${
@@ -457,7 +460,8 @@ export function DailyCheckSubmission({ vehicles }: DailyCheckSubmissionProps) {
                             <p className="text-sm text-muted-foreground">{form.checklist_items?.length || 0} items</p>
                           </CardContent>
                         </Card>
-                      ))}
+                      ))
+                    })()}
                   </div>
                 </div>
               )}
