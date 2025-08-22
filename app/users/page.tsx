@@ -4,18 +4,38 @@ import { UsersClient } from "./users-client"
 import { AppLayout } from "@/components/app-layout"
 
 export default async function UsersPage() {
+  console.log("[v0] Users page: Starting server-side rendering")
+
   const supabase = await createServerClient()
+  console.log("[v0] Users page: Supabase client created")
 
   // Check authentication
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser()
+
+  console.log("[v0] Users page: Auth check result:", { user: user?.id, error: userError })
+
   if (userError || !user) {
+    console.log("[v0] Users page: No user found, redirecting to login")
     redirect("/auth/login")
   }
 
-  const { data: userRecord } = await supabase.from("users_sync").select("*").eq("id", user.id).maybeSingle()
+  console.log("[v0] Users page: User authenticated, checking database record")
+
+  let userRecord = null
+  let userRecordError = null
+
+  try {
+    const result = await supabase.from("users_sync").select("*").eq("id", user.id).maybeSingle()
+    userRecord = result.data
+    userRecordError = result.error
+    console.log("[v0] Users page: User record query result:", { data: userRecord, error: userRecordError })
+  } catch (error) {
+    console.log("[v0] Users page: User record query failed with exception:", error)
+    userRecordError = error
+  }
 
   console.log("[v0] Current authenticated user:", {
     id: user.id,
@@ -46,6 +66,7 @@ export default async function UsersPage() {
 
   // Only admins can access user management
   if (userProfile.role !== "admin") {
+    console.log("[v0] Users page: User is not admin, redirecting to dashboard")
     redirect("/dashboard")
   }
 
@@ -57,7 +78,8 @@ export default async function UsersPage() {
         name: user.user_metadata?.full_name || "Unknown User",
         raw_json: user.user_metadata || {},
       })
-      await supabase.from("users_sync").insert([
+
+      const insertResult = await supabase.from("users_sync").insert([
         {
           id: user.id,
           email: user.email,
@@ -65,7 +87,14 @@ export default async function UsersPage() {
           raw_json: user.user_metadata || {},
         },
       ])
-      console.log("[v0] User record created successfully")
+
+      console.log("[v0] User record insert result:", insertResult)
+
+      if (insertResult.error) {
+        console.log("[v0] User record creation failed:", insertResult.error)
+      } else {
+        console.log("[v0] User record created successfully")
+      }
     } catch (error) {
       console.error("[v0] Error creating user record:", error)
     }
@@ -79,27 +108,47 @@ export default async function UsersPage() {
     pending: 0,
   }
 
+  console.log("[v0] Users page: Starting to fetch all users")
+
   try {
-    // Get all users from users_sync table
-    const { data: allUsers, error: usersError } = await supabase
+    console.log("[v0] Users page: Attempting to query users_sync table")
+
+    const usersResult = await supabase
       .from("users_sync")
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
 
-    console.log("[v0] Fetched users from database:", allUsers)
-    console.log("[v0] Users error:", usersError)
+    console.log("[v0] Users page: Raw query result:", usersResult)
+    console.log("[v0] Fetched users from database:", usersResult.data)
+    console.log("[v0] Users error:", usersResult.error)
 
-    if (allUsers) {
+    if (usersResult.error) {
+      console.log("[v0] Users page: Database error details:", {
+        message: usersResult.error.message,
+        details: usersResult.error.details,
+        hint: usersResult.error.hint,
+        code: usersResult.error.code,
+      })
+    }
+
+    if (usersResult.data) {
+      console.log("[v0] Users page: Processing user data, count:", usersResult.data.length)
+
       // Map users_sync records to expected profile format
-      users = allUsers.map((userRecord) => ({
-        id: userRecord.id,
-        email: userRecord.email,
-        full_name: userRecord.name || "Unknown User",
-        role: "admin", // Default role for now - can be enhanced later
-        created_at: userRecord.created_at,
-        updated_at: userRecord.updated_at,
-      }))
+      users = usersResult.data.map((userRecord, index) => {
+        console.log(`[v0] Users page: Processing user ${index}:`, userRecord)
+        return {
+          id: userRecord.id,
+          email: userRecord.email,
+          full_name: userRecord.name || "Unknown User",
+          role: "admin", // Default role for now - can be enhanced later
+          created_at: userRecord.created_at,
+          updated_at: userRecord.updated_at,
+        }
+      })
+
+      console.log("[v0] Users page: Mapped users:", users)
 
       userStats = {
         total: users.length,
@@ -107,10 +156,17 @@ export default async function UsersPage() {
         staff: users.filter((p) => p.role === "staff").length,
         pending: users.filter((p) => p.role === "pending").length,
       }
+
+      console.log("[v0] Users page: User stats calculated:", userStats)
+    } else {
+      console.log("[v0] Users page: No user data returned from query")
     }
   } catch (error) {
-    console.error("Error fetching users:", error)
+    console.error("[v0] Users page: Exception during user fetch:", error)
   }
+
+  console.log("[v0] Users page: Final users array:", users)
+  console.log("[v0] Users page: Final user stats:", userStats)
 
   return (
     <AppLayout user={userProfile}>
