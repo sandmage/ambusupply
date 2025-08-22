@@ -8,7 +8,7 @@ export default async function EquipmentPage() {
 
   try {
     console.log("[v0] [SERVER] Creating Supabase server client...")
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     console.log("[v0] [SERVER] Checking user authentication...")
     const {
