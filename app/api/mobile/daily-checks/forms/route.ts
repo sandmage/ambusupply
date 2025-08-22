@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 // GET /api/mobile/daily-checks/forms - Get available daily check forms
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Verify authentication
     const {

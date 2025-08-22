@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 // POST /api/mobile/upload - Handle file uploads from mobile (photos, signatures)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Verify authentication
     const {

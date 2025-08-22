@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 // POST /api/mobile/daily-checks/submissions - Submit daily check from mobile
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Verify authentication
     const {
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 // GET /api/mobile/daily-checks/submissions - Get user's submissions
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Verify authentication
     const {

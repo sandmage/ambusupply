@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 // GET /api/mobile/vehicles - Get vehicles for mobile app
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Verify authentication
     const {

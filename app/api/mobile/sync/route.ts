@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 // POST /api/mobile/sync - Handle offline sync from mobile app
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Verify authentication
     const {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
 // GET /api/mobile/sync - Get sync status and pending changes
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Verify authentication
     const {
