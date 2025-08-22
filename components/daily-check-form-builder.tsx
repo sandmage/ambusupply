@@ -42,7 +42,7 @@ interface ChecklistItem {
 
 interface DailyCheckForm {
   id?: string
-  name: string
+  form_name: string
   description: string
   vehicle_types: string[]
   checklist_items: ChecklistItem[]
@@ -98,7 +98,7 @@ export function DailyCheckFormBuilder() {
 
   const createNewForm = () => {
     const newForm: DailyCheckForm = {
-      name: "New Daily Check Form",
+      form_name: "New Daily Check Form",
       description: "",
       vehicle_types: [], // Ensure this is always an array
       checklist_items: [],
@@ -257,7 +257,7 @@ export function DailyCheckFormBuilder() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium">{form.name}</h4>
+                    <h4 className="font-medium">{form.form_name}</h4>
                     <p className="text-sm text-muted-foreground">{form.checklist_items.length} items</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ export function DailyCheckFormBuilder() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>{isEditing ? "Edit Form" : selectedForm.name}</CardTitle>
+                    <CardTitle>{isEditing ? "Edit Form" : selectedForm.form_name}</CardTitle>
                     <CardDescription>
                       {isEditing ? "Modify form settings and checklist items" : "View form details"}
                     </CardDescription>
@@ -338,11 +338,11 @@ export function DailyCheckFormBuilder() {
                         <Label htmlFor="form-name">Form Name</Label>
                         <Input
                           id="form-name"
-                          value={selectedForm.name}
+                          value={selectedForm.form_name}
                           onChange={(e) =>
                             setSelectedForm({
                               ...selectedForm,
-                              name: e.target.value,
+                              form_name: e.target.value,
                             })
                           }
                           disabled={!isEditing}
