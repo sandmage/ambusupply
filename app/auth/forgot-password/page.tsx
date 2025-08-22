@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
         },
       })
 
-      const redirectUrl = "https://v0-ambu-sup-v2-git-ambusupply-v2-labs-vercel.app/auth/reset-password"
+      const redirectUrl = `${window.location.origin}/auth/reset-password`
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
