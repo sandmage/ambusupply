@@ -21,26 +21,41 @@ interface UserStats {
 }
 
 export default async function UsersPage() {
+  console.log("[v0] Users page: Starting server-side rendering")
+
   const supabase = await createServerClient()
+  console.log("[v0] Users page: Supabase client created")
 
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser()
 
+  console.log("[v0] Users page: Auth check result:", { user: user?.id, error: userError })
+
   if (userError || !user) {
+    console.log("[v0] Users page: No authenticated user, redirecting to login")
     redirect("/auth/login")
   }
 
+  console.log("[v0] Users page: User authenticated:", user.id)
+
   let userProfile: UserProfile
   try {
+    console.log("[v0] Users page: Checking for existing user record")
     // Check if user record exists in users_sync table
-    const { data: userRecord } = await supabase
+    const { data: userRecord, error: userRecordError } = await supabase
       .schema("neon_auth")
       .from("users_sync")
       .select("*")
       .eq("id", user.id)
       .maybeSingle()
+
+    console.log("[v0] Users page: User record query result:", {
+      found: !!userRecord,
+      error: userRecordError,
+      record: userRecord,
+    })
 
     // Create user profile object
     userProfile = {
@@ -53,9 +68,12 @@ export default async function UsersPage() {
       organization_id: user.user_metadata?.organization_id,
     }
 
+    console.log("[v0] Users page: User profile created:", userProfile)
+
     // Create user record if it doesn't exist
     if (!userRecord) {
-      await supabase
+      console.log("[v0] Users page: Creating new user record")
+      const { error: insertError } = await supabase
         .schema("neon_auth")
         .from("users_sync")
         .insert([
@@ -66,9 +84,11 @@ export default async function UsersPage() {
             raw_json: user.user_metadata || {},
           },
         ])
+
+      console.log("[v0] Users page: User record creation result:", { error: insertError })
     }
   } catch (error) {
-    console.error("Error managing user record:", error)
+    console.error("[v0] Users page: Error managing user record:", error)
     // Fallback user profile
     userProfile = {
       id: user.id,
@@ -78,22 +98,33 @@ export default async function UsersPage() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
+    console.log("[v0] Users page: Using fallback user profile:", userProfile)
   }
 
   if (userProfile.role !== "admin") {
+    console.log("[v0] Users page: User is not admin, redirecting to dashboard")
     redirect("/dashboard")
   }
+
+  console.log("[v0] Users page: User is admin, proceeding to fetch all users")
 
   let users: UserProfile[] = []
   let userStats: UserStats = { total: 0, admins: 0, staff: 0, pending: 0 }
 
   try {
+    console.log("[v0] Users page: Fetching all users from database")
     const { data: usersData, error } = await supabase
       .schema("neon_auth")
       .from("users_sync")
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
+
+    console.log("[v0] Users page: Users query result:", {
+      error,
+      count: usersData?.length || 0,
+      data: usersData,
+    })
 
     if (!error && usersData) {
       users = usersData.map((userRecord) => ({
@@ -106,17 +137,29 @@ export default async function UsersPage() {
         organization_id: userRecord.raw_json?.organization_id,
       }))
 
+      console.log("[v0] Users page: Mapped users:", users)
+
       userStats = {
         total: users.length,
         admins: users.filter((u) => u.role === "admin").length,
         staff: users.filter((u) => u.role === "staff").length,
         pending: users.filter((u) => u.role === "pending").length,
       }
+
+      console.log("[v0] Users page: User stats calculated:", userStats)
+    } else {
+      console.log("[v0] Users page: No users data or error occurred")
     }
   } catch (error) {
-    console.error("Error fetching users:", error)
+    console.error("[v0] Users page: Error fetching users:", error)
     // Users array remains empty, stats remain at zero
   }
+
+  console.log("[v0] Users page: Final data being passed to client:", {
+    usersCount: users.length,
+    userStats,
+    currentUser: userProfile.id,
+  })
 
   return (
     <AppLayout user={userProfile}>
