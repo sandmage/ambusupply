@@ -38,8 +38,9 @@
   --sidebar-accent-foreground: oklch(0.205 0.08 264);
   --sidebar-border: oklch(0.922 0.02 264);
   --sidebar-ring: oklch(0.488 0.243 264.376);
-  --font-sf-pro: "SF Pro Display";
-  --font-jetbrains: "JetBrains Mono";
+  /* Updated font variables to use Inter and Fira Code instead of SF Pro Display and JetBrains Mono */
+  --font-inter: "Inter";
+  --font-fira: "Fira Code";
 }
 
 .dark {
@@ -115,10 +116,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  --font-mono: var(--font-jetbrains), "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
-    monospace;
+  /* Updated font stack to use Inter with Apple system fonts fallback */
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-mono: var(--font-fira), "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 }
 
 @layer base {

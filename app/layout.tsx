@@ -1,20 +1,20 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Sankofa_Display as SF_Pro_Display, JetBrains_Mono } from "next/font/google"
+import { Inter, Fira_Code } from "next/font/google"
 import "./globals.css"
 
-const sfProDisplay = SF_Pro_Display({
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-sf-pro",
+  variable: "--font-inter",
   weight: ["300", "400", "500", "600", "700", "800", "900"],
 })
 
-const jetbrainsMono = JetBrains_Mono({
+const firaCode = Fira_Code({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-jetbrains",
-  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-fira",
+  weight: ["300", "400", "500", "600", "700"],
 })
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${sfProDisplay.variable} ${jetbrainsMono.variable} antialiased`}>
+    <html lang="en" className={`${inter.variable} ${firaCode.variable} antialiased`}>
       <body className="min-h-screen bg-background font-sans antialiased">{children}</body>
     </html>
   )
