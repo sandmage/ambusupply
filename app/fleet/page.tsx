@@ -27,9 +27,9 @@ export default async function FleetPage() {
     // Get user profile
     let profile = null
     try {
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("email", user.email).single()
+      const { data: profileData } = await supabase.from("users").select("*").eq("id", user.id).single()
       profile = profileData
-      console.log("[v0] Fleet: Profile query successful")
+      console.log("[v0] Fleet: Profile query successful:", profile ? "found" : "not found")
     } catch (profileError) {
       console.error("[v0] Fleet: Profile query failed:", profileError)
     }
